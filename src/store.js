@@ -2,6 +2,7 @@ import { ownSurveys } from './seed/ownSurveys.js';
 import { communitySurveys } from './seed/communitySurveys.js';
 import { MAX_COMPARE } from './constants.js';
 import * as storage from './storage.js';
+import * as db from './db.js';
 
 /**
  * Application state, with a subscribe/notify loop.
@@ -181,6 +182,14 @@ export function deleteSurvey(id) {
   // A deleted survey must not linger in a comparison.
   state.compareSelection = state.compareSelection.filter((item) => item !== id);
   commit();
+
+  // Its photos and videos go too, or they sit in the database forever with
+  // nothing pointing at them. Not awaited: the record is already gone from the
+  // user's view, and a slow or unavailable database must not hold up the UI.
+  db.deleteMediaForSurvey(id).catch(() => {
+    /* Storage is unavailable; there was nothing to clean up. */
+  });
+
   return removed;
 }
 

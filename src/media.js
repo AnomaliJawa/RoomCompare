@@ -1,0 +1,122 @@
+import * as db from './db.js';
+import { downscaleImage, acceptVideo, MediaError } from './utils/image.js';
+import { MAX_PHOTOS_PER_SECTION } from './constants.js';
+
+/**
+ * Resize-then-store, the seam the uploader will sit on.
+ *
+ * Files are processed one at a time and reported individually: one unreadable
+ * photo out of ten must not discard the other nine.
+ */
+
+export const MAX_VIDEOS = 2;
+
+function newId() {
+  return `med-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Store one image against a survey section.
+ * Resolves { ok: true, record } or { ok: false, fileName, message }.
+ */
+export async function addPhoto(file, { surveyId, section }) {
+  try {
+    const processed = await downscaleImage(file);
+    const record = {
+      id: newId(),
+      surveyId,
+      section,
+      blob: processed.blob,
+      mimeType: processed.mimeType,
+      width: processed.width,
+      height: processed.height,
+      byteSize: processed.byteSize,
+      originalName: file.name,
+      originalBytes: file.size,
+      createdAt: new Date().toISOString(),
+    };
+
+    const stored = await db.putMedia(record);
+    if (!stored) {
+      return {
+        ok: false,
+        fileName: file.name,
+        message: 'Photos cannot be saved in this browser mode.',
+      };
+    }
+    return { ok: true, record };
+  } catch (error) {
+    const message =
+      error instanceof MediaError ? error.message : 'That file could not be added.';
+    return { ok: false, fileName: file?.name ?? '', message };
+  }
+}
+
+export async function addVideo(file, { surveyId }) {
+  try {
+    const checked = acceptVideo(file);
+    const record = {
+      id: newId(),
+      surveyId,
+      section: 'video',
+      blob: checked.blob,
+      mimeType: checked.mimeType,
+      width: null,
+      height: null,
+      byteSize: checked.byteSize,
+      originalName: file.name,
+      originalBytes: file.size,
+      createdAt: new Date().toISOString(),
+    };
+    const stored = await db.putMedia(record);
+    if (!stored) {
+      return { ok: false, fileName: file.name, message: 'Videos cannot be saved in this browser mode.' };
+    }
+    return { ok: true, record };
+  } catch (error) {
+    const message = error instanceof MediaError ? error.message : 'That file could not be added.';
+    return { ok: false, fileName: file?.name ?? '', message };
+  }
+}
+
+/**
+ * Process a batch, stopping at the section limit. Returns the successes and
+ * the failures separately so the uploader can show both.
+ */
+export async function addPhotos(files, { surveyId, section, existingCount = 0 }) {
+  const room = Math.max(0, MAX_PHOTOS_PER_SECTION - existingCount);
+  const accepted = [...files].slice(0, room);
+  const rejected = [...files].slice(room).map((file) => ({
+    ok: false,
+    fileName: file.name,
+    message: `Only ${MAX_PHOTOS_PER_SECTION} photos can be added to this section.`,
+  }));
+
+  const results = [];
+  for (const file of accepted) {
+    // Sequential on purpose: decoding several large images at once spikes
+    // memory on the phones this is meant to run on.
+    results.push(await addPhoto(file, { surveyId, section }));
+  }
+
+  const all = [...results, ...rejected];
+  return {
+    stored: all.filter((item) => item.ok).map((item) => item.record),
+    failed: all.filter((item) => !item.ok),
+  };
+}
+
+export async function removeMedia(id) {
+  db.releaseUrl(id);
+  return db.deleteMedia(id);
+}
+
+/** Records for a list of ids, in the order given, skipping any that are gone. */
+export async function loadMedia(ids) {
+  return db.getMediaMany(ids);
+}
+
+/** Everything stored against a survey, whatever section it belongs to. */
+export async function loadSurveyMedia(surveyId) {
+  return db.getMediaForSurvey(surveyId);
+}
