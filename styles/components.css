@@ -102,6 +102,53 @@
   font-size: var(--text-xs);
 }
 
+/* An input carrying a currency or unit affix. The wrapper takes the border so
+   prefix and field read as one control. */
+.field__group {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.field__group:hover { border-color: var(--muted); }
+
+/* Prefix and input are one control, so the focus ring belongs to the wrapper.
+   The indicator is not removed, it moves outward — the only place an input
+   drops its own outline, and only because something larger replaces it. */
+.field__group:focus-within {
+  border-color: var(--accent);
+  outline: var(--focus-width) solid var(--focus-color);
+  outline-offset: var(--focus-offset);
+}
+
+.field__group .field__control:focus-visible { outline: none; }
+
+.field__affix {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-3);
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+/* Higher specificity than .field__control, so the wrapper owns the chrome. */
+.field__group .field__control {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.field__group .field__control:hover,
+.field__group .field__control:focus { border-color: transparent; }
+
+.field[data-invalid="true"] .field__group { border-color: var(--alert); }
+
 /* Errors name the fix; they do not apologize. */
 .field__error {
   color: var(--alert);
