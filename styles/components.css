@@ -494,3 +494,304 @@
 @keyframes skeleton-pulse {
   50% { opacity: 0.5; }
 }
+
+/* --- Survey card ---------------------------------------------------------
+   One card serves both lists; the community variant swaps its actions. */
+
+.survey-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.survey-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-1) var(--space-1);
+}
+
+.survey-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.survey-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.survey-card__link:hover { text-decoration: underline; }
+
+.survey-card__facts {
+  display: flex;
+  gap: var(--space-5);
+  padding-top: var(--space-2);
+  border-top: var(--border-hair);
+}
+
+.survey-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.card__fact-label {
+  display: block;
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.card__fact-value {
+  display: block;
+  font-weight: var(--weight-semibold);
+}
+
+/* Stand-in tile for a survey with no photos. Never a broken image. */
+.thumb {
+  width: 100%;
+  height: 132px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.thumb--empty {
+  display: grid;
+  place-items: center;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+/* --- Dashboard hero ------------------------------------------------------
+   Opens on the user's own kos already side by side, in the ledger's type. */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-6) var(--space-5);
+  background: var(--surface);
+  border: var(--border-hair);
+  border-radius: var(--radius-md);
+}
+
+/* Grid children default to min-width:auto, so a wide table inside one widens
+   the whole page instead of scrolling. Both tracks opt out. */
+.hero > * { min-width: 0; }
+
+.hero__strip { overflow-x: auto; }
+
+.hero__text { display: flex; flex-direction: column; gap: var(--space-4); }
+.hero__text h2 { font-size: var(--text-xl); letter-spacing: var(--tracking-tight); }
+
+.strip { border-collapse: collapse; }
+
+.strip th,
+.strip td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-hair);
+  text-align: left;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.strip thead th {
+  border-bottom: var(--border-group);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.strip__label {
+  background: var(--paper);
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.strip__best { color: var(--accent); font-weight: var(--weight-semibold); }
+
+/* --- Listing rows --------------------------------------------------------- */
+
+.listing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-hair);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.listing:last-child { border-bottom: none; padding-bottom: 0; }
+
+.listing__title {
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.listing__title:hover { text-decoration: underline; }
+
+/* --- Definition lists (detail view) --------------------------------------- */
+
+.defn-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.defn__label {
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.defn__value {
+  margin: var(--space-1) 0 0;
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* --- Checklist -----------------------------------------------------------
+   The full list with present and absent both marked: "no AC" is information,
+   so it is shown rather than omitted. */
+
+.checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.checklist__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--muted);
+}
+
+.checklist__item[data-present="true"] { color: var(--ink); }
+
+.checklist__mark {
+  width: 1em;
+  color: var(--muted);
+  font-weight: var(--weight-semibold);
+}
+
+.checklist__item[data-present="true"] .checklist__mark { color: var(--accent); }
+
+.notes {
+  max-width: var(--measure-notes);
+  white-space: pre-wrap;
+}
+
+/* --- Compare layout ------------------------------------------------------- */
+
+.compare-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* Same reason: the ledger scrolls inside its own wrapper, not the page. */
+.compare-layout > * { min-width: 0; }
+.compare-result { min-width: 0; }
+
+/* --- Community filters ---------------------------------------------------- */
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.filter-grid__star { min-height: 40px; }
+
+/* --- Survey form ---------------------------------------------------------
+   Sections are numbered because this form is genuinely a sequence, and the
+   requirement numbers it that way. The only numbered markers in the product. */
+
+.survey-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.form-section {
+  padding: var(--space-5);
+  background: var(--surface);
+  border: var(--border-hair);
+  border-radius: var(--radius-md);
+}
+
+.form-section__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.form-section__number {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-family: var(--font-narrow);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+}
+
+.form-section__guide {
+  margin: var(--space-3) 0 var(--space-5);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--rule);
+  color: var(--muted);
+  max-width: var(--measure);
+}
+
+.form-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-bottom: var(--space-5);
+}
+
+/* --- Narrow screens ------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .compare-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; }
+  .survey-card__actions .btn { flex: 1; }
+}

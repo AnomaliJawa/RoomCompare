@@ -2,410 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>RoomCompare</title>
+    <meta
+      name="description"
+      content="Record, organize and compare the boarding houses you have already surveyed."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/layout.css" />
+    <link rel="stylesheet" href="styles/components.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-wrap">
-          <div class="brand-mark">R</div>
-          <div>
-            <div class="brand-name">RoomCompare</div>
-            <div class="brand-subtitle">Kos decision hub</div>
-          </div>
-        </div>
+    <a class="skip-link" href="#app-root">Skip to content</a>
 
-        <nav class="sidebar-nav">
-          <button class="nav-item active" data-view="dashboard">
-            <span class="nav-icon">⌂</span>
-            Dashboard
-          </button>
-          <button class="nav-item" data-view="survey-list">
-            <span class="nav-icon">▣</span>
-            My Surveys
-          </button>
-          <button class="nav-item" data-view="community">
-            <span class="nav-icon">◎</span>
-            Community
-          </button>
-          <button class="nav-item" data-view="compare">
-            <span class="nav-icon">⇄</span>
-            Compare Kos
-          </button>
+    <header class="nav">
+      <div class="nav__inner">
+        <a class="nav__wordmark" href="#/dashboard">RoomCompare</a>
+
+        <nav class="nav__links" id="nav-links" data-open="false" aria-label="Primary">
+          <a class="nav__link" data-nav="surveys" href="#/surveys">My surveys</a>
+          <a class="nav__link" data-nav="community" href="#/community">Community</a>
+          <a class="nav__link" data-nav="compare" href="#/compare">Compare</a>
         </nav>
 
-        <div class="sidebar-panel">
-          <div class="panel-label">This week</div>
-          <div class="panel-metric">4</div>
-          <div class="panel-note">surveys reviewed</div>
-        </div>
-      </aside>
-
-      <main class="main-panel">
-        <header class="topbar">
-          <div>
-            <div class="eyebrow" id="page-kicker">Overview</div>
-            <h1 id="page-title">Dashboard</h1>
-          </div>
-          <div class="topbar-actions">
-            <button class="ghost-button" data-view="community">Explore community</button>
-            <button class="primary-button" data-action="new-survey">+ Add survey</button>
-          </div>
-        </header>
-
-        <section id="dashboard-view" class="view active" data-view-section="dashboard">
-          <div class="hero-card">
-            <div>
-              <div class="pill success">Student living away from home</div>
-              <h2>Keep every kos visit organized and comparable.</h2>
-              <p>
-                Record room details, save photos, compare criteria, and revisit your decisions without opening multiple apps.
-              </p>
-              <div class="hero-actions">
-                <button class="primary-button" data-action="new-survey">Add new survey</button>
-                <button class="secondary-button" data-view="compare">Compare selected kos</button>
-              </div>
-            </div>
-            <div class="hero-visual">
-              <div class="mini-panel">
-                <div class="mini-label">Best match</div>
-                <div class="mini-value">92.4</div>
-                <div class="mini-row">
-                  <span>Casa Hijau</span>
-                  <span class="positive">+12.3%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="stats-grid" id="dashboard-stats"></div>
-
-          <div class="content-grid two-col">
-            <div class="panel">
-              <div class="panel-header">
-                <h3>Recent surveys</h3>
-                <button class="link-button" data-view="survey-list">View all</button>
-              </div>
-              <div id="recent-surveys" class="stack-list"></div>
-            </div>
-
-            <div class="panel">
-              <div class="panel-header">
-                <h3>Comparison criteria</h3>
-                <span class="pill neutral">Weighted score</span>
-              </div>
-              <ul class="criteria-list">
-                <li><span>Price</span><strong>25%</strong></li>
-                <li><span>Facilities</span><strong>20%</strong></li>
-                <li><span>Cleanliness</span><strong>15%</strong></li>
-                <li><span>Location</span><strong>15%</strong></li>
-                <li><span>Distance to campus</span><strong>13%</strong></li>
-                <li><span>Security</span><strong>12%</strong></li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section id="survey-list-view" class="view" data-view-section="survey-list">
-          <div class="view-header">
-            <div>
-              <div class="eyebrow">Survey management</div>
-              <h2>My surveys</h2>
-            </div>
-            <button class="primary-button" data-action="new-survey">+ Add survey</button>
-          </div>
-
-          <div class="toolbar">
-            <div class="search-wrap">
-              <span>⌕</span>
-              <input id="survey-search" type="search" placeholder="Search by kos name" />
-            </div>
-            <div class="toolbar-tags">
-              <span class="tag">Draft & Published</span>
-            </div>
-          </div>
-
-          <div id="survey-list" class="card-grid"></div>
-        </section>
-
-        <section id="community-view" class="view" data-view-section="community">
-          <div class="view-header">
-            <div>
-              <div class="eyebrow">Shared survey results</div>
-              <h2>Community surveys</h2>
-            </div>
-          </div>
-
-          <div class="filter-sheet">
-            <div class="filter-row">
-              <div class="small-input">
-                <label>Search location</label>
-                <input id="community-location" type="text" placeholder="e.g. Malang" />
-              </div>
-              <div class="small-input">
-                <label>Min rent</label>
-                <input id="community-min-rent" type="number" placeholder="500k" />
-              </div>
-              <div class="small-input">
-                <label>Max rent</label>
-                <input id="community-max-rent" type="number" placeholder="2.5M" />
-              </div>
-              <div class="small-input">
-                <label>Kos type</label>
-                <select id="community-type">
-                  <option value="">All</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Mixed">Mixed</option>
-                </select>
-              </div>
-              <div class="small-input checkbox-wrap">
-                <label class="checkbox-label">
-                  <input id="community-starred" type="checkbox" />
-                  Starred only
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div id="community-list" class="card-grid"></div>
-        </section>
-
-        <section id="compare-view" class="view" data-view-section="compare">
-          <div class="view-header">
-            <div>
-              <div class="eyebrow">Comparison</div>
-              <h2>Compare up to three kos</h2>
-            </div>
-          </div>
-
-          <div class="compare-bar" id="compare-bar"></div>
-
-          <div class="compare-layout">
-            <div class="panel compare-panel">
-              <div class="panel-header">
-                <h3>Available surveys</h3>
-                <span class="pill neutral" id="compare-counter">0 selected</span>
-              </div>
-              <div id="compare-candidates" class="compare-candidate-list"></div>
-            </div>
-
-            <div class="panel comparison-output">
-              <div class="panel-header">
-                <h3>Side-by-side results</h3>
-                <button class="primary-button" id="run-compare" disabled>Compare</button>
-              </div>
-              <div id="comparison-table-wrap"></div>
-            </div>
-          </div>
-        </section>
-
-        <section id="survey-form-view" class="view" data-view-section="survey-form">
-          <div class="view-header">
-            <div>
-              <div class="eyebrow" id="form-kicker">Add survey</div>
-              <h2 id="form-title">New survey</h2>
-            </div>
-          </div>
-
-          <form id="survey-form" class="survey-form">
-            <div class="form-section">
-              <div class="section-title">1. Kos Information</div>
-              <div class="form-note">
-                Fill in the basic information about the kos, including its name, type, location, distance to campus, and monthly rental price.
-              </div>
-              <div class="form-grid two-col">
-                <label>
-                  <span>Kos name</span>
-                  <input name="name" type="text" placeholder="e.g. Kos Nusa Indah" required />
-                </label>
-                <label>
-                  <span>Kos type</span>
-                  <select name="type">
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Mixed">Mixed</option>
-                  </select>
-                </label>
-                <label class="full-span">
-                  <span>Location</span>
-                  <input name="location" type="text" placeholder="Lowokwaru, Malang" required />
-                </label>
-                <label>
-                  <span>Distance to campus (km)</span>
-                  <input name="distance" type="number" step="0.1" value="1.8" />
-                </label>
-                <label>
-                  <span>Monthly rent</span>
-                  <input name="rent" type="number" min="0" step="1000" value="1500000" required />
-                </label>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <div class="section-title">2. Room</div>
-              <div class="form-note">
-                Provide the room dimensions, available facilities, cleanliness, internet quality, and photos based on actual observation.
-              </div>
-              <div class="form-grid two-col">
-                <label>
-                  <span>Room length (m)</span>
-                  <input name="roomLength" type="number" step="0.1" value="3.5" />
-                </label>
-                <label>
-                  <span>Room width (m)</span>
-                  <input name="roomWidth" type="number" step="0.1" value="3" />
-                </label>
-                <label class="full-span">
-                  <span>Room facilities</span>
-                  <div class="checkboxes">
-                    <label><input name="roomFacility" type="checkbox" value="Mattress" checked /> Mattress</label>
-                    <label><input name="roomFacility" type="checkbox" value="Wardrobe" checked /> Wardrobe</label>
-                    <label><input name="roomFacility" type="checkbox" value="TV" /> TV</label>
-                    <label><input name="roomFacility" type="checkbox" value="AC" /> AC</label>
-                    <label><input name="roomFacility" type="checkbox" value="Fan" checked /> Fan</label>
-                    <label><input name="roomFacility" type="checkbox" value="Table" checked /> Table</label>
-                    <label><input name="roomFacility" type="checkbox" value="Chair" checked /> Chair</label>
-                    <label><input name="roomFacility" type="checkbox" value="Refrigerator" /> Refrigerator</label>
-                    <label><input name="roomFacility" type="checkbox" value="Dispenser" checked /> Dispenser</label>
-                    <label><input name="roomFacility" type="checkbox" value="Window" checked /> Window</label>
-                    <label><input name="roomFacility" type="checkbox" value="Includes electricity" checked /> Includes electricity</label>
-                  </div>
-                </label>
-                <label>
-                  <span>Cleanliness</span>
-                  <select name="cleanliness">
-                    <option value="1">1 = Poor</option>
-                    <option value="2">2 = Fair</option>
-                    <option value="3">3 = Good</option>
-                    <option value="4" selected>4 = Very Good</option>
-                  </select>
-                </label>
-                <label>
-                  <span>Internet quality</span>
-                  <select name="internet">
-                    <option value="1">1 = Poor</option>
-                    <option value="2">2 = Fair</option>
-                    <option value="3">3 = Good</option>
-                    <option value="4" selected>4 = Very Good</option>
-                  </select>
-                </label>
-                <label class="full-span">
-                  <span>Room photos</span>
-                  <input type="file" accept="image/*" multiple />
-                </label>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <div class="section-title">3. Bathroom</div>
-              <div class="form-note">Select all available bathroom facilities based on your observation and upload photos.</div>
-              <div class="form-grid two-col">
-                <label class="full-span">
-                  <span>Bathroom facilities</span>
-                  <div class="checkboxes">
-                    <label><input name="bathroomFacility" type="checkbox" value="Outdoor bathroom" /> Outdoor bathroom</label>
-                    <label><input name="bathroomFacility" type="checkbox" value="Indoor bathroom" checked /> Indoor bathroom</label>
-                    <label><input name="bathroomFacility" type="checkbox" value="Squat toilet" /> Squat toilet</label>
-                    <label><input name="bathroomFacility" type="checkbox" value="Western-style toilet" checked /> Western-style toilet</label>
-                    <label><input name="bathroomFacility" type="checkbox" value="Water heater" checked /> Water heater</label>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <div class="section-title">4. Shared Facilities</div>
-              <div class="form-note">Select all shared facilities available at the kos and upload photos that show their actual condition.</div>
-              <div class="form-grid two-col">
-                <label class="full-span">
-                  <span>Shared facilities</span>
-                  <div class="checkboxes">
-                    <label><input name="sharedFacility" type="checkbox" value="Wifi" checked /> Wifi</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Motorcycle parking" checked /> Motorcycle parking</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Car parking" /> Car parking</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Kitchen" checked /> Kitchen</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Washing machine" checked /> Washing machine</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Laundry" checked /> Laundry</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Refrigerator" /> Refrigerator</label>
-                    <label><input name="sharedFacility" type="checkbox" value="Dispenser" checked /> Dispenser</label>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <div class="section-title">5. Surroundings</div>
-              <div class="form-note">Select the facilities or places around the kos that support daily needs.</div>
-              <div class="form-grid two-col">
-                <label class="full-span">
-                  <span>Surroundings</span>
-                  <div class="checkboxes">
-                    <label><input name="surrounding" type="checkbox" value="Minimarket / supermarket" checked /> Minimarket / supermarket</label>
-                    <label><input name="surrounding" type="checkbox" value="Eatery (warung makan)" checked /> Eatery (warung makan)</label>
-                    <label><input name="surrounding" type="checkbox" value="Pharmacy / clinic" /> Pharmacy / clinic</label>
-                    <label><input name="surrounding" type="checkbox" value="ATM / bank" /> ATM / bank</label>
-                    <label><input name="surrounding" type="checkbox" value="Laundry" /> Laundry</label>
-                    <label><input name="surrounding" type="checkbox" value="Place of worship" checked /> Place of worship</label>
-                    <label><input name="surrounding" type="checkbox" value="Gym / sports facilities" /> Gym / sports facilities</label>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <div class="section-title">6. Additional Information</div>
-              <div class="form-note">Rate overall security, add missing details, and optionally upload videos.</div>
-              <div class="form-grid two-col">
-                <label>
-                  <span>Security</span>
-                  <select name="security">
-                    <option value="1">1 = Poor</option>
-                    <option value="2">2 = Fair</option>
-                    <option value="3" selected>3 = Good</option>
-                    <option value="4">4 = Very Good</option>
-                  </select>
-                </label>
-                <label class="full-span">
-                  <span>Additional notes</span>
-                  <textarea name="notes" rows="4" placeholder="Add notes about safety, noise, access, owner responsiveness, or any important contextual information."></textarea>
-                </label>
-                <label class="full-span">
-                  <span>Videos</span>
-                  <input type="file" accept="video/*" />
-                </label>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="button" class="secondary-button" data-action="save-draft">Save as draft</button>
-              <button type="button" class="primary-button" data-action="publish-survey">Publish</button>
-            </div>
-          </form>
-        </section>
-
-        <section id="survey-detail-view" class="view" data-view-section="survey-detail">
-          <div id="survey-detail-content"></div>
-        </section>
-      </main>
-    </div>
-
-    <div class="modal hidden" id="delete-modal">
-      <div class="modal-card">
-        <div class="modal-title">Delete survey</div>
-        <p>Are you sure you want to remove this survey from your list?</p>
-        <div class="modal-actions">
-          <button class="ghost-button" data-action="cancel-delete">Cancel</button>
-          <button class="danger-button" data-action="confirm-delete">Delete</button>
+        <div class="nav__actions">
+          <button
+            class="btn btn--secondary btn--small nav__toggle"
+            type="button"
+            data-action="toggle-nav"
+            aria-controls="nav-links"
+            aria-expanded="false"
+          >Menu</button>
+          <a class="btn btn--primary" href="#/surveys/new">Add survey</a>
         </div>
       </div>
-    </div>
+    </header>
 
-    <script src="script.js"></script>
+    <main class="column" id="app-root" tabindex="-1"></main>
+
+    <dialog class="dialog" id="app-dialog" aria-modal="true"></dialog>
+    <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>
+
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>
