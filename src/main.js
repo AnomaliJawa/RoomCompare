@@ -275,11 +275,9 @@ function wireActions() {
   onAction('filter-max-rent', debounce(({ target }) => applyFilter('maxRent', normalizeRentInput(target.value), '#f-max'), 200), 'input');
   onAction('filter-type', ({ target }) => store.setCommunityFilter('type', target.value), 'change');
   onAction('filter-starred', ({ target }) => store.setCommunityFilter('starredOnly', target.checked), 'change');
+  onAction('filter-facility', ({ target }) => store.toggleCommunityFacility(target.value), 'change');
 
-  onAction('clear-community-filters', () => {
-    ['location', 'minRent', 'maxRent', 'type'].forEach((key) => store.setCommunityFilter(key, ''));
-    store.setCommunityFilter('starredOnly', false);
-  });
+  onAction('clear-community-filters', () => store.clearCommunityFilters());
 
   onAction('submit-survey', async ({ target, event }) => {
     const intent = event.submitter?.dataset.intent ?? 'draft';
