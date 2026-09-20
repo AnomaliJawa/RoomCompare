@@ -34,10 +34,13 @@ export function textField({
   action = '',
   numeric = false,
   id = `f-${name}`,
+  // Error key, when it differs from the form name. The kos location has both
+  // a name field and a map pin; only one of them can own "kosLocation".
+  field = name,
 }) {
   const described = describedBy(id, { hint, error });
   return html`
-    <div class="field" data-invalid="${error ? 'true' : 'false'}">
+    <div class="field" data-field="${field}" data-invalid="${error ? 'true' : 'false'}">
       <label class="field__label" for="${id}">${label}</label>
       <input
         class="field__control${numeric ? ' numeric' : ''}"
@@ -59,7 +62,7 @@ export function textField({
 export function currencyField({ name, label, value = '', hint = '', error = '', action = '', id = `f-${name}` }) {
   const described = describedBy(id, { hint, error });
   return html`
-    <div class="field" data-invalid="${error ? 'true' : 'false'}">
+    <div class="field" data-field="${name}" data-invalid="${error ? 'true' : 'false'}">
       <label class="field__label" for="${id}">${label}</label>
       <div class="field__group">
         <span class="field__affix" aria-hidden="true">Rp</span>
@@ -83,7 +86,7 @@ export function currencyField({ name, label, value = '', hint = '', error = '', 
 export function textareaField({ name, label, value = '', rows = 4, placeholder = '', hint = '', error = '', id = `f-${name}` }) {
   const described = describedBy(id, { hint, error });
   return html`
-    <div class="field" data-invalid="${error ? 'true' : 'false'}">
+    <div class="field" data-field="${name}" data-invalid="${error ? 'true' : 'false'}">
       <label class="field__label" for="${id}">${label}</label>
       <textarea
         class="field__control"
@@ -117,7 +120,7 @@ export function selectField({ name, label, value = '', options, action = '', id 
 export function checkboxGroup({ name, legend, options, selected = [] }) {
   const chosen = new Set(selected);
   return html`
-    <fieldset class="choice-group">
+    <fieldset class="choice-group" data-field="${name}">
       <legend class="choice-group__legend">${legend}</legend>
       <div class="choice-group__options">
         ${options.map(
@@ -133,7 +136,7 @@ export function checkboxGroup({ name, legend, options, selected = [] }) {
 
 export function radioGroup({ name, legend, options, value = null }) {
   return html`
-    <fieldset class="choice-group">
+    <fieldset class="choice-group" data-field="${name}">
       <legend class="choice-group__legend">${legend}</legend>
       <div class="choice-group__options">
         ${options.map(
