@@ -312,29 +312,38 @@
   font-weight: var(--weight-semibold);
 }
 
-/* Criteria column stays put while the kos columns scroll. */
+/* The criterion column is the table's spine — chrome, not data. Tinting it
+   to --paper sets it apart from the white value cells, and keeps it legible
+   while the kos columns scroll underneath it. */
 .ledger__criterion {
   position: sticky;
   left: 0;
   z-index: 1;
   width: 200px;
   min-width: 160px;
-  background: var(--surface);
+  background: var(--paper);
   color: var(--muted);
   font-weight: var(--weight-regular);
 }
 
-.ledger thead .ledger__criterion { z-index: 3; }
+/* Beats `.ledger thead th`, which would otherwise repaint the corner white. */
+.ledger thead .ledger__criterion {
+  z-index: 3;
+  background: var(--paper);
+}
 
-/* A group boundary means more than a row boundary. */
+/* A group boundary means more than a row boundary, so it is banded rather
+   than merely ruled. It carries the same paper tone as the spine, so header
+   and spine join into one continuous frame around the values, and it steps
+   up to body size because a section name outranks a criterion name. */
 .ledger__group th {
-  padding-top: var(--space-4);
+  padding-block: var(--space-3);
   border-top: var(--border-group);
-  border-bottom: var(--border-hair);
+  border-bottom: var(--border-group);
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-narrow);
-  font-size: var(--text-xs);
+  font-size: var(--text-base);
   font-weight: var(--weight-bold);
 }
 
