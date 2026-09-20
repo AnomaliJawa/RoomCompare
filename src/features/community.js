@@ -2,7 +2,7 @@ import { html, raw } from '../utils/dom.js';
 import { getState } from '../store.js';
 import { surveyCard } from '../components/surveyCard.js';
 import { noFilterResults } from '../components/emptyState.js';
-import { filterPanel } from '../components/filterPanel.js';
+import { filterBar } from '../components/filterPanel.js';
 
 /**
  * Shared survey results from other users.
@@ -64,7 +64,7 @@ export function renderCommunity() {
       </div>
     </div>
 
-    ${filterPanel(communityFilters, { total: communitySurveys.length, showing: visible.length })}
+    ${filterBar(communityFilters, { total: communitySurveys.length, showing: visible.length })}
 
     ${body}
   `;
