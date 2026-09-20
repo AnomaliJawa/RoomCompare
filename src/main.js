@@ -2,6 +2,7 @@ import { mount, qs, qsa, debounce, html } from './utils/dom.js';
 import { defineRoute, setNotFound, startRouter, navigate, currentRoute } from './router.js';
 import { onAction, startEventBridge } from './events.js';
 import { toast, confirmDialog } from './components/feedback.js';
+import { banner } from './components/banner.js';
 import { normalizeRentInput } from './utils/format.js';
 import { STATUS, MAX_COMPARE } from './constants.js';
 import * as store from './store.js';
@@ -56,14 +57,11 @@ function renderStorageNotice() {
 
   mount(
     region,
-    html`
-      <div class="banner" data-tone="${storageStatus === 'ok' ? 'info' : 'alert'}">
-        <span>${storageNotice}</span>
-        <button class="btn btn--quiet btn--small" type="button" data-action="dismiss-storage-notice">
-          Dismiss
-        </button>
-      </div>
-    `,
+    banner({
+      message: storageNotice,
+      tone: storageStatus === 'ok' ? 'info' : 'alert',
+      action: { name: 'dismiss-storage-notice', label: 'Dismiss' },
+    }),
   );
 }
 

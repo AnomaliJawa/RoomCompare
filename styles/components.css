@@ -763,6 +763,13 @@
 .compare-layout > * { min-width: 0; }
 .compare-result { min-width: 0; }
 
+/* --- Search row ----------------------------------------------------------- */
+
+.search-row {
+  max-width: 420px;
+  margin-bottom: var(--space-5);
+}
+
 /* --- Community filters ---------------------------------------------------- */
 
 .filter-grid {

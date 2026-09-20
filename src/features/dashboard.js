@@ -2,6 +2,7 @@ import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
 import { getState } from '../store.js';
 import { BEST_MATCH_WEIGHTS, STATUS } from '../constants.js';
+import { emptyState } from '../components/emptyState.js';
 
 /**
  * The dashboard opens with the most characteristic thing in this product's
@@ -12,16 +13,13 @@ import { BEST_MATCH_WEIGHTS, STATUS } from '../constants.js';
  */
 
 function emptyHero() {
-  return html`
-    <section class="empty">
-      <p class="empty__title">No kos recorded yet</p>
-      <p class="empty__body">
-        Start with the first kos you visited. Record what you saw, add photos and
-        notes, then compare your options side by side when you have two or more.
-      </p>
-      <a class="btn btn--primary" href="#/surveys/new">Add survey</a>
-    </section>
-  `;
+  return emptyState({
+    title: 'No kos recorded yet',
+    body:
+      'Start with the first kos you visited. Record what you saw, add photos and ' +
+      'notes, then compare your options side by side when you have two or more.',
+    actions: [{ label: 'Add survey', href: '#/surveys/new' }],
+  });
 }
 
 function heroStrip(surveys) {
@@ -96,7 +94,7 @@ export function renderDashboard() {
       </div>
     </div>
 
-    ${recent.length ? raw(heroStrip(recent)) : raw(emptyHero())}
+    ${recent.length ? heroStrip(recent) : emptyHero()}
 
     <div class="grid-split section">
       <section class="panel">

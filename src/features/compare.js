@@ -1,6 +1,8 @@
 import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
 import { getState, comparableSurveys, selectedForCompare } from '../store.js';
+import { nothingSelected, needsOneMore } from '../components/emptyState.js';
+import { incompleteDataBanner } from '../components/banner.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -214,31 +216,13 @@ export function renderCompare() {
 
   let result;
   if (selected.length === 0) {
-    result = html`<section class="empty">
-      <p class="empty__title">Add two kos to start comparing</p>
-      <p class="empty__body">
-        Pick from the surveys you have recorded, and any community surveys you
-        have starred. You can compare up to three at once.
-      </p>
-    </section>`;
+    result = nothingSelected();
   } else if (selected.length < MIN_COMPARE) {
-    result = html`<section class="empty">
-      <p class="empty__title">Add one more kos</p>
-      <p class="empty__body">
-        A comparison needs at least two. ${selected[0].kos.name} is ready to go.
-      </p>
-      <a class="btn btn--secondary" href="#/surveys/new">Add survey</a>
-    </section>`;
+    result = needsOneMore(selected[0].kos.name);
   } else {
     const incomplete = selected.filter((s) => s.room.internet == null || s.additional.security == null);
-    const notice = incomplete.length
-      ? html`<div class="banner" style="margin-bottom: var(--space-4)">
-          Some information is missing for
-          ${incomplete.map((s) => s.kos.name).join(' and ')}. Rows below read
-          &ldquo;Not recorded&rdquo; where nothing was captured.
-        </div>`
-      : '';
-    result = html`${raw(notice)}${raw(ledger(selected))}`;
+    const notice = incomplete.length ? incompleteDataBanner(incomplete.map((s) => s.kos.name)) : '';
+    result = html`${notice}${ledger(selected)}`;
   }
 
   return html`
@@ -258,10 +242,10 @@ export function renderCompare() {
           <h2>Add kos</h2>
           <span class="meta">${compareSelection.length} of ${MAX_COMPARE}</span>
         </div>
-        ${raw(picker(candidates, compareSelection))}
+        ${picker(candidates, compareSelection)}
       </section>
 
-      <div class="compare-result">${raw(result)}</div>
+      <div class="compare-result">${result}</div>
     </div>
   `;
 }

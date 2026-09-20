@@ -1,6 +1,7 @@
 import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
 import { findSurvey, isOwnSurvey, isStarred, getState } from '../store.js';
+import { notFound } from '../components/emptyState.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -70,13 +71,12 @@ function photos(ids, label) {
 export function renderSurveyDetail({ id }) {
   const survey = findSurvey(id);
   if (!survey) {
-    return html`
-      <section class="empty">
-        <p class="empty__title">That survey is not here</p>
-        <p class="empty__body">It may have been deleted, or the link may be wrong.</p>
-        <a class="btn btn--secondary" href="#/surveys">Back to my surveys</a>
-      </section>
-    `;
+    return notFound({
+      title: 'That survey is not here',
+      body: 'It may have been deleted, or the link may be wrong.',
+      backHref: '#/surveys',
+      backLabel: 'Back to my surveys',
+    });
   }
 
   const own = isOwnSurvey(id);

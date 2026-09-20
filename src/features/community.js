@@ -1,6 +1,8 @@
 import { html, raw } from '../utils/dom.js';
 import { getState } from '../store.js';
 import { surveyCard } from '../components/surveyCard.js';
+import { noFilterResults } from '../components/emptyState.js';
+import { textField, currencyField, selectField } from '../components/fields.js';
 import { KOS_TYPES } from '../constants.js';
 
 /**
@@ -42,11 +44,7 @@ export function renderCommunity() {
             .join(''),
         )}
       </div>`
-    : html`<section class="empty">
-        <p class="empty__title">No shared surveys match these filters</p>
-        <p class="empty__body">Widen the rent range or clear the filters to see everything.</p>
-        <button class="btn btn--secondary" type="button" data-action="clear-community-filters">Clear filters</button>
-      </section>`;
+    : noFilterResults();
 
   return html`
     <div class="page-head">
@@ -61,40 +59,18 @@ export function renderCommunity() {
 
     <section class="panel section" aria-label="Filters">
       <div class="filter-grid">
-        <div class="field">
-          <label class="field__label" for="f-location">Location</label>
-          <input class="field__control" id="f-location" type="search" placeholder="e.g. Dinoyo"
-            value="${communityFilters.location}" data-action="filter-location" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label class="field__label" for="f-min">Rent from</label>
-          <div class="field__group">
-            <span class="field__affix" aria-hidden="true">Rp</span>
-            <input class="field__control numeric" id="f-min" type="text" inputmode="numeric"
-              value="${communityFilters.minRent}" data-action="filter-min-rent" autocomplete="off" />
-          </div>
-        </div>
-        <div class="field">
-          <label class="field__label" for="f-max">Rent up to</label>
-          <div class="field__group">
-            <span class="field__affix" aria-hidden="true">Rp</span>
-            <input class="field__control numeric" id="f-max" type="text" inputmode="numeric"
-              value="${communityFilters.maxRent}" data-action="filter-max-rent" autocomplete="off" />
-          </div>
-        </div>
-        <div class="field">
-          <label class="field__label" for="f-type">Kos type</label>
-          <select class="field__control" id="f-type" data-action="filter-type">
-            <option value="">All types</option>
-            ${raw(
-              KOS_TYPES.map(
-                (t) => html`<option value="${t.value}" ${communityFilters.type === t.value ? 'selected' : ''}>${t.label}</option>`,
-              ).join(''),
-            )}
-          </select>
-        </div>
+        ${textField({
+          name: 'f-location', id: 'f-location', label: 'Location', type: 'search',
+          value: communityFilters.location, placeholder: 'e.g. Dinoyo', action: 'filter-location',
+        })}
+        ${currencyField({ name: 'f-min', id: 'f-min', label: 'Rent from', value: communityFilters.minRent, action: 'filter-min-rent' })}
+        ${currencyField({ name: 'f-max', id: 'f-max', label: 'Rent up to', value: communityFilters.maxRent, action: 'filter-max-rent' })}
+        ${selectField({
+          name: 'f-type', id: 'f-type', label: 'Kos type', value: communityFilters.type, action: 'filter-type',
+          options: [{ value: '', label: 'All types' }, ...KOS_TYPES],
+        })}
         <label class="choice filter-grid__star">
-          <input type="checkbox" data-action="filter-starred" ${communityFilters.starredOnly ? 'checked' : ''} />
+          <input type="checkbox" data-action="filter-starred" ${communityFilters.starredOnly ? raw('checked') : ''} />
           Starred only
         </label>
       </div>
@@ -104,6 +80,6 @@ export function renderCommunity() {
       ${visible.length} of ${communitySurveys.length} shared surveys.
     </p>
 
-    ${raw(body)}
+    ${body}
   `;
 }
