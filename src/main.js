@@ -11,7 +11,15 @@ import * as store from './store.js';
 import { renderDashboard } from './features/dashboard.js';
 import { renderSurveyList } from './features/surveyList.js';
 import { renderSurveyDetail } from './features/surveyDetail.js';
-import { renderSurveyForm, mountSurveyForm, readSurveyForm, formSurveyId, clearDraftId } from './features/surveyForm.js';
+import {
+  renderSurveyForm,
+  mountSurveyForm,
+  readSurveyForm,
+  formSurveyId,
+  clearDraftId,
+  isFormDirty,
+  teardownSurveyForm,
+} from './features/surveyForm.js';
 import { renderCommunity } from './features/community.js';
 import { renderCompare } from './features/compare.js';
 
@@ -33,10 +41,25 @@ const ROUTES = [
   { path: '/compare', name: 'compare', render: renderCompare, nav: 'compare' },
 ];
 
+/**
+ * Routes whose DOM holds live user input. A store change must not rebuild
+ * these: the form owns typed values, focus, caret position, map instances and
+ * uploaded thumbnails, and re-rendering would discard all of it mid-edit.
+ * Autosave writes to the store on a timer, so this is not hypothetical.
+ */
+const SELF_MANAGED_ROUTES = new Set(['survey-new', 'survey-edit']);
+
 /** Re-render the active route in place, without touching the URL. */
 function refresh() {
   const active = ROUTES.find((route) => route.name === currentRoute().name);
   if (!active) return;
+
+  if (SELF_MANAGED_ROUTES.has(active.name)) {
+    // Notices still update; the form itself is left alone.
+    renderStorageNotice();
+    return;
+  }
+
   const params = currentRoute().params;
   mount(root(), active.render(params));
   active.mount?.(root());
@@ -188,13 +211,49 @@ function wireActions() {
     store.removeFromCompare(dataset.id);
   });
 
-  onAction('cancel-form', () => {
+  onAction('cancel-form', async () => {
+    if (isFormDirty()) {
+      const discard = await confirmDialog({
+        title: 'Discard your changes?',
+        body: 'What you have entered on this form will not be saved.',
+        confirmLabel: 'Discard',
+      });
+      if (!discard) return;
+    }
     // Photos chosen on an abandoned form are swept on the next boot.
+    teardownSurveyForm();
     clearDraftId();
     navigate('/surveys');
   });
 
   onAction('dismiss-storage-notice', () => store.clearStorageNotice());
+
+  // A new survey autosaves as a draft so a dropped tab mid-visit costs
+  // nothing. It is deliberately quiet: no navigation, no toast stealing
+  // attention while someone is still typing.
+  document.addEventListener('autosave', (event) => {
+    const form = event.target;
+    const data = readSurveyForm(form);
+    if (!data.kos.name) return;
+
+    const id = form.dataset.surveyId;
+    if (store.findSurvey(id)) {
+      store.updateSurvey(id, data);
+    } else {
+      store.addSurvey({
+        id,
+        ownerId: 'me',
+        status: STATUS.DRAFT,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...data,
+      });
+      // The form is now editing a real record rather than creating one.
+      form.dataset.id = id;
+    }
+    const note = qs('[data-autosave-note]');
+    if (note) note.textContent = `Draft saved ${new Date().toLocaleTimeString()}`;
+  });
 
   onAction('filter-location', debounce(({ target }) => applyFilter('location', target.value, '#f-location'), 200), 'input');
   onAction('filter-min-rent', debounce(({ target }) => applyFilter('minRent', normalizeRentInput(target.value), '#f-min'), 200), 'input');
@@ -219,8 +278,11 @@ function wireActions() {
 
     const editingId = target.dataset.id;
     if (editingId) {
-      store.updateSurvey(editingId, data);
-      toast('Survey updated');
+      // An autosaved draft is already a record, so publishing it promotes
+      // the same row rather than creating a second one.
+      const intended = intent === 'publish' ? STATUS.PUBLISHED : undefined;
+      store.updateSurvey(editingId, intended ? { ...data, status: intended } : data);
+      toast(intent === 'publish' ? 'Published' : 'Survey updated');
     } else {
       store.addSurvey({
         id: target.dataset.surveyId || formSurveyId(),
@@ -232,6 +294,7 @@ function wireActions() {
       });
       toast(intent === 'publish' ? 'Published' : 'Saved as draft');
     }
+    teardownSurveyForm();
     clearDraftId();
     navigate('/surveys');
   }, 'submit');

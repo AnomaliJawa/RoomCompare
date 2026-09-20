@@ -985,3 +985,61 @@
   flex-direction: column;
   gap: var(--space-1);
 }
+
+/* --- Map picker ----------------------------------------------------------
+   Loaded on demand, so a blocked CDN degrades to coordinate inputs rather
+   than leaving the form unusable. */
+
+.map-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.mappicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mappicker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.mappicker__canvas {
+  height: 240px;
+  border: var(--border-hair);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.mappicker__canvas[hidden] { display: none; }
+
+.mappicker__loading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.mappicker__readout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Leaflet paints its own controls; keep them on the system's radii. */
+.mappicker__canvas .leaflet-control-zoom a { border-radius: var(--radius-sm); }
+.mappicker__canvas .leaflet-container { font-family: var(--font-sans); }
+
+.form-actions__note { margin-right: auto; }
+
+@media (max-width: 640px) {
+  .form-actions__note { margin-right: 0; text-align: center; }
+}

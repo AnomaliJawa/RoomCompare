@@ -2,6 +2,8 @@ import { html, raw, qs, getCheckedValues } from '../utils/dom.js';
 import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
 import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
+import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
+import { formatDistance } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
 import {
   textField,
@@ -27,13 +29,16 @@ import {
  * Sections are numbered because this form genuinely is a sequence and the
  * requirement numbers it that way — the only place numbered markers are used.
  *
- * Interim in this phase: locations are typed rather than pinned on a map, the
- * distance is entered by hand rather than derived from two coordinates, and
- * photo pickers are not yet wired. Those arrive with the map and media work.
+ * Locations are pinned on a map and the distance between them is derived, so
+ * the number cannot drift from the two points it describes. Photos are stored
+ * as they are chosen. Validation beyond a required name arrives with the
+ * validation phase.
  */
 
 let currencyHandle = null;
 let uploaderHandle = null;
+let mapHandle = null;
+let autosaveTimer = null;
 
 /**
  * A new survey is given its id when the form opens, not when it is saved.
@@ -129,25 +134,39 @@ export function renderSurveyForm({ id } = {}) {
           <div class="form-grid">
             ${textField({
               name: 'kosLocation',
-              label: 'Kos location',
+              label: 'Kos location name',
               value: kos.kosLocation?.label,
               placeholder: 'e.g. Lowokwaru, Malang',
-              hint: 'Map pinning arrives with the map picker.',
+              hint: 'What you will recognise it by in a list.',
             })}
             ${textField({
               name: 'campusLocation',
-              label: 'Campus location',
+              label: 'Campus name',
               value: kos.campusLocation?.label,
               placeholder: 'e.g. Universitas Brawijaya',
             })}
-            ${textField({
-              name: 'distanceKm',
-              label: 'Distance to campus (km)',
-              value: kos.distanceKm,
-              type: 'number',
-              numeric: true,
-              hint: 'Entered by hand for now; later derived from the two pins.',
+          </div>
+          <div class="map-pair">
+            ${mapPickerField({
+              name: 'kosLocation',
+              label: 'Pin the kos',
+              hint: 'Tap the map, or drag the marker to adjust.',
+              point: kos.kosLocation,
             })}
+            ${mapPickerField({
+              name: 'campusLocation',
+              label: 'Pin the campus',
+              hint: 'The distance below is measured between the two pins.',
+              point: kos.campusLocation,
+            })}
+          </div>
+          <div class="field">
+            <label class="field__label" for="f-distanceKm">Distance to campus</label>
+            <input class="field__control numeric" id="f-distanceKm" name="distanceKm" type="text"
+              value="${kos.distanceKm ?? ''}" readonly aria-describedby="f-distanceKm-hint" />
+            <span class="field__hint" id="f-distanceKm-hint" data-distance-readout>
+              ${kos.distanceKm == null ? 'Pin both places to measure the distance.' : formatDistance(kos.distanceKm)}
+            </span>
           </div>
         `,
       )}
@@ -247,7 +266,10 @@ export function renderSurveyForm({ id } = {}) {
         `,
       )}
 
-      <div class="form-actions">${actions}</div>
+      <div class="form-actions">
+        <span class="form-actions__note meta" data-autosave-note role="status" aria-live="polite"></span>
+        ${actions}
+      </div>
     </form>
   `;
 }
@@ -264,7 +286,72 @@ export function mountSurveyForm(root) {
   }
 
   uploaderHandle?.destroy();
-  uploaderHandle = mountUploaders(form, { surveyId: form.dataset.surveyId });
+  uploaderHandle = mountUploaders(form, { surveyId: form.dataset.surveyId, onChange: markDirty });
+
+  mapHandle?.destroy();
+  mountMapPickers(form, {
+    onDistance: (km) => {
+      const field = qs('#f-distanceKm', form);
+      const readout = qs('[data-distance-readout]', form);
+      if (!field) return;
+      field.value = km ?? '';
+      if (readout) {
+        readout.textContent = km == null ? 'Pin both places to measure the distance.' : formatDistance(km);
+      }
+      markDirty();
+    },
+  }).then((handle) => {
+    mapHandle = handle;
+  });
+
+  // Anything the user touches counts, so Cancel can ask before discarding.
+  dirty = false;
+  form.addEventListener('input', markDirty);
+  form.addEventListener('change', markDirty);
+
+  startAutosave(form);
+}
+
+let dirty = false;
+
+function markDirty() {
+  dirty = true;
+}
+
+export function isFormDirty() {
+  return dirty;
+}
+
+export function teardownSurveyForm() {
+  clearInterval(autosaveTimer);
+  autosaveTimer = null;
+  mapHandle?.destroy();
+  mapHandle = null;
+  uploaderHandle?.destroy();
+  uploaderHandle = null;
+  dirty = false;
+}
+
+/**
+ * Autosave applies to new surveys only.
+ *
+ * A survey is recorded on a phone, mid-visit, and losing it to a dropped tab
+ * would be the worst failure this form has. An edit is left alone: Cancel
+ * there promises the saved version is untouched, and autosaving would break
+ * that promise.
+ */
+const AUTOSAVE_MS = 30000;
+
+function startAutosave(form) {
+  clearInterval(autosaveTimer);
+  if (form.dataset.id) return;
+
+  autosaveTimer = setInterval(() => {
+    if (!dirty) return;
+    const name = qs('#f-name', form)?.value.trim();
+    if (!name) return;
+    form.dispatchEvent(new CustomEvent('autosave', { bubbles: true }));
+  }, AUTOSAVE_MS);
 }
 
 /** Read the form into the survey shape. Full validation arrives later. */
@@ -277,7 +364,17 @@ export function readSurveyForm(form) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   };
-  const place = (key) => (text(key) ? { lat: null, lng: null, label: text(key) } : null);
+  /**
+   * A place is kept when it has a pin or a name. Coordinates come from the
+   * map; the label is what lists and tables display.
+   */
+  const place = (key) => {
+    const label = text(key);
+    const lat = num(`${key}Lat`);
+    const lng = num(`${key}Lng`);
+    if (!label && lat === null && lng === null) return null;
+    return { lat, lng, label: label || null };
+  };
   const ids = (key) => text(key).split(',').filter(Boolean);
   const rentInput = qs('#f-rent', form);
 
@@ -287,6 +384,7 @@ export function readSurveyForm(form) {
       type: text('type') || null,
       kosLocation: place('kosLocation'),
       campusLocation: place('campusLocation'),
+      // Derived from the two pins by the map picker; never hand-edited.
       distanceKm: num('distanceKm'),
       rent: rentInput?.dataset.value ? Number(rentInput.dataset.value) : null,
     },
