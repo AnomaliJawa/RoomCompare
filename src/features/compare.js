@@ -3,6 +3,9 @@ import { numberToCurrency, formatDistance } from '../utils/format.js';
 import { getState, comparableSurveys, selectedForCompare } from '../store.js';
 import { nothingSelected, needsOneMore } from '../components/emptyState.js';
 import { incompleteDataBanner } from '../components/banner.js';
+// The only line coupling the comparison to the optional score. Delete this
+// import and the mount below to remove the feature entirely.
+import { bestMatchPanel } from './bestMatch.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -222,7 +225,7 @@ export function renderCompare() {
   } else {
     const incomplete = selected.filter((s) => s.room.internet == null || s.additional.security == null);
     const notice = incomplete.length ? incompleteDataBanner(incomplete.map((s) => s.kos.name)) : '';
-    result = html`${notice}${ledger(selected)}`;
+    result = html`${notice}${ledger(selected)}${bestMatchPanel(selected)}`;
   }
 
   return html`
