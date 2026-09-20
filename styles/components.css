@@ -32,7 +32,13 @@
   color: var(--surface);
 }
 
-.btn--primary:hover:not(:disabled) { background: var(--accent-press); }
+/* Colour is restated on every hover: base.css `a:hover` beats `.btn--primary`
+   on a link button, and would paint the text the same shade as this
+   background. `:hover:not(:disabled)` outranks it. */
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent-press);
+  color: var(--surface);
+}
 
 .btn--secondary {
   background: var(--surface);
@@ -51,7 +57,10 @@
   color: var(--accent);
 }
 
-.btn--quiet:hover:not(:disabled) { background: var(--accent-tint); }
+.btn--quiet:hover:not(:disabled) {
+  background: var(--accent-tint);
+  color: var(--accent-press);
+}
 
 .btn--danger {
   background: var(--surface);
@@ -62,6 +71,7 @@
 .btn--danger:hover:not(:disabled) {
   background: var(--alert-bg);
   border-color: var(--alert);
+  color: var(--alert);
 }
 
 .btn--small {
