@@ -10,7 +10,7 @@ import * as store from './store.js';
 
 import { renderDashboard } from './features/dashboard.js';
 import { renderSurveyList } from './features/surveyList.js';
-import { renderSurveyDetail } from './features/surveyDetail.js';
+import { renderSurveyDetail, mountSurveyDetail } from './features/surveyDetail.js';
 import {
   renderSurveyForm,
   mountSurveyForm,
@@ -28,16 +28,28 @@ const root = () => qs('#app-root');
 /** The most recent delete, restorable until its toast expires. */
 let pendingUndo = null;
 
+/**
+ * Whatever the current view mounted. Views that hold resources — object urls
+ * for photo blobs, map instances — return a handle, and it is released before
+ * the next view replaces the DOM.
+ */
+let viewHandle = null;
+
+function releaseView() {
+  viewHandle?.destroy?.();
+  viewHandle = null;
+}
+
 /* --- Routes -------------------------------------------------------------- */
 
 const ROUTES = [
   { path: '/dashboard', name: 'dashboard', render: renderDashboard, nav: null },
   { path: '/surveys', name: 'surveys', render: renderSurveyList, nav: 'surveys' },
   { path: '/surveys/new', name: 'survey-new', render: renderSurveyForm, nav: 'surveys', mount: mountSurveyForm },
-  { path: '/surveys/:id', name: 'survey-detail', render: renderSurveyDetail, nav: 'surveys' },
+  { path: '/surveys/:id', name: 'survey-detail', render: renderSurveyDetail, nav: 'surveys', mount: mountSurveyDetail },
   { path: '/surveys/:id/edit', name: 'survey-edit', render: renderSurveyForm, nav: 'surveys', mount: mountSurveyForm },
   { path: '/community', name: 'community', render: renderCommunity, nav: 'community' },
-  { path: '/community/:id', name: 'community-detail', render: renderSurveyDetail, nav: 'community' },
+  { path: '/community/:id', name: 'community-detail', render: renderSurveyDetail, nav: 'community', mount: mountSurveyDetail },
   { path: '/compare', name: 'compare', render: renderCompare, nav: 'compare' },
 ];
 
@@ -61,8 +73,9 @@ function refresh() {
   }
 
   const params = currentRoute().params;
+  releaseView();
   mount(root(), active.render(params));
-  active.mount?.(root());
+  viewHandle = active.mount?.(root()) ?? null;
   syncNav(active.nav);
   renderStorageNotice();
 }
@@ -322,8 +335,9 @@ function start() {
       path: route.path,
       name: route.name,
       render: (params) => {
+        releaseView();
         mount(root(), route.render(params));
-        route.mount?.(root());
+        viewHandle = route.mount?.(root()) ?? null;
         syncNav(route.nav);
         renderStorageNotice();
         closeMobileNav();
