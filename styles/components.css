@@ -1043,3 +1043,23 @@
 @media (max-width: 640px) {
   .form-actions__note { margin-right: 0; text-align: center; }
 }
+
+/* --- Address lookup ------------------------------------------------------
+   Sits above the canvas. The map's own size, chrome and behaviour are
+   untouched; this only moves the pin. */
+
+.mappicker__search {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mappicker__search .field__control { flex: 1; min-width: 0; }
+
+.mappicker__search .btn { flex-shrink: 0; }
+
+.mappicker [data-search-status]:empty { display: none; }
+
+@media (max-width: 480px) {
+  .mappicker__search { flex-direction: column; }
+  .mappicker__search .btn { width: 100%; }
+}

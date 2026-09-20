@@ -1,5 +1,6 @@
 import { html, raw, qs, qsa } from '../utils/dom.js';
 import { DEFAULT_CENTER, distanceBetween, formatCoordinate, isValidPoint } from '../utils/geo.js';
+import { geocodeAddress, shortLabel, GEOCODE_STATUS } from '../utils/geocode.js';
 
 /**
  * Pin a place on a map.
@@ -11,6 +12,10 @@ import { DEFAULT_CENTER, distanceBetween, formatCoordinate, isValidPoint } from 
  *
  * Geolocation is offered but never required: a denied prompt is an ordinary
  * outcome, not an error, and tapping the map still works.
+ *
+ * An address can be typed and looked up, which is how most people know where
+ * a kos is. The lookup only ever moves the pin — the map itself, and every
+ * other way of setting the pin, are unchanged.
  */
 
 const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
@@ -52,8 +57,16 @@ function loadLeaflet() {
 
 /* --- Markup -------------------------------------------------------------- */
 
-export function mapPickerField({ name, label, hint = '', point = null }) {
+export function mapPickerField({
+  name,
+  label,
+  hint = '',
+  point = null,
+  addressLabel = 'Address',
+  placeholder = 'Street, area, city',
+}) {
   const pinned = isValidPoint(point);
+  const address = point?.address ?? '';
   return html`
     <div class="mappicker" data-mappicker="${name}">
       <div class="mappicker__head">
@@ -62,6 +75,23 @@ export function mapPickerField({ name, label, hint = '', point = null }) {
           Use my location
         </button>
       </div>
+
+      <div class="mappicker__search">
+        <label class="visually-hidden" for="${name}-address">${addressLabel}</label>
+        <input
+          class="field__control"
+          id="${name}-address"
+          name="${name}Address"
+          type="text"
+          value="${address ?? ''}"
+          placeholder="${placeholder}"
+          autocomplete="off"
+          data-address
+          aria-describedby="${name}-search-status"
+        />
+        <button class="btn btn--secondary" type="button" data-find>Find on map</button>
+      </div>
+      <p class="field__hint" id="${name}-search-status" data-search-status role="status" aria-live="polite"></p>
 
       <div class="mappicker__canvas" data-canvas role="application" aria-labelledby="${name}-label">
         <p class="mappicker__loading" data-loading>Loading map…</p>
@@ -134,6 +164,14 @@ function mountOne(node, L, onChange) {
       }, readout);
     });
 
+    // Looking up an address does not need a map, only the coordinates it
+    // returns, so the box works here too.
+    wireAddressSearch(node, (point) => {
+      latInput.value = point.lat;
+      lngInput.value = point.lng;
+      sync();
+    });
+
     return { destroy() {} };
   }
 
@@ -189,6 +227,19 @@ function mountOne(node, L, onChange) {
     }, readout);
   });
 
+  wireAddressSearch(node, (point, result) => {
+    publish(point, { moveMap: false });
+    place(point);
+    map.setView([point.lat, point.lng], 17);
+    // Offer a display name when the user has not written one, so the address
+    // they already typed does double duty.
+    const labelField = document.querySelector(`#f-${node.dataset.mappicker}`);
+    if (labelField && !labelField.value.trim()) {
+      labelField.value = shortLabel(result.displayName);
+      labelField.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
   // The container is sized by CSS after mount, so Leaflet needs a nudge.
   setTimeout(() => map.invalidateSize(), 60);
 
@@ -197,6 +248,59 @@ function mountOne(node, L, onChange) {
       map.remove();
     },
   };
+}
+
+/**
+ * Wire the address box. `onFound` receives the resolved point so the caller
+ * can place it however it places any other pin.
+ */
+function wireAddressSearch(node, onFound) {
+  const input = qs('[data-address]', node);
+  const button = qs('[data-find]', node);
+  const status = qs('[data-search-status]', node);
+  if (!input || !button) return;
+
+  async function search() {
+    const query = input.value.trim();
+    if (!query) {
+      status.textContent = 'Enter an address to look up.';
+      input.focus();
+      return;
+    }
+
+    button.disabled = true;
+    status.textContent = 'Looking up that address…';
+
+    const result = await geocodeAddress(query);
+
+    button.disabled = false;
+
+    switch (result.status) {
+      case GEOCODE_STATUS.OK:
+        status.textContent = `Found ${result.displayName}`;
+        onFound({ lat: result.lat, lng: result.lng }, result);
+        break;
+      case GEOCODE_STATUS.NOT_FOUND:
+        status.textContent = 'No match for that address. Try a nearby landmark, or tap the map.';
+        break;
+      case GEOCODE_STATUS.THROTTLED:
+        status.textContent = 'One moment — searches are limited to one a second.';
+        break;
+      case GEOCODE_STATUS.EMPTY:
+        status.textContent = 'Enter an address to look up.';
+        break;
+      default:
+        status.textContent = 'Address lookup is unavailable. Tap the map to pin it instead.';
+    }
+  }
+
+  button.addEventListener('click', search);
+  // Enter would otherwise submit the whole survey form.
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    search();
+  });
 }
 
 /** Geolocation is a convenience. Refusal is expected and is not an error. */

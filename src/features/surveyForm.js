@@ -150,12 +150,16 @@ export function renderSurveyForm({ id } = {}) {
             ${mapPickerField({
               name: 'kosLocation',
               label: 'Pin the kos',
-              hint: 'Tap the map, or drag the marker to adjust.',
+              addressLabel: 'Kos address',
+              placeholder: 'e.g. Jl. Sumbersari 12, Malang',
+              hint: 'Search the address, tap the map, or drag the marker.',
               point: kos.kosLocation,
             })}
             ${mapPickerField({
               name: 'campusLocation',
               label: 'Pin the campus',
+              addressLabel: 'Campus address',
+              placeholder: 'e.g. Universitas Brawijaya',
               hint: 'The distance below is measured between the two pins.',
               point: kos.campusLocation,
             })}
@@ -370,10 +374,13 @@ export function readSurveyForm(form) {
    */
   const place = (key) => {
     const label = text(key);
+    const address = text(`${key}Address`);
     const lat = num(`${key}Lat`);
     const lng = num(`${key}Lng`);
-    if (!label && lat === null && lng === null) return null;
-    return { lat, lng, label: label || null };
+    if (!label && !address && lat === null && lng === null) return null;
+    // The address is kept as typed: it is what the lookup was based on, and
+    // reopening the form should show the user what they entered.
+    return { lat, lng, label: label || address || null, address: address || null };
   };
   const ids = (key) => text(key).split(',').filter(Boolean);
   const rentInput = qs('#f-rent', form);
