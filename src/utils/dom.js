@@ -22,30 +22,56 @@ export function escapeHtml(value) {
 
 const RAW = Symbol('raw');
 
-/** Mark a string as trusted markup so `html` will not escape it. */
+/**
+ * Markup that has already been escaped. `html` returns one of these so that
+ * nesting a template inside another template composes instead of escaping —
+ * the alternative made every nested call a silent bug that rendered tags as
+ * visible text.
+ */
+class SafeHtml {
+  constructor(value) {
+    this.value = value;
+    this[RAW] = true;
+  }
+
+  toString() {
+    return this.value;
+  }
+}
+
+/** Mark an already-built string as trusted markup. */
 export function raw(value) {
-  return { [RAW]: true, value: value === null || value === undefined ? '' : String(value) };
+  if (value instanceof SafeHtml) return value;
+  return new SafeHtml(value === null || value === undefined ? '' : String(value));
+}
+
+export function isSafeHtml(value) {
+  return value instanceof SafeHtml;
 }
 
 function resolve(value) {
   if (value === null || value === undefined || value === false) return '';
+  if (value instanceof SafeHtml) return value.value;
   if (Array.isArray(value)) return value.map(resolve).join('');
-  if (typeof value === 'object' && value[RAW]) return value.value;
+  if (typeof value === 'object' && value[RAW]) return String(value.value ?? '');
   return escapeHtml(value);
 }
 
-/** Tagged template that escapes interpolations. Arrays are joined. */
+/**
+ * Tagged template that escapes interpolated values. Nested `html` results and
+ * anything passed through `raw()` are inserted as-is; arrays are joined.
+ */
 export function html(strings, ...values) {
   let out = strings[0];
   for (let i = 0; i < values.length; i += 1) {
     out += resolve(values[i]) + strings[i + 1];
   }
-  return out;
+  return new SafeHtml(out);
 }
 
 /** Render markup into a node, replacing its contents. */
 export function mount(node, markup) {
-  node.innerHTML = markup;
+  node.innerHTML = String(markup);
   return node;
 }
 

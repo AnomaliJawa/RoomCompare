@@ -496,27 +496,28 @@
 }
 
 /* --- Survey card ---------------------------------------------------------
-   One card serves both lists; the community variant swaps its actions. */
+   One card serves both lists; the community variant swaps its actions.
+   Cards in a row share a height and pin their actions to the bottom, so the
+   action rows line up however long a kos name runs. */
 
 .survey-card {
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
+  transition: border-color var(--duration-fast) var(--ease);
 }
 
+.survey-card:hover { border-color: var(--muted); }
+.survey-card:focus-within { border-color: var(--accent); }
+
 .survey-card__body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: 0 var(--space-1) var(--space-1);
-}
-
-.survey-card__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
 }
 
 .survey-card__link {
@@ -524,12 +525,36 @@
   text-decoration: none;
 }
 
+/* The whole card is clickable via the title, without nesting interactive
+   elements inside a link. */
+.survey-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
+}
+
+.survey-card { position: relative; }
+
+/* Buttons must stay above the title's click target. */
+.survey-card__actions { position: relative; z-index: 1; }
+
 .survey-card__link:hover { text-decoration: underline; }
+
+/* Location and status share a line, so a two-line name never squeezes them. */
+.survey-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 20px;
+}
 
 .survey-card__facts {
   display: flex;
   gap: var(--space-5);
-  padding-top: var(--space-2);
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
   border-top: var(--border-hair);
 }
 
@@ -537,7 +562,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-4);
 }
 
 .card__fact-label {
@@ -550,13 +576,15 @@
 
 .card__fact-value {
   display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-base);
   font-weight: var(--weight-semibold);
 }
 
 /* Stand-in tile for a survey with no photos. Never a broken image. */
 .thumb {
   width: 100%;
-  height: 132px;
+  height: 120px;
   border-radius: var(--radius-sm);
   object-fit: cover;
 }
@@ -566,8 +594,9 @@
   place-items: center;
   background: var(--accent-tint);
   color: var(--accent);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: var(--weight-bold);
+  border: 1px solid var(--rule);
 }
 
 /* --- Dashboard hero ------------------------------------------------------

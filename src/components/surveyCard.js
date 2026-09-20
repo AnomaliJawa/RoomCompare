@@ -31,8 +31,8 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
   const href = isCommunity ? `#/community/${survey.id}` : `#/surveys/${survey.id}`;
 
   const meta = isCommunity
-    ? html`<p class="meta">${survey.kos.kosLocation?.label} · Shared by ${survey.ownerName}</p>`
-    : html`<p class="meta">${survey.kos.kosLocation?.label}</p>`;
+    ? html`<span class="meta">${survey.kos.kosLocation?.label} · ${survey.ownerName}</span>`
+    : html`<span class="meta">${survey.kos.kosLocation?.label}</span>`;
 
   const badge = isCommunity
     ? html`<span class="meta">${kosTypeLabel(survey.kos.type)}</span>`
@@ -70,11 +70,13 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
     <article class="card survey-card">
       ${thumb(survey)}
       <div class="survey-card__body">
-        <div class="survey-card__head">
-          <h3 class="card__title"><a class="survey-card__link" href="${href}">${survey.kos.name}</a></h3>
+        <h3 class="card__title">
+          <a class="survey-card__link" href="${href}">${survey.kos.name}</a>
+        </h3>
+        <div class="survey-card__meta">
+          ${meta}
           ${badge}
         </div>
-        ${meta}
         <div class="survey-card__facts">
           ${fact('Rent', numberToCurrency(survey.kos.rent))}
           ${fact('To campus', formatDistance(survey.kos.distanceKm))}
