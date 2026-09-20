@@ -175,6 +175,15 @@ export function updateSurvey(id, changes) {
   return state.surveys[index];
 }
 
+/**
+ * Remove a survey and its media.
+ *
+ * Returns the removed record, where it sat, and the media cleanup promise.
+ * The promise is handed back rather than awaited because the record is
+ * already gone from the user's view and a slow database must not hold up the
+ * UI — but undo needs to wait for it, or a fast undo would restore the photos
+ * just before the cleanup deletes them again.
+ */
 export function deleteSurvey(id) {
   const index = state.surveys.findIndex((survey) => survey.id === id);
   if (index < 0) return null;
@@ -183,14 +192,17 @@ export function deleteSurvey(id) {
   state.compareSelection = state.compareSelection.filter((item) => item !== id);
   commit();
 
-  // Its photos and videos go too, or they sit in the database forever with
-  // nothing pointing at them. Not awaited: the record is already gone from the
-  // user's view, and a slow or unavailable database must not hold up the UI.
-  db.deleteMediaForSurvey(id).catch(() => {
-    /* Storage is unavailable; there was nothing to clean up. */
-  });
+  const mediaCleanup = db.deleteMediaForSurvey(id).catch(() => null);
 
-  return removed;
+  return { removed, index, mediaCleanup };
+}
+
+/** Put a deleted survey back where it was. */
+export function restoreSurvey(survey, index = 0) {
+  const at = Math.max(0, Math.min(index, state.surveys.length));
+  state.surveys.splice(at, 0, survey);
+  commit();
+  return survey;
 }
 
 export function toggleStar(id) {

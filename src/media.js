@@ -106,6 +106,16 @@ export async function addPhotos(files, { surveyId, section, existingCount = 0 })
   };
 }
 
+/** Re-store records captured before a delete, so undo brings the photos back. */
+export async function restoreMedia(records) {
+  if (!records?.length) return 0;
+  let restored = 0;
+  for (const record of records) {
+    if (await db.putMedia(record)) restored += 1;
+  }
+  return restored;
+}
+
 export async function removeMedia(id) {
   db.releaseUrl(id);
   return db.deleteMedia(id);

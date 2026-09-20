@@ -4,11 +4,24 @@ import { surveyCard } from '../components/surveyCard.js';
 import { noSurveysYet, noSearchResults } from '../components/emptyState.js';
 import { textField } from '../components/fields.js';
 
-/** Case-insensitive partial match on the kos name, per the search requirement. */
+/**
+ * Partial match on the kos name, ignoring case and accents.
+ *
+ * Someone who recorded "Kos Sejahtera" while typing on a phone keyboard may
+ * well search for "sejahtera" in either form, and a search that misses a kos
+ * the user knows they saved reads as data loss.
+ */
+function searchKey(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 export function filterSurveys(surveys, query) {
-  const term = query.trim().toLowerCase();
+  const term = searchKey(query).trim();
   if (!term) return surveys;
-  return surveys.filter((survey) => survey.kos.name.toLowerCase().includes(term));
+  return surveys.filter((survey) => searchKey(survey.kos.name).includes(term));
 }
 
 export function renderSurveyList() {
