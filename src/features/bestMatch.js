@@ -34,11 +34,16 @@ function fromLikert(value) {
  * When every kos matches, they all score full marks — none is worse.
  */
 function relative(values, index, { lowerIsBetter }) {
+  if (!Number.isFinite(values[index])) return null;
+
+  // Only values that were actually recorded take part. A kos whose own value
+  // is missing is suppressed elsewhere; it must not drag down the kos that
+  // were recorded properly, which is what requiring two values did.
   const present = values.filter((value) => Number.isFinite(value));
-  if (!Number.isFinite(values[index]) || present.length < 2) return null;
 
   const min = Math.min(...present);
   const max = Math.max(...present);
+  // Nothing to rank against, or nothing to separate them: none is worse.
   if (min === max) return 100;
 
   const position = (values[index] - min) / (max - min);
