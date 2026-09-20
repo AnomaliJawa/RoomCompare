@@ -2,7 +2,7 @@ import { mount, qs, qsa, debounce, html } from './utils/dom.js';
 import { defineRoute, setNotFound, startRouter, navigate, currentRoute } from './router.js';
 import { onAction, startEventBridge } from './events.js';
 import { toast, dismissToast, confirmDialog } from './components/feedback.js';
-import { loadSurveyMedia, restoreMedia, sweepOrphanedMedia } from './media.js';
+import { loadSurveyMedia, restoreMedia, sweepOrphanedMedia, pruneSurveyMedia } from './media.js';
 import { banner } from './components/banner.js';
 import { showErrors, clearErrors, watchForRepair } from './components/formErrors.js';
 import { validateSurvey, findDuplicateName } from './utils/validate.js';
@@ -318,6 +318,15 @@ function wireActions() {
     }
 
     clearErrors(target);
+
+    /** Every media id the saved survey still points at. */
+    const keptMedia = [
+      ...data.room.photoIds,
+      ...data.bathroom.photoIds,
+      ...data.shared.photoIds,
+      ...data.additional.videoIds,
+    ];
+
     const editingId = target.dataset.id;
     if (editingId) {
       // An autosaved draft is already a record, so publishing it promotes
@@ -336,6 +345,10 @@ function wireActions() {
       });
       toast(intent === 'publish' ? 'Published' : 'Saved as draft');
     }
+    // Photos dropped in the form are destroyed here, once the record that no
+    // longer lists them has actually been written.
+    pruneSurveyMedia(editingId || target.dataset.surveyId, keptMedia).catch(() => null);
+
     teardownSurveyForm();
     clearDraftId();
     navigate('/surveys');

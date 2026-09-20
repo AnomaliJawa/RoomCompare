@@ -4,6 +4,7 @@ import { attachCurrencyInput } from '../components/currencyInput.js';
 import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
 import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
 import { LIMITS } from '../utils/validate.js';
+import { distanceBetween } from '../utils/geo.js';
 import { formatDistance } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
 import {
@@ -403,15 +404,19 @@ export function readSurveyForm(form) {
   };
   const ids = (key) => text(key).split(',').filter(Boolean);
   const rentInput = qs('#f-rent', form);
+  const kosPoint = place('kosLocation');
+  const campusPoint = place('campusLocation');
 
   return {
     kos: {
       name: text('name'),
       type: text('type') || null,
-      kosLocation: place('kosLocation'),
-      campusLocation: place('campusLocation'),
-      // Derived from the two pins by the map picker; never hand-edited.
-      distanceKm: num('distanceKm'),
+      kosLocation: kosPoint,
+      campusLocation: campusPoint,
+      // Recomputed from the two pins rather than read back from the display
+      // field. Derived data stored beside its inputs can drift from them; this
+      // way the saved distance can never disagree with the saved pins.
+      distanceKm: distanceBetween(kosPoint, campusPoint),
       rent: rentInput?.dataset.value ? Number(rentInput.dataset.value) : null,
     },
     room: {

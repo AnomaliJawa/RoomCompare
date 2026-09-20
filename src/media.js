@@ -133,6 +133,24 @@ export async function sweepOrphanedMedia(knownSurveyIds) {
   return orphans.length;
 }
 
+/**
+ * Delete media belonging to a survey that its saved record no longer lists.
+ *
+ * Removal in the form is only an intent until the survey is saved, so this is
+ * where a removed photo is actually destroyed — and only once the record that
+ * dropped it has been written.
+ */
+export async function pruneSurveyMedia(surveyId, keepIds) {
+  const keep = new Set(keepIds.filter(Boolean));
+  const held = await db.getMediaForSurvey(surveyId);
+  const stale = held.filter((record) => !keep.has(record.id));
+  for (const record of stale) {
+    db.releaseUrl(record.id);
+    await db.deleteMedia(record.id);
+  }
+  return stale.length;
+}
+
 export async function removeMedia(id) {
   db.releaseUrl(id);
   return db.deleteMedia(id);
