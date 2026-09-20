@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RoomCompare">
+  <rect width="64" height="64" rx="14" fill="#1f5d4c"/>
+  <rect x="14" y="16" width="14" height="32" rx="2" fill="#f7f8f6"/>
+  <rect x="36" y="24" width="14" height="24" rx="2" fill="#f7f8f6" opacity="0.62"/>
+  <rect x="12" y="50" width="40" height="3" rx="1.5" fill="#f7f8f6"/>
+</svg>
