@@ -1,7 +1,8 @@
 import { mount, qs, qsa, debounce, html } from './utils/dom.js';
 import { defineRoute, setNotFound, startRouter, navigate, currentRoute } from './router.js';
 import { onAction, startEventBridge } from './events.js';
-import { toast, confirmDialog } from './components/feedback.js';
+import { toast, dismissToast, confirmDialog } from './components/feedback.js';
+import { loadSurveyMedia, restoreMedia } from './media.js';
 import { banner } from './components/banner.js';
 import { normalizeRentInput } from './utils/format.js';
 import { STATUS, MAX_COMPARE } from './constants.js';
@@ -15,6 +16,9 @@ import { renderCommunity } from './features/community.js';
 import { renderCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
+
+/** The most recent delete, restorable until its toast expires. */
+let pendingUndo = null;
 
 /* --- Routes -------------------------------------------------------------- */
 
@@ -117,15 +121,50 @@ function wireActions() {
   onAction('ask-delete', async ({ dataset }) => {
     const survey = store.findSurvey(dataset.id);
     if (!survey) return;
+
+    const photoCount = (await loadSurveyMedia(dataset.id)).length;
+    const detail = photoCount
+      ? `${survey.kos.name} and its ${photoCount} photo${photoCount === 1 ? '' : 's'} will be removed from your surveys.`
+      : `${survey.kos.name} will be removed from your surveys.`;
+
     const confirmed = await confirmDialog({
       title: 'Delete this survey?',
-      body: `${survey.kos.name} will be removed from your surveys.`,
+      body: detail,
       confirmLabel: 'Delete',
     });
     if (!confirmed) return;
-    store.deleteSurvey(dataset.id);
-    toast(`${survey.kos.name} deleted`);
+
+    // Capture the media before the delete cascades, so undo can put the
+    // photos back and not just the record.
+    const captured = await loadSurveyMedia(dataset.id);
+    const { removed, index, mediaCleanup } = store.deleteSurvey(dataset.id) ?? {};
+    if (!removed) return;
+
+    // Wait for the cleanup to finish before offering undo: otherwise a quick
+    // undo restores the photos and the cascade then deletes them again.
+    await mediaCleanup;
+
+    pendingUndo = { survey: removed, index, media: captured };
+    toast(`${survey.kos.name} deleted`, {
+      action: { name: 'undo-delete', label: 'Undo' },
+      onExpire: () => {
+        pendingUndo = null;
+      },
+    });
+
     if (currentRoute().name === 'survey-detail') navigate('/surveys');
+  });
+
+  onAction('undo-delete', async () => {
+    if (!pendingUndo) return;
+    const { survey, index, media } = pendingUndo;
+    pendingUndo = null;
+
+    await restoreMedia(media);
+    store.restoreSurvey(survey, index);
+
+    dismissToast();
+    toast(`${survey.kos.name} restored`);
   });
 
   onAction('toggle-star', ({ dataset }) => {
