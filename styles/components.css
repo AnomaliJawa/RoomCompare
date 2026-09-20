@@ -856,3 +856,132 @@
   .form-actions .btn { width: 100%; }
   .survey-card__actions .btn { flex: 1; }
 }
+
+/* --- Media uploader ------------------------------------------------------
+   Files are stored as soon as they are chosen, so the grid below the picker
+   shows what is already saved rather than a queue waiting on submit. */
+
+.uploader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.uploader__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.uploader__count {
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.uploader__drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-4);
+  width: 100%;
+  background: var(--surface);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  text-align: center;
+  transition: border-color var(--duration-fast) var(--ease),
+              background-color var(--duration-fast) var(--ease);
+}
+
+.uploader__drop:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.uploader__drop:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.uploader__drop-main { font-weight: var(--weight-semibold); }
+
+.uploader__drop-hint {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* Dragging over any part of the field, not just the button. */
+.uploader[data-dragging="true"] .uploader__drop {
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--accent-tint);
+}
+
+.uploader__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.uploader__grid:empty { display: none; }
+
+.uploader__item {
+  position: relative;
+  border: var(--border-hair);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.uploader__thumb {
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+}
+
+.uploader__item--file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.uploader__file { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+
+.uploader__file-name {
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploader__remove {
+  position: absolute;
+  right: var(--space-1);
+  bottom: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--alert);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.uploader__remove:hover { background: var(--alert-bg); border-color: var(--alert); }
+
+.uploader__item--file .uploader__remove { position: static; }
+
+.uploader__status:empty { display: none; }
+
+.uploader__errors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

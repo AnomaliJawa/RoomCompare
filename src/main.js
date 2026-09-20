@@ -2,7 +2,7 @@ import { mount, qs, qsa, debounce, html } from './utils/dom.js';
 import { defineRoute, setNotFound, startRouter, navigate, currentRoute } from './router.js';
 import { onAction, startEventBridge } from './events.js';
 import { toast, dismissToast, confirmDialog } from './components/feedback.js';
-import { loadSurveyMedia, restoreMedia } from './media.js';
+import { loadSurveyMedia, restoreMedia, sweepOrphanedMedia } from './media.js';
 import { banner } from './components/banner.js';
 import { normalizeRentInput } from './utils/format.js';
 import { STATUS, MAX_COMPARE } from './constants.js';
@@ -11,7 +11,7 @@ import * as store from './store.js';
 import { renderDashboard } from './features/dashboard.js';
 import { renderSurveyList } from './features/surveyList.js';
 import { renderSurveyDetail } from './features/surveyDetail.js';
-import { renderSurveyForm, mountSurveyForm, readSurveyForm } from './features/surveyForm.js';
+import { renderSurveyForm, mountSurveyForm, readSurveyForm, formSurveyId, clearDraftId } from './features/surveyForm.js';
 import { renderCommunity } from './features/community.js';
 import { renderCompare } from './features/compare.js';
 
@@ -188,7 +188,11 @@ function wireActions() {
     store.removeFromCompare(dataset.id);
   });
 
-  onAction('cancel-form', () => navigate('/surveys'));
+  onAction('cancel-form', () => {
+    // Photos chosen on an abandoned form are swept on the next boot.
+    clearDraftId();
+    navigate('/surveys');
+  });
 
   onAction('dismiss-storage-notice', () => store.clearStorageNotice());
 
@@ -219,7 +223,7 @@ function wireActions() {
       toast('Survey updated');
     } else {
       store.addSurvey({
-        id: `svy-${Date.now().toString(36)}`,
+        id: target.dataset.surveyId || formSurveyId(),
         ownerId: 'me',
         status: intent === 'publish' ? STATUS.PUBLISHED : STATUS.DRAFT,
         createdAt: new Date().toISOString(),
@@ -228,6 +232,7 @@ function wireActions() {
       });
       toast(intent === 'publish' ? 'Published' : 'Saved as draft');
     }
+    clearDraftId();
     navigate('/surveys');
   }, 'submit');
 }
@@ -267,6 +272,10 @@ function start() {
 
   startEventBridge();
   wireActions();
+
+  // Files chosen on a form that was never saved have nothing pointing at
+  // them. Clearing them here keeps abandoned drafts from accumulating.
+  sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id)).catch(() => null);
   // Any store write re-renders the active route.
   store.subscribe(refresh);
   startRouter();
