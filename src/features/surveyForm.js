@@ -1,10 +1,18 @@
 import { html, raw, qs, getCheckedValues } from '../utils/dom.js';
 import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
+import { notFound } from '../components/emptyState.js';
+import {
+  textField,
+  currencyField,
+  textareaField,
+  checkboxGroup,
+  radioGroup,
+  likertField,
+} from '../components/fields.js';
 import {
   GUIDELINES,
   KOS_TYPES,
-  LIKERT,
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
   SHARED_FACILITIES,
@@ -33,58 +41,8 @@ function section(index, title, guideline, body) {
         <h2>${title}</h2>
       </div>
       <p class="form-section__guide">${guideline}</p>
-      <div class="form-section__body">${raw(body)}</div>
+      <div class="form-section__body">${body}</div>
     </section>
-  `;
-}
-
-function textField(name, label, val, { type = 'text', placeholder = '', hint = '' } = {}) {
-  return html`
-    <div class="field">
-      <label class="field__label" for="f-${name}">${label}</label>
-      <input class="field__control ${type === 'number' ? 'numeric' : ''}" id="f-${name}" name="${name}"
-        type="${type}" value="${val ?? ''}" placeholder="${placeholder}" autocomplete="off" />
-      ${hint ? raw(html`<span class="field__hint">${hint}</span>`) : ''}
-    </div>
-  `;
-}
-
-function checkboxGroup(name, legend, options, selected) {
-  const chosen = new Set(selected ?? []);
-  return html`
-    <fieldset class="choice-group">
-      <legend class="choice-group__legend">${legend}</legend>
-      <div class="choice-group__options">
-        ${raw(
-          options
-            .map(
-              (option) => html`<label class="choice">
-                <input type="checkbox" name="${name}" value="${option}" ${chosen.has(option) ? 'checked' : ''} />
-                ${option}
-              </label>`,
-            )
-            .join(''),
-        )}
-      </div>
-    </fieldset>
-  `;
-}
-
-function likertField(name, legend, val) {
-  return html`
-    <fieldset class="choice-group">
-      <legend class="choice-group__legend">${legend}</legend>
-      <div class="choice-group__options">
-        ${raw(
-          LIKERT.map(
-            (step) => html`<label class="choice">
-              <input type="radio" name="${name}" value="${step.value}" ${Number(val) === step.value ? 'checked' : ''} />
-              ${step.value} ${step.label}
-            </label>`,
-          ).join(''),
-        )}
-      </div>
-    </fieldset>
   `;
 }
 
@@ -100,13 +58,12 @@ export function renderSurveyForm({ id } = {}) {
   const survey = editing ? findSurvey(id) : null;
 
   if (editing && (!survey || !isOwnSurvey(id))) {
-    return html`
-      <section class="empty">
-        <p class="empty__title">That survey cannot be edited</p>
-        <p class="empty__body">It may have been deleted, or it belongs to someone else.</p>
-        <a class="btn btn--secondary" href="#/surveys">Back to my surveys</a>
-      </section>
-    `;
+    return notFound({
+      title: 'That survey cannot be edited',
+      body: 'It may have been deleted, or it belongs to someone else.',
+      backHref: '#/surveys',
+      backLabel: 'Back to my surveys',
+    });
   }
 
   const kos = survey?.kos ?? {};
@@ -136,102 +93,116 @@ export function renderSurveyForm({ id } = {}) {
     </div>
 
     <form class="survey-form" id="survey-form" data-action="submit-survey" data-id="${survey?.id ?? ''}" novalidate>
-      ${raw(
-        section(
-          1,
-          'Kos information',
-          GUIDELINES.kos,
-          html`
-            <div class="form-grid">
-              ${raw(textField('name', 'Kos name', kos.name, { placeholder: 'e.g. Kos Melati Residence' }))}
-              ${raw(
-                html`<fieldset class="choice-group">
-                  <legend class="choice-group__legend">Kos type</legend>
-                  <div class="choice-group__options">
-                    ${raw(
-                      KOS_TYPES.map(
-                        (t) => html`<label class="choice">
-                          <input type="radio" name="type" value="${t.value}" ${kos.type === t.value ? 'checked' : ''} />
-                          ${t.label}
-                        </label>`,
-                      ).join(''),
-                    )}
-                  </div>
-                </fieldset>`,
-              )}
-              ${raw(textField('kosLocation', 'Kos location', kos.kosLocation?.label, { placeholder: 'e.g. Lowokwaru, Malang', hint: 'Map pinning arrives with the map picker.' }))}
-              ${raw(textField('campusLocation', 'Campus location', kos.campusLocation?.label, { placeholder: 'e.g. Universitas Brawijaya' }))}
-              ${raw(textField('distanceKm', 'Distance to campus (km)', kos.distanceKm, { type: 'number', hint: 'Entered by hand for now; later derived from the two pins.' }))}
-              <div class="field">
-                <label class="field__label" for="f-rent">Monthly rent</label>
-                <div class="field__group">
-                  <span class="field__affix" aria-hidden="true">Rp</span>
-                  <input class="field__control numeric" id="f-rent" name="rent" type="text"
-                    inputmode="numeric" value="${kos.rent ?? ''}" autocomplete="off" />
-                </div>
-              </div>
-            </div>
-          `,
-        ),
+      ${section(
+        1,
+        'Kos information',
+        GUIDELINES.kos,
+        html`
+          <div class="form-grid">
+            ${textField({ name: 'name', label: 'Kos name', value: kos.name, placeholder: 'e.g. Kos Melati Residence' })}
+            ${currencyField({ name: 'rent', label: 'Monthly rent', value: kos.rent ?? '' })}
+          </div>
+          ${radioGroup({ name: 'type', legend: 'Kos type', value: kos.type, options: KOS_TYPES })}
+          <div class="form-grid">
+            ${textField({
+              name: 'kosLocation',
+              label: 'Kos location',
+              value: kos.kosLocation?.label,
+              placeholder: 'e.g. Lowokwaru, Malang',
+              hint: 'Map pinning arrives with the map picker.',
+            })}
+            ${textField({
+              name: 'campusLocation',
+              label: 'Campus location',
+              value: kos.campusLocation?.label,
+              placeholder: 'e.g. Universitas Brawijaya',
+            })}
+            ${textField({
+              name: 'distanceKm',
+              label: 'Distance to campus (km)',
+              value: kos.distanceKm,
+              type: 'number',
+              numeric: true,
+              hint: 'Entered by hand for now; later derived from the two pins.',
+            })}
+          </div>
+        `,
       )}
 
-      ${raw(
-        section(
-          2,
-          'Room',
-          GUIDELINES.room,
-          html`
-            <div class="form-grid">
-              ${raw(textField('lengthM', 'Room length (m)', room.lengthM, { type: 'number' }))}
-              ${raw(textField('widthM', 'Room width (m)', room.widthM, { type: 'number' }))}
-            </div>
-            ${raw(checkboxGroup('roomFacility', 'Room facilities', ROOM_FACILITIES, room.facilities))}
-            ${raw(likertField('cleanliness', 'Cleanliness', room.cleanliness))}
-            ${raw(likertField('internet', 'Internet quality', room.internet))}
-            ${raw(photoNote(room.photoIds?.length ?? 0, 'room'))}
-          `,
-        ),
+      ${section(
+        2,
+        'Room',
+        GUIDELINES.room,
+        html`
+          <div class="form-grid">
+            ${textField({ name: 'lengthM', label: 'Room length (m)', value: room.lengthM, type: 'number', numeric: true })}
+            ${textField({ name: 'widthM', label: 'Room width (m)', value: room.widthM, type: 'number', numeric: true })}
+          </div>
+          ${checkboxGroup({ name: 'roomFacility', legend: 'Room facilities', options: ROOM_FACILITIES, selected: room.facilities })}
+          ${likertField({ name: 'cleanliness', legend: 'Cleanliness', value: room.cleanliness })}
+          ${likertField({ name: 'internet', legend: 'Internet quality', value: room.internet })}
+          ${photoNote(room.photoIds?.length ?? 0, 'room')}
+        `,
       )}
 
-      ${raw(
-        section(
-          3,
-          'Bathroom',
-          GUIDELINES.bathroom,
-          html`${raw(checkboxGroup('bathroomFacility', 'Bathroom facilities', BATHROOM_FACILITIES, survey?.bathroom?.facilities))}
-          ${raw(photoNote(survey?.bathroom?.photoIds?.length ?? 0, 'bathroom'))}`,
-        ),
+      ${section(
+        3,
+        'Bathroom',
+        GUIDELINES.bathroom,
+        html`
+          ${checkboxGroup({
+            name: 'bathroomFacility',
+            legend: 'Bathroom facilities',
+            options: BATHROOM_FACILITIES,
+            selected: survey?.bathroom?.facilities,
+          })}
+          ${photoNote(survey?.bathroom?.photoIds?.length ?? 0, 'bathroom')}
+        `,
       )}
 
-      ${raw(
-        section(
-          4,
-          'Shared facilities',
-          GUIDELINES.shared,
-          html`${raw(checkboxGroup('sharedFacility', 'Shared facilities', SHARED_FACILITIES, survey?.shared?.facilities))}
-          ${raw(photoNote(survey?.shared?.photoIds?.length ?? 0, 'shared facility'))}`,
-        ),
+      ${section(
+        4,
+        'Shared facilities',
+        GUIDELINES.shared,
+        html`
+          ${checkboxGroup({
+            name: 'sharedFacility',
+            legend: 'Shared facilities',
+            options: SHARED_FACILITIES,
+            selected: survey?.shared?.facilities,
+          })}
+          ${photoNote(survey?.shared?.photoIds?.length ?? 0, 'shared facility')}
+        `,
       )}
 
-      ${raw(section(5, 'Surroundings', GUIDELINES.surroundings, checkboxGroup('surrounding', 'Around the kos', SURROUNDINGS, survey?.surroundings)))}
-
-      ${raw(
-        section(
-          6,
-          'Additional information',
-          GUIDELINES.additional,
-          html`
-            ${raw(likertField('security', 'Security', survey?.additional?.security))}
-            <div class="field">
-              <label class="field__label" for="f-notes">Additional notes</label>
-              <textarea class="field__control" id="f-notes" name="notes" rows="4"
-                placeholder="Anything the sections above do not cover.">${survey?.additional?.notes ?? ''}</textarea>
-            </div>
-          `,
-        ),
+      ${section(
+        5,
+        'Surroundings',
+        GUIDELINES.surroundings,
+        checkboxGroup({
+          name: 'surrounding',
+          legend: 'Around the kos',
+          options: SURROUNDINGS,
+          selected: survey?.surroundings,
+        }),
       )}
 
-      <div class="form-actions">${raw(actions)}</div>
+      ${section(
+        6,
+        'Additional information',
+        GUIDELINES.additional,
+        html`
+          ${likertField({ name: 'security', legend: 'Security', value: survey?.additional?.security })}
+          ${textareaField({
+            name: 'notes',
+            label: 'Additional notes',
+            value: survey?.additional?.notes,
+            placeholder: 'Anything the sections above do not cover.',
+          })}
+        `,
+      )}
+
+      <div class="form-actions">${actions}</div>
     </form>
   `;
 }
