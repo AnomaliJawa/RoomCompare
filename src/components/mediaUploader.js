@@ -1,6 +1,6 @@
 import { html, raw, qs, qsa, mount } from '../utils/dom.js';
 import { formatBytes } from '../utils/image.js';
-import { addPhotos, addVideo, removeMedia, loadMedia, MAX_VIDEOS } from '../media.js';
+import { addPhotos, addVideo, loadMedia, MAX_VIDEOS } from '../media.js';
 import { urlFor, releaseUrl } from '../db.js';
 import { MAX_PHOTOS_PER_SECTION } from '../constants.js';
 
@@ -212,11 +212,15 @@ function mountOne(node, { surveyId, onChange }) {
     const button = event.target.closest('[data-remove]');
     if (!button) return;
     const id = button.dataset.remove;
+
+    // Dropped from the list, not from the database. Deleting here would
+    // destroy the file before the form is saved, so cancelling an edit could
+    // not put it back — and the survey would still be pointing at it.
+    // Anything left unreferenced after a save is pruned then.
     ids = ids.filter((item) => item !== id);
     releaseUrl(id);
-    await removeMedia(id);
     await paint();
-    status.textContent = 'Photo removed.';
+    status.textContent = 'Photo removed. It is deleted when you save.';
   });
 
   paint();
