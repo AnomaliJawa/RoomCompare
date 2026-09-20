@@ -483,6 +483,21 @@
   background: var(--surface);
 }
 
+/* The notice region collapses to nothing when there is no notice. */
+.column--notice {
+  padding-top: var(--space-5);
+  padding-bottom: 0;
+}
+
+.column--notice:empty { display: none; }
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
 .banner[data-tone="alert"] {
   border-left-color: var(--alert);
   background: var(--alert-bg);
