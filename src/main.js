@@ -4,6 +4,8 @@ import { onAction, startEventBridge } from './events.js';
 import { toast, dismissToast, confirmDialog } from './components/feedback.js';
 import { loadSurveyMedia, restoreMedia, sweepOrphanedMedia } from './media.js';
 import { banner } from './components/banner.js';
+import { showErrors, clearErrors, watchForRepair } from './components/formErrors.js';
+import { validateSurvey, findDuplicateName } from './utils/validate.js';
 import { normalizeRentInput } from './utils/format.js';
 import { STATUS, MAX_COMPARE } from './constants.js';
 import * as store from './store.js';
@@ -279,16 +281,43 @@ function wireActions() {
     store.setCommunityFilter('starredOnly', false);
   });
 
-  onAction('submit-survey', ({ target, event }) => {
+  onAction('submit-survey', async ({ target, event }) => {
     const intent = event.submitter?.dataset.intent ?? 'draft';
     const data = readSurveyForm(target);
 
-    if (!data.kos.name) {
-      toast('Enter a name so you can find this kos later.');
-      qs('#f-name', target)?.focus();
-      return;
+    // Update keeps whatever status the record already has, so an edited draft
+    // is held to draft rules rather than being forced to completeness.
+    const existing = target.dataset.id ? store.findSurvey(target.dataset.id) : null;
+    const mode =
+      intent === 'publish' || (intent === 'update' && existing?.status === STATUS.PUBLISHED)
+        ? 'publish'
+        : 'draft';
+
+    const result = validateSurvey(data, { mode });
+    // Re-check a repaired field on blur from here on, but never before the
+    // user has actually tried to submit.
+    watchForRepair(target, () => validateSurvey(readSurveyForm(target), { mode }));
+
+    if (!showErrors(target, result)) return;
+
+    // Two kos can share a name, so this asks rather than refuses.
+    const duplicate = findDuplicateName(store.getState().surveys, data.kos.name, {
+      excludeId: target.dataset.id || target.dataset.surveyId,
+    });
+    if (duplicate) {
+      const proceed = await confirmDialog({
+        title: 'You already have a survey with this name',
+        body: `${duplicate.kos.name} in ${duplicate.kos.kosLocation?.label ?? 'an unnamed location'} is already saved. Save this one as well?`,
+        confirmLabel: 'Save anyway',
+        tone: 'primary',
+      });
+      if (!proceed) {
+        qs('#f-name', target)?.focus();
+        return;
+      }
     }
 
+    clearErrors(target);
     const editingId = target.dataset.id;
     if (editingId) {
       // An autosaved draft is already a record, so publishing it promotes

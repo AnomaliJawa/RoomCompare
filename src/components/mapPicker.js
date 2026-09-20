@@ -68,7 +68,7 @@ export function mapPickerField({
   const pinned = isValidPoint(point);
   const address = point?.address ?? '';
   return html`
-    <div class="mappicker" data-mappicker="${name}">
+    <div class="mappicker" data-mappicker="${name}" data-field="${name}">
       <div class="mappicker__head">
         <span class="field__label" id="${name}-label">${label}</span>
         <button class="btn btn--secondary btn--small" type="button" data-locate>

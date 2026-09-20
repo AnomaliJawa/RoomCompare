@@ -3,6 +3,7 @@ import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
 import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
 import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
+import { LIMITS } from '../utils/validate.js';
 import { formatDistance } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
 import {
@@ -62,10 +63,11 @@ export function clearDraftId() {
 
 function section(index, title, guideline, body) {
   return html`
-    <section class="form-section">
+    <section class="form-section" data-section="${index}">
       <div class="form-section__head">
         <span class="form-section__number" aria-hidden="true">${index}</span>
         <h2>${title}</h2>
+        <span class="form-section__errors" data-section-errors hidden></span>
       </div>
       <p class="form-section__guide">${guideline}</p>
       <div class="form-section__body">${body}</div>
@@ -121,6 +123,8 @@ export function renderSurveyForm({ id } = {}) {
       data-survey-id="${surveyId}"
       novalidate
     >
+      <div class="error-summary" data-error-summary hidden role="alert"></div>
+
       ${section(
         1,
         'Kos information',
@@ -134,6 +138,7 @@ export function renderSurveyForm({ id } = {}) {
           <div class="form-grid">
             ${textField({
               name: 'kosLocation',
+              field: 'kosLocationName',
               label: 'Kos location name',
               value: kos.kosLocation?.label,
               placeholder: 'e.g. Lowokwaru, Malang',
@@ -141,6 +146,7 @@ export function renderSurveyForm({ id } = {}) {
             })}
             ${textField({
               name: 'campusLocation',
+              field: 'campusLocationName',
               label: 'Campus name',
               value: kos.campusLocation?.label,
               placeholder: 'e.g. Universitas Brawijaya',
@@ -259,6 +265,7 @@ export function renderSurveyForm({ id } = {}) {
             label: 'Additional notes',
             value: survey?.additional?.notes,
             placeholder: 'Anything the sections above do not cover.',
+            hint: `${(survey?.additional?.notes ?? '').length} of ${LIMITS.NOTES_MAX} characters`,
           })}
           ${uploaderField({
             section: 'video',
@@ -307,6 +314,18 @@ export function mountSurveyForm(root) {
   }).then((handle) => {
     mapHandle = handle;
   });
+
+  // Live character count, so the notes limit is visible before it is hit.
+  const notes = qs('#f-notes', form);
+  const notesHint = qs('#f-notes-hint', form);
+  if (notes && notesHint) {
+    const updateCount = () => {
+      notesHint.textContent = `${notes.value.length} of ${LIMITS.NOTES_MAX} characters`;
+      notesHint.classList.toggle('field__hint--over', notes.value.length > LIMITS.NOTES_MAX);
+    };
+    notes.addEventListener('input', updateCount);
+    updateCount();
+  }
 
   // Anything the user touches counts, so Cancel can ask before discarding.
   dirty = false;

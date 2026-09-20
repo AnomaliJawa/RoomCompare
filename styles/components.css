@@ -1152,3 +1152,42 @@
 
 .lightbox__nav { display: flex; gap: var(--space-2); }
 .lightbox__nav .btn { flex: 1; }
+
+/* --- Validation ----------------------------------------------------------
+   Errors are written into the live form, so these styles apply to nodes that
+   already exist rather than to a re-render. */
+
+.error-summary { margin-bottom: var(--space-4); }
+.error-summary[hidden] { display: none; }
+
+.form-section__errors {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--alert);
+  border-radius: var(--radius-sm);
+  background: var(--alert-bg);
+  color: var(--alert);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.form-section__errors[hidden] { display: none; }
+
+/* A whole group can be wrong, not just a single input. */
+.choice-group[data-invalid="true"] .choice-group__legend { color: var(--alert); }
+
+.choice-group[data-invalid="true"] .choice {
+  border-color: var(--alert);
+}
+
+.mappicker[data-invalid="true"] .mappicker__canvas,
+.mappicker[data-invalid="true"] .mappicker__manual {
+  border-color: var(--alert);
+}
+
+.field__hint--over { color: var(--alert); font-weight: var(--weight-medium); }
+
+/* A confirmation that is a question, not a destructive act. */
+.dialog__actions .btn--primary { background: var(--accent); color: var(--surface); }
