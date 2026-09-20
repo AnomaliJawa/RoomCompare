@@ -24,7 +24,7 @@ import {
 } from './features/surveyForm.js';
 import { renderCommunity, filterCommunity } from './features/community.js';
 import { filterDialogContent } from './components/filterPanel.js';
-import { renderCompare } from './features/compare.js';
+import { renderCompare, mountCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
 
@@ -53,7 +53,7 @@ const ROUTES = [
   { path: '/surveys/:id/edit', name: 'survey-edit', render: renderSurveyForm, nav: 'surveys', mount: mountSurveyForm },
   { path: '/community', name: 'community', render: renderCommunity, nav: 'community' },
   { path: '/community/:id', name: 'community-detail', render: renderSurveyDetail, nav: 'community', mount: mountSurveyDetail },
-  { path: '/compare', name: 'compare', render: renderCompare, nav: 'compare' },
+  { path: '/compare', name: 'compare', render: renderCompare, nav: 'compare', mount: mountCompare },
 ];
 
 /**
@@ -241,6 +241,9 @@ function wireActions() {
   onAction('remove-compare', ({ dataset }) => {
     store.removeFromCompare(dataset.id);
   });
+
+  onAction('show-comparison', () => store.showComparison());
+  onAction('clear-compare', () => store.clearCompare());
 
   onAction('cancel-form', async () => {
     if (isFormDirty()) {
