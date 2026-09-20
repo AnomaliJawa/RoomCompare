@@ -119,31 +119,38 @@ function rowDiffers(row) {
   return rest.some((value) => value !== first);
 }
 
-function cell(row, value, index) {
+/**
+ * One value. The kos name is repeated inside the cell for the stacked mobile
+ * layout, where the column header is not beside it; it is aria-hidden because
+ * the header still provides that association to assistive technology.
+ */
+function cell(row, value, index, kosName) {
+  const label = html`<span class="ledger__cell-label" aria-hidden="true">${kosName}</span>`;
+
   if (row.kind === 'facility') {
     return value
-      ? html`<td class="ledger__check">✓<span class="visually-hidden"> present</span></td>`
-      : html`<td class="ledger__absent">—<span class="visually-hidden"> not available</span></td>`;
+      ? html`<td class="ledger__check" role="cell">${label}<span class="ledger__cell-value">✓<span class="visually-hidden"> present</span></span></td>`
+      : html`<td class="ledger__absent" role="cell">${label}<span class="ledger__cell-value">—<span class="visually-hidden"> not available</span></span></td>`;
   }
   if (value === MISSING) {
-    return html`<td><span class="unrecorded">Not recorded</span></td>`;
+    return html`<td role="cell">${label}<span class="ledger__cell-value unrecorded">Not recorded</span></td>`;
   }
   const best = row.best === index ? ' ledger__best' : '';
-  return html`<td class="numeric${best}">${value}</td>`;
+  return html`<td class="numeric${best}" role="cell">${label}<span class="ledger__cell-value">${value}</span></td>`;
 }
 
 function ledger(surveys) {
   const groups = buildGroups(surveys);
   return html`
     <div class="ledger-wrap">
-      <table class="ledger">
-        <thead>
-          <tr>
-            <th class="ledger__criterion" scope="col">Criterion</th>
+      <table class="ledger" role="table">
+        <thead role="rowgroup">
+          <tr role="row">
+            <th class="ledger__criterion" scope="col" role="columnheader">Criterion</th>
             ${raw(
               surveys
                 .map(
-                  (s) => html`<th scope="col">
+                  (s) => html`<th scope="col" role="columnheader">
                     <span class="ledger__kos">${s.kos.name}</span>
                     <button class="btn btn--quiet btn--small" type="button"
                       data-action="remove-compare" data-id="${s.id}">Remove</button>
@@ -156,16 +163,16 @@ function ledger(surveys) {
         ${raw(
           groups
             .map(
-              (group) => html`<tbody>
-                <tr class="ledger__group">
-                  <th colspan="${surveys.length + 1}" scope="colgroup">${group.label}</th>
+              (group) => html`<tbody role="rowgroup">
+                <tr class="ledger__group" role="row">
+                  <th colspan="${surveys.length + 1}" scope="colgroup" role="columnheader">${group.label}</th>
                 </tr>
                 ${raw(
                   group.rows
                     .map(
-                      (row) => html`<tr data-differs="${rowDiffers(row) ? 'true' : 'false'}">
-                        <th class="ledger__criterion" scope="row">${row.label}</th>
-                        ${raw(row.values.map((v, i) => cell(row, v, i)).join(''))}
+                      (row) => html`<tr role="row" data-differs="${rowDiffers(row) ? 'true' : 'false'}">
+                        <th class="ledger__criterion" scope="row" role="rowheader">${row.label}</th>
+                        ${raw(row.values.map((v, i) => cell(row, v, i, surveys[i].kos.name)).join(''))}
                       </tr>`,
                     )
                     .join(''),

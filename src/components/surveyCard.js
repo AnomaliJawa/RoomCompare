@@ -70,9 +70,9 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
     <article class="card survey-card">
       ${thumb(survey)}
       <div class="survey-card__body">
-        <h3 class="card__title">
+        <h2 class="card__title">
           <a class="survey-card__link" href="${href}">${survey.kos.name}</a>
-        </h3>
+        </h2>
         <div class="survey-card__meta">
           ${meta}
           ${badge}
