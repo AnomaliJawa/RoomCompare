@@ -22,7 +22,8 @@ import {
   isFormDirty,
   teardownSurveyForm,
 } from './features/surveyForm.js';
-import { renderCommunity } from './features/community.js';
+import { renderCommunity, filterCommunity } from './features/community.js';
+import { filterDialogContent } from './components/filterPanel.js';
 import { renderCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
@@ -74,6 +75,8 @@ function refresh() {
     return;
   }
 
+  renderFilterDialog();
+
   const params = currentRoute().params;
   releaseView();
   mount(root(), active.render(params));
@@ -105,6 +108,19 @@ function renderStorageNotice() {
       action: { name: 'dismiss-storage-notice', label: 'Dismiss' },
     }),
   );
+}
+
+/**
+ * Keep the filter dialog current. Filters apply as they are changed, so the
+ * count on its primary button updates while the dialog is still open and the
+ * user can see what a choice costs before committing to it.
+ */
+function renderFilterDialog() {
+  const node = qs('#app-filters');
+  if (!node || !node.open) return;
+  const { communitySurveys, communityFilters, starredIds } = store.getState();
+  const showing = filterCommunity(communitySurveys, communityFilters, starredIds).length;
+  mount(node, filterDialogContent(communityFilters, { total: communitySurveys.length, showing }));
 }
 
 function syncNav(active) {
@@ -276,6 +292,17 @@ function wireActions() {
   onAction('filter-type', ({ target }) => store.setCommunityFilter('type', target.value), 'change');
   onAction('filter-starred', ({ target }) => store.setCommunityFilter('starredOnly', target.checked), 'change');
   onAction('filter-facility', ({ target }) => store.toggleCommunityFacility(target.value), 'change');
+
+  onAction('open-filters', () => {
+    const node = qs('#app-filters');
+    if (!node) return;
+    const { communitySurveys, communityFilters, starredIds } = store.getState();
+    const showing = filterCommunity(communitySurveys, communityFilters, starredIds).length;
+    mount(node, filterDialogContent(communityFilters, { total: communitySurveys.length, showing }));
+    node.showModal();
+  });
+
+  onAction('close-filters', () => qs('#app-filters')?.close());
 
   onAction('clear-community-filters', () => store.clearCommunityFilters());
 
