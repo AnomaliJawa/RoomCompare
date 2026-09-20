@@ -1,238 +1,50 @@
-import { html, raw } from '../utils/dom.js';
-import { numberToCurrency, formatDistance } from '../utils/format.js';
+import { html, qs } from '../utils/dom.js';
 import { getState, comparableSurveys, selectedForCompare } from '../store.js';
 import { nothingSelected, needsOneMore } from '../components/emptyState.js';
 import { incompleteDataBanner } from '../components/banner.js';
+import { compareBar } from '../components/compareBar.js';
+import { candidatePicker } from '../components/candidatePicker.js';
+import { comparisonTable } from '../components/comparisonTable.js';
 // The only line coupling the comparison to the optional score. Delete this
 // import and the mount below to remove the feature entirely.
 import { bestMatchPanel } from './bestMatch.js';
-import {
-  ROOM_FACILITIES,
-  BATHROOM_FACILITIES,
-  SHARED_FACILITIES,
-  SURROUNDINGS,
-  STATUS_LABELS,
-  MAX_COMPARE,
-  MIN_COMPARE,
-  likertLabel,
-  kosTypeLabel,
-} from '../constants.js';
+import { MIN_COMPARE } from '../constants.js';
 
 /**
- * The comparison is never scored and never truncated.
+ * The comparison.
  *
- * The prototype joined facilities into a comma list and cut it with
- * `.slice(0, 5)`, so a reader could not tell whether "AC" was absent or merely
- * hidden. Every facility gets its own row with an explicit present/absent mark.
+ * Selection and the comparison itself are separate steps, as the requirement
+ * describes: kos go into the bar, and Compare opens the table. Once it is
+ * open, adding or removing updates it in place rather than sending the user
+ * back to press Compare again after swapping one kos out.
  */
-
-const MISSING = Symbol('missing');
-
-function textRow(label, values, { best = null } = {}) {
-  return { kind: 'text', label, values, best };
-}
-
-function facilityRows(all, pick) {
-  return all.map((item) => ({
-    kind: 'facility',
-    label: item,
-    values: pick.map((list) => (list ?? []).includes(item)),
-    best: null,
-  }));
-}
-
-/** Index of the lowest finite number, or null when nothing is comparable. */
-function lowestIndex(numbers) {
-  let best = null;
-  numbers.forEach((n, i) => {
-    if (!Number.isFinite(n)) return;
-    if (best === null || n < numbers[best]) best = i;
-  });
-  // A "best" only means something when the values actually differ.
-  const finite = numbers.filter(Number.isFinite);
-  if (finite.length < 2 || new Set(finite).size === 1) return null;
-  return best;
-}
-
-function buildGroups(surveys) {
-  const rents = surveys.map((s) => s.kos.rent ?? NaN);
-  const distances = surveys.map((s) => s.kos.distanceKm ?? NaN);
-
-  return [
-    {
-      label: 'Kos information',
-      rows: [
-        textRow('Type', surveys.map((s) => kosTypeLabel(s.kos.type) ?? MISSING)),
-        textRow('Location', surveys.map((s) => s.kos.kosLocation?.label ?? MISSING)),
-        textRow('Monthly rent', surveys.map((s) => (s.kos.rent == null ? MISSING : numberToCurrency(s.kos.rent))), {
-          best: lowestIndex(rents),
-        }),
-        textRow('Distance to campus', surveys.map((s) => (s.kos.distanceKm == null ? MISSING : formatDistance(s.kos.distanceKm))), {
-          best: lowestIndex(distances),
-        }),
-        textRow('Status', surveys.map((s) => STATUS_LABELS[s.status] ?? MISSING)),
-      ],
-    },
-    {
-      label: 'Room',
-      rows: [
-        textRow(
-          'Dimensions',
-          surveys.map((s) => (s.room.lengthM && s.room.widthM ? `${s.room.lengthM} × ${s.room.widthM} m` : MISSING)),
-        ),
-        textRow(
-          'Floor area',
-          surveys.map((s) =>
-            s.room.lengthM && s.room.widthM ? `${(s.room.lengthM * s.room.widthM).toFixed(1)} m²` : MISSING,
-          ),
-        ),
-        textRow('Cleanliness', surveys.map((s) => likertLabel(s.room.cleanliness) ?? MISSING)),
-        textRow('Internet quality', surveys.map((s) => likertLabel(s.room.internet) ?? MISSING)),
-        ...facilityRows(ROOM_FACILITIES, surveys.map((s) => s.room.facilities)),
-      ],
-    },
-    { label: 'Bathroom', rows: facilityRows(BATHROOM_FACILITIES, surveys.map((s) => s.bathroom.facilities)) },
-    { label: 'Shared facilities', rows: facilityRows(SHARED_FACILITIES, surveys.map((s) => s.shared.facilities)) },
-    { label: 'Surroundings', rows: facilityRows(SURROUNDINGS, surveys.map((s) => s.surroundings)) },
-    {
-      label: 'Additional information',
-      rows: [
-        textRow('Security', surveys.map((s) => likertLabel(s.additional.security) ?? MISSING)),
-        textRow('Notes', surveys.map((s) => s.additional.notes || MISSING)),
-        textRow('Photos recorded', surveys.map((s) => {
-          const count =
-            (s.room.photoIds?.length ?? 0) +
-            (s.bathroom.photoIds?.length ?? 0) +
-            (s.shared.photoIds?.length ?? 0);
-          return count === 0 ? 'None' : String(count);
-        })),
-      ],
-    },
-  ];
-}
-
-function rowDiffers(row) {
-  // Values are primitives or the MISSING symbol, so identity comparison is
-  // enough — no sentinel string, and "not recorded" never reads as equal to
-  // a real value that happens to stringify the same way.
-  const [first, ...rest] = row.values;
-  return rest.some((value) => value !== first);
-}
-
-/**
- * One value. The kos name is repeated inside the cell for the stacked mobile
- * layout, where the column header is not beside it; it is aria-hidden because
- * the header still provides that association to assistive technology.
- */
-function cell(row, value, index, kosName) {
-  const label = html`<span class="ledger__cell-label" aria-hidden="true">${kosName}</span>`;
-
-  if (row.kind === 'facility') {
-    return value
-      ? html`<td class="ledger__check" role="cell">${label}<span class="ledger__cell-value">✓<span class="visually-hidden"> present</span></span></td>`
-      : html`<td class="ledger__absent" role="cell">${label}<span class="ledger__cell-value">—<span class="visually-hidden"> not available</span></span></td>`;
-  }
-  if (value === MISSING) {
-    return html`<td role="cell">${label}<span class="ledger__cell-value unrecorded">Not recorded</span></td>`;
-  }
-  const best = row.best === index ? ' ledger__best' : '';
-  return html`<td class="numeric${best}" role="cell">${label}<span class="ledger__cell-value">${value}</span></td>`;
-}
-
-function ledger(surveys) {
-  const groups = buildGroups(surveys);
-  return html`
-    <div class="ledger-wrap">
-      <table class="ledger" role="table">
-        <thead role="rowgroup">
-          <tr role="row">
-            <th class="ledger__criterion" scope="col" role="columnheader">Criterion</th>
-            ${raw(
-              surveys
-                .map(
-                  (s) => html`<th scope="col" role="columnheader">
-                    <span class="ledger__kos">${s.kos.name}</span>
-                    <button class="btn btn--quiet btn--small" type="button"
-                      data-action="remove-compare" data-id="${s.id}">Remove</button>
-                  </th>`,
-                )
-                .join(''),
-            )}
-          </tr>
-        </thead>
-        ${raw(
-          groups
-            .map(
-              (group) => html`<tbody role="rowgroup">
-                <tr class="ledger__group" role="row">
-                  <th colspan="${surveys.length + 1}" scope="colgroup" role="columnheader">${group.label}</th>
-                </tr>
-                ${raw(
-                  group.rows
-                    .map(
-                      (row) => html`<tr role="row" data-differs="${rowDiffers(row) ? 'true' : 'false'}">
-                        <th class="ledger__criterion" scope="row" role="rowheader">${row.label}</th>
-                        ${raw(row.values.map((v, i) => cell(row, v, i, surveys[i].kos.name)).join(''))}
-                      </tr>`,
-                    )
-                    .join(''),
-                )}
-              </tbody>`,
-            )
-            .join(''),
-        )}
-      </table>
-    </div>
-  `;
-}
-
-function picker(candidates, selection) {
-  if (!candidates.length) {
-    return html`<p class="meta">
-      Nothing to compare yet. Record a survey, or star a community survey to bring it in.
-    </p>`;
-  }
-  const full = selection.length >= MAX_COMPARE;
-  return html`
-    <ul class="stack">
-      ${raw(
-        candidates
-          .map((survey) => {
-            const picked = selection.includes(survey.id);
-            return html`<li class="listing">
-              <div>
-                <span class="listing__title">${survey.kos.name}</span>
-                <p class="meta">${survey.kos.kosLocation?.label} · ${numberToCurrency(survey.kos.rent)}</p>
-              </div>
-              <button
-                class="btn ${picked ? 'btn--primary' : 'btn--secondary'} btn--small"
-                type="button"
-                data-action="toggle-compare"
-                data-id="${survey.id}"
-                ${!picked && full ? 'disabled' : ''}
-              >${picked ? 'Selected' : full ? 'Maximum of 3' : 'Add'}</button>
-            </li>`;
-          })
-          .join(''),
-      )}
-    </ul>
-  `;
-}
 
 export function renderCompare() {
-  const { compareSelection } = getState();
+  const { compareSelection, compareShown } = getState();
   const candidates = comparableSurveys();
   const selected = selectedForCompare();
+  const ready = selected.length >= MIN_COMPARE;
 
   let result;
-  if (selected.length === 0) {
-    result = nothingSelected();
-  } else if (selected.length < MIN_COMPARE) {
-    result = needsOneMore(selected[0].kos.name);
+  if (!ready) {
+    result = selected.length === 0 ? nothingSelected() : needsOneMore(selected[0].kos.name);
+  } else if (!compareShown) {
+    result = html`
+      <section class="empty">
+        <p class="empty__title">Ready when you are</p>
+        <p class="empty__body">
+          ${selected.length} kos selected. Compare them on the same criteria, in
+          the same order, with nothing left out.
+        </p>
+        <button class="btn btn--primary" type="button" data-action="show-comparison">
+          Compare ${selected.length} kos
+        </button>
+      </section>
+    `;
   } else {
     const incomplete = selected.filter((s) => s.room.internet == null || s.additional.security == null);
     const notice = incomplete.length ? incompleteDataBanner(incomplete.map((s) => s.kos.name)) : '';
-    result = html`${notice}${ledger(selected)}${bestMatchPanel(selected)}`;
+    result = html`${notice}${comparisonTable(selected)}${bestMatchPanel(selected)}`;
   }
 
   return html`
@@ -246,16 +58,39 @@ export function renderCompare() {
       </div>
     </div>
 
+    ${compareBar(selected, { shown: compareShown })}
+
     <div class="compare-layout">
       <section class="panel">
         <div class="section__head">
           <h2>Add kos</h2>
-          <span class="meta">${compareSelection.length} of ${MAX_COMPARE}</span>
         </div>
-        ${picker(candidates, compareSelection)}
+        ${candidatePicker(candidates, compareSelection)}
       </section>
 
       <div class="compare-result">${result}</div>
     </div>
   `;
+}
+
+/**
+ * The one orchestrated moment in the interface: the columns resolve as the
+ * comparison opens, so it reads as something arriving rather than the page
+ * merely being different. Reduced motion skips it entirely.
+ */
+export function mountCompare(root) {
+  const table = qs('[data-reveal]', root);
+  if (!table) return null;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+
+  table.dataset.revealing = 'true';
+  const timer = setTimeout(() => {
+    delete table.dataset.revealing;
+  }, 900);
+
+  return {
+    destroy() {
+      clearTimeout(timer);
+    },
+  };
 }

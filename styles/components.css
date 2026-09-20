@@ -380,16 +380,19 @@
 /* The best value stated quietly. A fact, not a badge. */
 .ledger__best { color: var(--accent); font-weight: var(--weight-semibold); }
 
-/* One orchestrated moment: columns resolving when Compare is pressed. */
+/* The one orchestrated moment: columns resolving as the comparison opens.
+   Each column carries its index, so they arrive left to right rather than
+   all at once — it reads as the comparison being assembled. */
 @media (prefers-reduced-motion: no-preference) {
-  .ledger[data-revealing="true"] td,
-  .ledger[data-revealing="true"] thead th {
+  .ledger[data-revealing="true"] thead th[style*="--column"],
+  .ledger[data-revealing="true"] td[style*="--column"] {
     animation: ledger-in var(--duration-base) var(--ease) both;
+    animation-delay: calc(var(--column, 0) * 120ms);
   }
 }
 
 @keyframes ledger-in {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -1680,4 +1683,73 @@
 
   .filter-dialog__foot { flex-direction: column-reverse; }
   .filter-dialog__foot .btn { width: 100%; }
+}
+
+/* --- Compare bar ---------------------------------------------------------
+   The selection, held above the work. Empty slots show how many more kos can
+   be added without the user having to remember the limit. */
+
+.compare-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: var(--border-hair);
+  border-radius: var(--radius-md);
+}
+
+.compare-bar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.compare-chip {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+
+.compare-chip__name { font-weight: var(--weight-semibold); }
+
+.compare-chip__rent {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.compare-chip__remove {
+  color: var(--alert);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.compare-chip__remove:hover { text-decoration: underline; }
+
+.compare-chip--empty {
+  border-style: dashed;
+  background: none;
+}
+
+.compare-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .compare-bar { flex-direction: column; align-items: stretch; }
+  .compare-bar__actions { flex-direction: column-reverse; align-items: stretch; }
+  .compare-bar__actions .btn { width: 100%; }
 }

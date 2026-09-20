@@ -1,6 +1,6 @@
 import { ownSurveys } from './seed/ownSurveys.js';
 import { communitySurveys } from './seed/communitySurveys.js';
-import { MAX_COMPARE } from './constants.js';
+import { MAX_COMPARE, MIN_COMPARE } from './constants.js';
 import * as storage from './storage.js';
 import * as db from './db.js';
 
@@ -38,6 +38,12 @@ const state = {
   communitySurveys: structuredClone(communitySurveys),
   starredIds: seeded ? ['com-kartika'] : boot.data.starredIds,
   compareSelection: [],
+  /**
+   * Whether the comparison has been opened. Selection and comparison are
+   * separate steps, so the table is something the user asks for rather than
+   * something that appears while they are still choosing.
+   */
+  compareShown: false,
   search: '',
   communityFilters: {
     location: '',
@@ -196,6 +202,7 @@ export function deleteSurvey(id) {
   const [removed] = state.surveys.splice(index, 1);
   // A deleted survey must not linger in a comparison.
   state.compareSelection = state.compareSelection.filter((item) => item !== id);
+  closeComparisonIfTooFew();
   commit();
 
   const mediaCleanup = db.deleteMediaForSurvey(id).catch(() => null);
@@ -222,6 +229,7 @@ export function toggleStar(id) {
 export function toggleCompare(id) {
   if (state.compareSelection.includes(id)) {
     state.compareSelection = state.compareSelection.filter((item) => item !== id);
+    closeComparisonIfTooFew();
     notify();
     return true;
   }
@@ -233,6 +241,25 @@ export function toggleCompare(id) {
 
 export function removeFromCompare(id) {
   state.compareSelection = state.compareSelection.filter((item) => item !== id);
+  closeComparisonIfTooFew();
+  notify();
+}
+
+/** An open comparison that drops below two kos has nothing left to show. */
+function closeComparisonIfTooFew() {
+  if (state.compareSelection.length < MIN_COMPARE) state.compareShown = false;
+}
+
+export function showComparison() {
+  if (state.compareSelection.length < MIN_COMPARE) return false;
+  state.compareShown = true;
+  notify();
+  return true;
+}
+
+export function clearCompare() {
+  state.compareSelection = [];
+  state.compareShown = false;
   notify();
 }
 
