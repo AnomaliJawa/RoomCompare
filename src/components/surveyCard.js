@@ -9,12 +9,25 @@ import { STATUS_LABELS, kosTypeLabel } from '../constants.js';
  * drifted apart; merging them is the largest de-duplication in the rebuild.
  */
 
+/**
+ * The first recorded photo, or the placeholder tile when there is none.
+ *
+ * The image is left empty here and filled by mountThumbs once the blob loads
+ * from the database: the card renders synchronously, and the record only
+ * carries ids.
+ */
 function thumb(survey) {
-  // Media lands in a later phase; every card currently takes the
-  // no-photos placeholder, which is a real specified state, not a stub.
-  const photoId = survey.room?.photoIds?.[0];
+  const photoId =
+    survey.room?.photoIds?.[0] ?? survey.shared?.photoIds?.[0] ?? survey.bathroom?.photoIds?.[0];
   if (!photoId) return raw(photoPlaceholder(survey.kos.name));
-  return html`<img class="thumb" src="" alt="" data-photo-id="${photoId}" />`;
+  return html`<img
+    class="thumb"
+    src=""
+    alt="${survey.kos.name}"
+    loading="lazy"
+    data-photo-id="${photoId}"
+    data-kos-name="${survey.kos.name}"
+  />`;
 }
 
 function fact(label, value) {

@@ -1,0 +1,14 @@
+{
+  "name": "RoomCompare",
+  "short_name": "RoomCompare",
+  "description": "Record, organize and compare the boarding houses you have already surveyed.",
+  "start_url": "./index.html#/dashboard",
+  "display": "standalone",
+  "background_color": "#f7f8f6",
+  "theme_color": "#1f5d4c",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -3,6 +3,7 @@ import { getState } from '../store.js';
 import { surveyCard } from '../components/surveyCard.js';
 import { noSurveysYet, noSearchResults } from '../components/emptyState.js';
 import { textField } from '../components/fields.js';
+import { mountThumbs } from '../components/thumbs.js';
 
 /**
  * Partial match on the kos name, ignoring case and accents.
@@ -72,4 +73,17 @@ export function renderSurveyList() {
 
     ${body}
   `;
+}
+
+/** Fill in card thumbnails once their blobs load. */
+export function mountSurveyList(root) {
+  let handle = null;
+  mountThumbs(root).then((result) => {
+    handle = result;
+  });
+  return {
+    destroy() {
+      handle?.destroy();
+    },
+  };
 }

@@ -3,6 +3,7 @@ import { getState } from '../store.js';
 import { surveyCard } from '../components/surveyCard.js';
 import { noFilterResults } from '../components/emptyState.js';
 import { filterBar } from '../components/filterPanel.js';
+import { mountThumbs } from '../components/thumbs.js';
 
 /**
  * Shared survey results from other users.
@@ -68,4 +69,17 @@ export function renderCommunity() {
 
     ${body}
   `;
+}
+
+/** Fill in card thumbnails once their blobs load. */
+export function mountCommunity(root) {
+  let handle = null;
+  mountThumbs(root).then((result) => {
+    handle = result;
+  });
+  return {
+    destroy() {
+      handle?.destroy();
+    },
+  };
 }

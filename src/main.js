@@ -9,9 +9,10 @@ import { validateSurvey, findDuplicateName } from './utils/validate.js';
 import { normalizeRentInput } from './utils/format.js';
 import { STATUS, MAX_COMPARE } from './constants.js';
 import * as store from './store.js';
+import { seedPhotos } from './seed/seedPhotos.js';
 
 import { renderDashboard } from './features/dashboard.js';
-import { renderSurveyList } from './features/surveyList.js';
+import { renderSurveyList, mountSurveyList } from './features/surveyList.js';
 import { renderSurveyDetail, mountSurveyDetail } from './features/surveyDetail.js';
 import {
   renderSurveyForm,
@@ -22,7 +23,7 @@ import {
   isFormDirty,
   teardownSurveyForm,
 } from './features/surveyForm.js';
-import { renderCommunity, filterCommunity } from './features/community.js';
+import { renderCommunity, mountCommunity, filterCommunity } from './features/community.js';
 import { filterDialogContent } from './components/filterPanel.js';
 import { renderCompare, mountCompare } from './features/compare.js';
 
@@ -47,11 +48,11 @@ function releaseView() {
 
 const ROUTES = [
   { path: '/dashboard', name: 'dashboard', render: renderDashboard, nav: null },
-  { path: '/surveys', name: 'surveys', render: renderSurveyList, nav: 'surveys' },
+  { path: '/surveys', name: 'surveys', render: renderSurveyList, nav: 'surveys', mount: mountSurveyList },
   { path: '/surveys/new', name: 'survey-new', render: renderSurveyForm, nav: 'surveys', mount: mountSurveyForm },
   { path: '/surveys/:id', name: 'survey-detail', render: renderSurveyDetail, nav: 'surveys', mount: mountSurveyDetail },
   { path: '/surveys/:id/edit', name: 'survey-edit', render: renderSurveyForm, nav: 'surveys', mount: mountSurveyForm },
-  { path: '/community', name: 'community', render: renderCommunity, nav: 'community' },
+  { path: '/community', name: 'community', render: renderCommunity, nav: 'community', mount: mountCommunity },
   { path: '/community/:id', name: 'community-detail', render: renderSurveyDetail, nav: 'community', mount: mountSurveyDetail },
   { path: '/compare', name: 'compare', render: renderCompare, nav: 'compare', mount: mountCompare },
 ];
@@ -420,9 +421,27 @@ function start() {
   startEventBridge();
   wireActions();
 
-  // Files chosen on a form that was never saved have nothing pointing at
-  // them. Clearing them here keeps abandoned drafts from accumulating.
-  sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id)).catch(() => null);
+  if (store.wasSeeded()) {
+    // Sample photographs, attached once so the galleries are not all
+    // placeholders on a first look. Deliberately not awaited: the app is
+    // usable while they load, and each survey updates as its own arrive.
+    seedPhotos().then((assigned) => {
+      if (!assigned) return;
+      Object.entries(assigned).forEach(([surveyId, sections]) => {
+        const survey = store.findSurvey(surveyId);
+        if (!survey) return;
+        store.updateSurvey(surveyId, {
+          room: { ...survey.room, photoIds: sections.room },
+          bathroom: { ...survey.bathroom, photoIds: sections.bathroom },
+          shared: { ...survey.shared, photoIds: sections.shared },
+        });
+      });
+    });
+  } else {
+    // Files chosen on a form that was never saved have nothing pointing at
+    // them. Clearing them here keeps abandoned drafts from accumulating.
+    sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id)).catch(() => null);
+  }
   // Any store write re-renders the active route.
   store.subscribe(refresh);
   startRouter();

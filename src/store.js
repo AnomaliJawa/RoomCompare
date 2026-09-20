@@ -82,6 +82,11 @@ export function getState() {
   return state;
 }
 
+/** True when this boot created the sample surveys rather than loading saved ones. */
+export function wasSeeded() {
+  return seeded;
+}
+
 export function subscribe(listener) {
   listeners.add(listener);
   return () => listeners.delete(listener);
