@@ -64,9 +64,6 @@ export function renderSurveyList() {
           ${surveys.length} kos recorded${search ? `, ${visible.length} matching` : ''}.
         </p>
       </div>
-      <div class="page-head__actions">
-        <a class="btn btn--primary" href="#/surveys/new">Add survey</a>
-      </div>
     </div>
 
     <div class="field" style="margin-bottom: var(--space-5); max-width: 420px">
