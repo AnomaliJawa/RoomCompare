@@ -1,0 +1,112 @@
+/* ==========================================================================
+   RoomCompare — Design tokens
+   "Field Ledger": a surveyor's notebook, not a dashboard.
+   Separation comes from rules and alignment, never from shadows.
+   Light mode only. A dark palette would redefine the six colour tokens.
+   ========================================================================== */
+
+:root {
+  /* --- Colour -------------------------------------------------------------
+     Six tokens carry the whole interface. One accent, used only to mark
+     what is interactive or what is the answer. No gradients anywhere. */
+
+  --paper:    #f7f8f6;  /* page canvas — cool paper-neutral, not cream  */
+  --surface:  #ffffff;  /* raised content: cards, table body, fields    */
+  --ink:      #16241f;  /* text and rules at full strength              */
+  --rule:     #dce0da;  /* hairline borders, table grid, dividers       */
+  --accent:   #1f5d4c;  /* pine — links, primary action, checks, best   */
+  --muted:    #68706a;  /* labels, "Not recorded", secondary meta       */
+
+  /* Derived from --accent. Tints only; never introduces a new hue. */
+  --accent-tint:  #edf3f0;  /* selected rows, hover fills              */
+  --accent-press: #17463a;  /* pressed state                           */
+
+  /* Semantic only — never decorative. */
+  --alert:    #8c2f2a;
+  --alert-bg: #faf0ef;
+
+  /* --- Typography ---------------------------------------------------------
+     Two faces from one superfamily. The width contrast is functional:
+     Archivo Narrow in table headers buys real horizontal room for a
+     criteria column plus three kos columns. */
+
+  --font-sans:   "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: "Archivo Narrow", "Archivo", ui-sans-serif, sans-serif;
+
+  /* Major third from a 16px base. Nothing between these steps. */
+  --text-xs:   0.8125rem;  /* 13 — table headers, labels, meta */
+  --text-base: 1rem;       /* 16 — body, form values           */
+  --text-md:   1.25rem;    /* 20 — card titles, kos names      */
+  --text-lg:   1.5625rem;  /* 25 — section headings            */
+  --text-xl:   1.9375rem;  /* 31 — page titles                 */
+  --text-2xl:  2.4375rem;  /* 39 — hero figure                 */
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight: 1.2;
+  --leading-snug:  1.35;
+  --leading-body:  1.55;
+
+  --tracking-tight: -0.02em;
+
+  /* Line length. Serif would take more; this is a sans. */
+  --measure:       66ch;
+  --measure-notes: 62ch;
+
+  /* --- Space --------------------------------------------------------------
+     Everything lands on this scale. Nothing off it. */
+
+  --space-1: 0.25rem;  /*  4 */
+  --space-2: 0.5rem;   /*  8 */
+  --space-3: 0.75rem;  /* 12 */
+  --space-4: 1rem;     /* 16 */
+  --space-5: 1.5rem;   /* 24 */
+  --space-6: 2.5rem;   /* 40 */
+  --space-7: 4rem;     /* 64 */
+
+  /* --- Radii --------------------------------------------------------------
+     Differentiated by role. Not one value on everything. */
+
+  --radius-none: 0;        /* table cells                  */
+  --radius-sm:   4px;      /* inputs, buttons              */
+  --radius-md:   8px;      /* cards, panels                */
+  --radius-lg:   12px;     /* dialog                       */
+
+  /* --- Elevation ----------------------------------------------------------
+     The only shadows in the system. Both encode "floating above the page".
+     Cards separate with a 1px rule on --surface instead. */
+
+  --shadow-dialog:   0 16px 48px rgba(22, 36, 31, 0.18);
+  --shadow-lightbox: 0 24px 64px rgba(22, 36, 31, 0.32);
+
+  /* --- Borders ------------------------------------------------------------ */
+
+  --border-hair:  1px solid var(--rule);
+  --border-group: 2px solid var(--ink);   /* group boundary > row boundary */
+
+  /* --- Focus --------------------------------------------------------------
+     Visible on every interactive element. `outline: none` is never used. */
+
+  --focus-width:  2px;
+  --focus-offset: 2px;
+  --focus-color:  var(--accent);
+
+  /* --- Layout ------------------------------------------------------------- */
+
+  --column-max:      1120px;
+  --column-max-wide: 1320px;  /* #/compare only */
+  --gutter:          var(--space-5);
+  --gutter-narrow:   var(--space-4);
+  --nav-height:      64px;
+
+  /* --- Motion -------------------------------------------------------------
+     Response to action only. One orchestrated moment: the comparison
+     columns resolving. All of it disabled under reduced-motion. */
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --ease:          cubic-bezier(0.2, 0, 0.2, 1);
+}
