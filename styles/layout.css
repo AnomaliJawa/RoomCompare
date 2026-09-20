@@ -1,0 +1,221 @@
+/* ==========================================================================
+   RoomCompare — Layout: navigation, content column, page structure
+   Top navigation over a centred column. Dropping the prototype's 280px
+   sidebar returns that width to the comparison table, which is the point.
+   ========================================================================== */
+
+/* --- Skip link ----------------------------------------------------------- */
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: calc(-1 * var(--space-7));
+  z-index: 60;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border: var(--border-hair);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transition: top var(--duration-fast) var(--ease);
+}
+
+.skip-link:focus { top: var(--space-2); }
+
+/* --- Top navigation ------------------------------------------------------ */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--paper);
+  border-bottom: var(--border-hair);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  height: var(--nav-height);
+  max-width: var(--column-max-wide);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.nav__wordmark {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 100%;
+}
+
+/* Current page takes a 2px accent underline, not a filled pill. */
+.nav__link {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--space-3);
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.nav__link:hover { color: var(--ink); }
+
+.nav__link[aria-current="page"] {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.nav .nav__toggle { display: none; }
+
+/* --- Content column ------------------------------------------------------ */
+
+.column {
+  max-width: var(--column-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--gutter) var(--space-7);
+}
+
+/* #/compare opts in — the comparison table earns the extra width. */
+.column--wide { max-width: var(--column-max-wide); }
+
+/* --- Page header ---------------------------------------------------------
+   Title and its actions. No eyebrow label above it: the title says what
+   the page is, and a label above would only repeat it. */
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.page-head__text { min-width: 0; }
+
+.page-head__lede {
+  margin-top: var(--space-2);
+  color: var(--muted);
+}
+
+.page-head__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+}
+
+/* --- Sections ------------------------------------------------------------ */
+
+.section + .section { margin-top: var(--space-6); }
+
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-hair);
+}
+
+/* --- Grids --------------------------------------------------------------- */
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.grid-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-5);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* --- Breakpoints --------------------------------------------------------- */
+
+/* Nav collapses; two-column layouts stack. */
+@media (max-width: 900px) {
+  .nav__links {
+    display: none;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: var(--space-2) var(--gutter) var(--space-4);
+    background: var(--paper);
+    border-bottom: var(--border-hair);
+  }
+
+  .nav__links[data-open="true"] { display: flex; }
+
+  .nav__link {
+    height: auto;
+    padding: var(--space-3) 0;
+    border-bottom: none;
+    border-left: 2px solid transparent;
+    padding-left: var(--space-3);
+  }
+
+  .nav__link[aria-current="page"] {
+    border-bottom-color: transparent;
+    border-left-color: var(--accent);
+  }
+
+  .nav .nav__toggle {
+    display: inline-flex;
+    order: 3;
+  }
+
+  .grid-split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  :root { --gutter: var(--gutter-narrow); }
+
+  .column { padding-top: var(--space-5); }
+
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-head__actions > * { flex: 1; }
+}

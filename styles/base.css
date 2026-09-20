@@ -1,0 +1,188 @@
+/* ==========================================================================
+   RoomCompare — Reset, element defaults, typography
+   Element selectors and single-class utilities only. No layout lives here.
+   ========================================================================== */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* --- Headings ------------------------------------------------------------
+   Sentence case throughout. No ALL-CAPS tracked eyebrow labels: the
+   hierarchy is carried by size and weight, not by decorative chrome. */
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--text-xl); letter-spacing: var(--tracking-tight); }
+h2 { font-size: var(--text-lg); }
+h3 { font-size: var(--text-md); }
+h4 { font-size: var(--text-base); }
+
+p {
+  margin: 0;
+  max-width: var(--measure);
+}
+
+/* --- Numerals ------------------------------------------------------------
+   The one typographic statement the design makes. Rents, distances,
+   dimensions and scores line up digit-for-digit down a column, so
+   magnitude reads before the number does. */
+
+.numeric,
+td.numeric,
+th.numeric,
+input[type="number"] {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.numeric { text-align: right; }
+
+/* --- Narrow face ---------------------------------------------------------
+   Table column headers, group labels, dense meta. */
+
+.narrow {
+  font-family: var(--font-narrow);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-xs);
+}
+
+/* --- Muted / secondary text --------------------------------------------- */
+
+.meta {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* "Not recorded" — distinct from absent. A blank cell reads as "absent";
+   this reads as "unknown", and those are different facts. */
+.unrecorded {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* --- Links --------------------------------------------------------------- */
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover { color: var(--accent-press); }
+
+/* --- Form elements ------------------------------------------------------- */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+textarea {
+  max-width: var(--measure-notes);
+  resize: vertical;
+}
+
+/* --- Focus ---------------------------------------------------------------
+   Visible on every interactive element. `outline: none` appears nowhere
+   in this codebase. */
+
+:focus-visible {
+  outline: var(--focus-width) solid var(--focus-color);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Media --------------------------------------------------------------- */
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- Lists --------------------------------------------------------------- */
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --- Tables --------------------------------------------------------------
+   The origin of the visual system. Hairline grid, no rounded corners,
+   numerals aligned. */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* --- Selection ----------------------------------------------------------- */
+
+::selection {
+  background: var(--accent-tint);
+  color: var(--ink);
+}
+
+/* --- Screen-reader-only -------------------------------------------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Reduced motion ------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
