@@ -1,6 +1,7 @@
 import { html, raw, qs, getCheckedValues } from '../utils/dom.js';
 import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
+import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
 import { notFound } from '../components/emptyState.js';
 import {
   textField,
@@ -32,6 +33,27 @@ import {
  */
 
 let currencyHandle = null;
+let uploaderHandle = null;
+
+/**
+ * A new survey is given its id when the form opens, not when it is saved.
+ *
+ * Photos are stored the moment they are chosen — a survey is filled in while
+ * standing in the room, and an interrupted session should not lose them — and
+ * a stored file needs a survey to belong to. Media left by a form that is
+ * never saved is swept on the next boot.
+ */
+let draftId = null;
+
+export function formSurveyId(editingId) {
+  if (editingId) return editingId;
+  if (!draftId) draftId = `svy-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  return draftId;
+}
+
+export function clearDraftId() {
+  draftId = null;
+}
 
 function section(index, title, guideline, body) {
   return html`
@@ -44,13 +66,6 @@ function section(index, title, guideline, body) {
       <div class="form-section__body">${body}</div>
     </section>
   `;
-}
-
-function photoNote(count, label) {
-  return html`<p class="field__hint">
-    ${count ? `${count} ${label} photos recorded.` : `No ${label} photos yet.`}
-    Up to ${MAX_PHOTOS_PER_SECTION} per section once photo upload is available.
-  </p>`;
 }
 
 export function renderSurveyForm({ id } = {}) {
@@ -68,6 +83,7 @@ export function renderSurveyForm({ id } = {}) {
 
   const kos = survey?.kos ?? {};
   const room = survey?.room ?? {};
+  const surveyId = formSurveyId(survey?.id);
 
   const actions = editing
     ? html`
@@ -92,7 +108,14 @@ export function renderSurveyForm({ id } = {}) {
       </div>
     </div>
 
-    <form class="survey-form" id="survey-form" data-action="submit-survey" data-id="${survey?.id ?? ''}" novalidate>
+    <form
+      class="survey-form"
+      id="survey-form"
+      data-action="submit-survey"
+      data-id="${survey?.id ?? ''}"
+      data-survey-id="${surveyId}"
+      novalidate
+    >
       ${section(
         1,
         'Kos information',
@@ -141,7 +164,12 @@ export function renderSurveyForm({ id } = {}) {
           ${checkboxGroup({ name: 'roomFacility', legend: 'Room facilities', options: ROOM_FACILITIES, selected: room.facilities })}
           ${likertField({ name: 'cleanliness', legend: 'Cleanliness', value: room.cleanliness })}
           ${likertField({ name: 'internet', legend: 'Internet quality', value: room.internet })}
-          ${photoNote(room.photoIds?.length ?? 0, 'room')}
+          ${uploaderField({
+            section: 'room',
+            label: 'Room photos',
+            name: 'roomPhotoIds',
+            mediaIds: room.photoIds ?? [],
+          })}
         `,
       )}
 
@@ -156,7 +184,12 @@ export function renderSurveyForm({ id } = {}) {
             options: BATHROOM_FACILITIES,
             selected: survey?.bathroom?.facilities,
           })}
-          ${photoNote(survey?.bathroom?.photoIds?.length ?? 0, 'bathroom')}
+          ${uploaderField({
+            section: 'bathroom',
+            label: 'Bathroom photos',
+            name: 'bathroomPhotoIds',
+            mediaIds: survey?.bathroom?.photoIds ?? [],
+          })}
         `,
       )}
 
@@ -171,7 +204,12 @@ export function renderSurveyForm({ id } = {}) {
             options: SHARED_FACILITIES,
             selected: survey?.shared?.facilities,
           })}
-          ${photoNote(survey?.shared?.photoIds?.length ?? 0, 'shared facility')}
+          ${uploaderField({
+            section: 'shared',
+            label: 'Shared facility photos',
+            name: 'sharedPhotoIds',
+            mediaIds: survey?.shared?.photoIds ?? [],
+          })}
         `,
       )}
 
@@ -199,6 +237,13 @@ export function renderSurveyForm({ id } = {}) {
             value: survey?.additional?.notes,
             placeholder: 'Anything the sections above do not cover.',
           })}
+          ${uploaderField({
+            section: 'video',
+            kind: 'video',
+            label: 'Videos (optional)',
+            name: 'videoIds',
+            mediaIds: survey?.additional?.videoIds ?? [],
+          })}
         `,
       )}
 
@@ -207,12 +252,19 @@ export function renderSurveyForm({ id } = {}) {
   `;
 }
 
-/** Attach the currency behaviour once the form markup is in the document. */
+/** Attach field behaviour once the form markup is in the document. */
 export function mountSurveyForm(root) {
-  const rent = qs('#f-rent', root);
-  if (!rent) return;
-  currencyHandle?.destroy();
-  currencyHandle = attachCurrencyInput(rent);
+  const form = qs('#survey-form', root);
+  if (!form) return;
+
+  const rent = qs('#f-rent', form);
+  if (rent) {
+    currencyHandle?.destroy();
+    currencyHandle = attachCurrencyInput(rent);
+  }
+
+  uploaderHandle?.destroy();
+  uploaderHandle = mountUploaders(form, { surveyId: form.dataset.surveyId });
 }
 
 /** Read the form into the survey shape. Full validation arrives later. */
@@ -226,6 +278,7 @@ export function readSurveyForm(form) {
     return Number.isFinite(parsed) ? parsed : null;
   };
   const place = (key) => (text(key) ? { lat: null, lng: null, label: text(key) } : null);
+  const ids = (key) => text(key).split(',').filter(Boolean);
   const rentInput = qs('#f-rent', form);
 
   return {
@@ -243,11 +296,11 @@ export function readSurveyForm(form) {
       facilities: getCheckedValues('roomFacility', form),
       cleanliness: num('cleanliness'),
       internet: num('internet'),
-      photoIds: [],
+      photoIds: ids('roomPhotoIds'),
     },
-    bathroom: { facilities: getCheckedValues('bathroomFacility', form), photoIds: [] },
-    shared: { facilities: getCheckedValues('sharedFacility', form), photoIds: [] },
+    bathroom: { facilities: getCheckedValues('bathroomFacility', form), photoIds: ids('bathroomPhotoIds') },
+    shared: { facilities: getCheckedValues('sharedFacility', form), photoIds: ids('sharedPhotoIds') },
     surroundings: getCheckedValues('surrounding', form),
-    additional: { security: num('security'), notes: text('notes'), videoIds: [] },
+    additional: { security: num('security'), notes: text('notes'), videoIds: ids('videoIds') },
   };
 }

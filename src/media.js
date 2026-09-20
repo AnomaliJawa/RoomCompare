@@ -116,6 +116,23 @@ export async function restoreMedia(records) {
   return restored;
 }
 
+/**
+ * Delete media belonging to surveys that no longer exist.
+ *
+ * Photos are stored as soon as they are chosen, so a form abandoned without
+ * saving — or a tab closed mid-survey — leaves files with nothing pointing at
+ * them. Sweeping on boot keeps that from accumulating silently.
+ */
+export async function sweepOrphanedMedia(knownSurveyIds) {
+  const known = new Set(knownSurveyIds);
+  const owners = await db.listMediaOwners();
+  const orphans = owners.filter((owner) => !known.has(owner));
+  for (const orphan of orphans) {
+    await db.deleteMediaForSurvey(orphan);
+  }
+  return orphans.length;
+}
+
 export async function removeMedia(id) {
   db.releaseUrl(id);
   return db.deleteMedia(id);

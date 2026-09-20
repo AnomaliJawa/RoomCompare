@@ -193,6 +193,22 @@ export async function getMediaForSurvey(surveyId) {
   );
 }
 
+/** Distinct surveyIds that currently hold media. Used to find orphans. */
+export async function listMediaOwners() {
+  const owners = await withStore('readonly', (store) => {
+    const box = { value: new Set() };
+    const request = store.index(SURVEY_INDEX).openKeyCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      box.value.add(cursor.key);
+      cursor.continue();
+    };
+    return box;
+  });
+  return owners ? [...owners] : [];
+}
+
 export async function countMedia() {
   return (await withStore('readonly', (store) => requestValue(store.count()))) ?? 0;
 }
