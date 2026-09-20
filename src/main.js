@@ -36,6 +36,35 @@ function refresh() {
   mount(root(), active.render(params));
   active.mount?.(root());
   syncNav(active.nav);
+  renderStorageNotice();
+}
+
+/**
+ * Storage problems are stated plainly rather than left for the user to
+ * discover by losing work. The notice sits above the view so it is seen
+ * without covering anything.
+ */
+function renderStorageNotice() {
+  const region = qs('#storage-notice');
+  if (!region) return;
+  const { storageNotice, storageStatus } = store.getState();
+
+  if (!storageNotice) {
+    region.innerHTML = '';
+    return;
+  }
+
+  mount(
+    region,
+    html`
+      <div class="banner" data-tone="${storageStatus === 'ok' ? 'info' : 'alert'}">
+        <span>${storageNotice}</span>
+        <button class="btn btn--quiet btn--small" type="button" data-action="dismiss-storage-notice">
+          Dismiss
+        </button>
+      </div>
+    `,
+  );
 }
 
 function syncNav(active) {
@@ -124,6 +153,8 @@ function wireActions() {
 
   onAction('cancel-form', () => navigate('/surveys'));
 
+  onAction('dismiss-storage-notice', () => store.clearStorageNotice());
+
   onAction('filter-location', debounce(({ target }) => applyFilter('location', target.value, '#f-location'), 200), 'input');
   onAction('filter-min-rent', debounce(({ target }) => applyFilter('minRent', normalizeRentInput(target.value), '#f-min'), 200), 'input');
   onAction('filter-max-rent', debounce(({ target }) => applyFilter('maxRent', normalizeRentInput(target.value), '#f-max'), 200), 'input');
@@ -189,6 +220,7 @@ function start() {
         mount(root(), route.render(params));
         route.mount?.(root());
         syncNav(route.nav);
+        renderStorageNotice();
         closeMobileNav();
         window.scrollTo(0, 0);
       },
