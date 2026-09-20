@@ -38,7 +38,6 @@ function heroStrip(surveys) {
         </p>
         <div class="row">
           <a class="btn btn--primary" href="#/compare">Compare kos</a>
-          <a class="btn btn--secondary" href="#/surveys/new">Add survey</a>
         </div>
       </div>
       <div class="hero__strip">
@@ -94,9 +93,6 @@ export function renderDashboard() {
       <div class="page-head__text">
         <h1>Dashboard</h1>
         <p class="page-head__lede">Survey, record, organize, compare.</p>
-      </div>
-      <div class="page-head__actions">
-        <a class="btn btn--primary" href="#/surveys/new">Add survey</a>
       </div>
     </div>
 
