@@ -2,6 +2,8 @@ import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
 import { findSurvey, isOwnSurvey, isStarred, getState } from '../store.js';
 import { notFound } from '../components/emptyState.js';
+import { galleryField, mountGalleries } from '../components/photoGallery.js';
+import { formatCoordinate } from '../utils/geo.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -61,11 +63,8 @@ function section(title, body) {
   `;
 }
 
-function photos(ids, label) {
-  if (!ids || !ids.length) {
-    return html`<p class="meta">No ${label} photos recorded.</p>`;
-  }
-  return html`<p class="meta">${ids.length} photo${ids.length === 1 ? '' : 's'}.</p>`;
+function photos(ids, section, label) {
+  return galleryField({ section, label: `${label} photos`, mediaIds: ids ?? [] });
 }
 
 export function renderSurveyDetail({ id }) {
@@ -135,6 +134,8 @@ export function renderSurveyDetail({ id }) {
         html`<dl class="defn-list">
           ${raw(definition('Type', kosTypeLabel(survey.kos.type)))}
           ${raw(definition('Location', survey.kos.kosLocation?.label))}
+          ${raw(definition('Address', survey.kos.kosLocation?.address))}
+          ${raw(definition('Pinned at', survey.kos.kosLocation?.lat == null ? null : formatCoordinate(survey.kos.kosLocation)))}
           ${raw(definition('Campus', survey.kos.campusLocation?.label))}
           ${raw(definition('Distance to campus', formatDistance(survey.kos.distanceKm)))}
           ${raw(definition('Monthly rent', numberToCurrency(survey.kos.rent)))}
@@ -151,13 +152,13 @@ export function renderSurveyDetail({ id }) {
             ${raw(definition('Internet quality', likertLabel(survey.room.internet)))}
           </dl>
           ${raw(checklist(ROOM_FACILITIES, survey.room.facilities))}
-          ${raw(photos(survey.room.photoIds, 'room'))}
+          ${photos(survey.room.photoIds, 'room', 'room')}
         `,
       ),
     )}
 
-    ${raw(section('Bathroom', html`${raw(checklist(BATHROOM_FACILITIES, survey.bathroom.facilities))}${raw(photos(survey.bathroom.photoIds, 'bathroom'))}`))}
-    ${raw(section('Shared facilities', html`${raw(checklist(SHARED_FACILITIES, survey.shared.facilities))}${raw(photos(survey.shared.photoIds, 'shared facility'))}`))}
+    ${raw(section('Bathroom', html`${raw(checklist(BATHROOM_FACILITIES, survey.bathroom.facilities))}${photos(survey.bathroom.photoIds, 'bathroom', 'bathroom')}`))}
+    ${raw(section('Shared facilities', html`${raw(checklist(SHARED_FACILITIES, survey.shared.facilities))}${photos(survey.shared.photoIds, 'shared', 'shared facility')}`))}
     ${raw(section('Surroundings', checklist(SURROUNDINGS, survey.surroundings)))}
 
     ${raw(
@@ -168,8 +169,27 @@ export function renderSurveyDetail({ id }) {
             ${raw(definition('Security', likertLabel(survey.additional.security)))}
           </dl>
           <p class="notes">${raw(value(survey.additional.notes))}</p>
+          ${galleryField({
+            section: 'video',
+            kind: 'video',
+            label: 'videos',
+            mediaIds: survey.additional?.videoIds ?? [],
+          })}
         `,
       ),
     )}
   `;
+}
+
+/** Load the stored blobs once the markup is in the document. */
+export function mountSurveyDetail(root) {
+  let handle = null;
+  mountGalleries(root).then((result) => {
+    handle = result;
+  });
+  return {
+    destroy() {
+      handle?.destroy();
+    },
+  };
 }
