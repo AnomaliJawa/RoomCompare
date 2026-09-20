@@ -46,9 +46,11 @@ p {
 }
 
 /* --- Numerals ------------------------------------------------------------
-   The one typographic statement the design makes. Rents, distances,
-   dimensions and scores line up digit-for-digit down a column, so
-   magnitude reads before the number does. */
+   The one typographic statement the design makes. Tabular figures give
+   every digit the same advance width, so values of equal length line up
+   digit-for-digit down a column and magnitude reads at a glance.
+   Values are left-aligned: they start where the eye already is, on the
+   same edge as every label and text value in the interface. */
 
 .numeric,
 td.numeric,
@@ -57,7 +59,7 @@ input[type="number"] {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-.numeric { text-align: right; }
+.numeric { text-align: left; }
 
 /* --- Narrow face ---------------------------------------------------------
    Table column headers, group labels, dense meta. */

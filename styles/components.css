@@ -254,10 +254,6 @@
 .ledger th:last-child,
 .ledger td:last-child { border-right: none; }
 
-/* .ledger td sets text-align: left, so numerics need equal specificity here. */
-.ledger td.numeric,
-.ledger th.numeric { text-align: right; }
-
 .ledger thead th {
   position: sticky;
   top: 0;
