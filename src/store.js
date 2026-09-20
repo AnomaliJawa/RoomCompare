@@ -45,6 +45,12 @@ const state = {
     maxRent: '',
     type: '',
     starredOnly: false,
+    /**
+     * Section-scoped keys such as "room:AC". Scoping matters: Refrigerator
+     * and Dispenser exist in both the room and shared lists, and Laundry in
+     * both shared and surroundings, so a bare name would be ambiguous.
+     */
+    facilities: [],
   },
   /**
    * How storage behaved, so the shell can say so plainly rather than
@@ -237,5 +243,27 @@ export function setSearch(value) {
 
 export function setCommunityFilter(key, value) {
   state.communityFilters = { ...state.communityFilters, [key]: value };
+  notify();
+}
+
+/** Add or remove one section-scoped facility requirement. */
+export function toggleCommunityFacility(key) {
+  const current = state.communityFilters.facilities;
+  const next = current.includes(key)
+    ? current.filter((item) => item !== key)
+    : [...current, key];
+  state.communityFilters = { ...state.communityFilters, facilities: next };
+  notify();
+}
+
+export function clearCommunityFilters() {
+  state.communityFilters = {
+    location: '',
+    minRent: '',
+    maxRent: '',
+    type: '',
+    starredOnly: false,
+    facilities: [],
+  };
   notify();
 }
