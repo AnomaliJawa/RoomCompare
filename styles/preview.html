@@ -127,10 +127,27 @@
             <label class="field__label" for="p-name">Kos name</label>
             <input class="field__control" id="p-name" type="text" value="Kos Melati Residence" />
           </div>
-          <div class="field" data-invalid="true">
+          <div class="field">
             <label class="field__label" for="p-rent">Monthly rent</label>
-            <input class="field__control numeric" id="p-rent" type="number" value="-1" aria-describedby="p-rent-err" />
-            <span class="field__error" id="p-rent-err">Enter the monthly rent in rupiah.</span>
+            <div class="field__group">
+              <span class="field__affix" aria-hidden="true">Rp</span>
+              <input
+                class="field__control numeric"
+                id="p-rent"
+                type="text"
+                inputmode="numeric"
+                value="1500000"
+                aria-describedby="p-rent-hint"
+              />
+            </div>
+            <span class="field__hint" id="p-rent-hint">
+              Type the digits. Thousands are separated as you go.
+            </span>
+          </div>
+          <div class="field" data-invalid="true">
+            <label class="field__label" for="p-length">Room length</label>
+            <input class="field__control numeric" id="p-length" type="number" value="32" aria-describedby="p-length-err" />
+            <span class="field__error" id="p-length-err">Enter a size between 0.1 and 20 metres.</span>
           </div>
           <fieldset class="choice-group">
             <legend class="choice-group__legend">Room facilities</legend>
@@ -291,5 +308,12 @@
         </div>
       </section>
     </div>
+
+    <script type="module">
+      import { attachCurrencyInput } from '../src/components/currencyInput.js';
+      const rent = attachCurrencyInput(document.querySelector('#p-rent'));
+      // Exposed so the live behaviour can be exercised from the console.
+      window.__rent = rent;
+    </script>
   </body>
 </html>

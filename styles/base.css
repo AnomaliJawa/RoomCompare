@@ -55,7 +55,8 @@ p {
 .numeric,
 td.numeric,
 th.numeric,
-input[type="number"] {
+input[type="number"],
+input[inputmode="numeric"] {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
