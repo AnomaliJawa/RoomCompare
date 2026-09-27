@@ -6,6 +6,7 @@ import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
 import { distanceBetween } from '../utils/geo.js';
 import { formatDistance } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
+import { surveyGuideButton, maybeShowSurveyGuide } from '../components/surveyGuide.js';
 import {
   textField,
   currencyField,
@@ -119,7 +120,10 @@ export function renderSurveyForm({ id } = {}) {
   return html`
     <div class="page-head">
       <div class="page-head__text">
-        <h1>${editing ? 'Edit survey' : 'New survey'}</h1>
+        <div class="page-head__title">
+          <h1>${editing ? 'Edit survey' : 'New survey'}</h1>
+          ${surveyGuideButton()}
+        </div>
         <p class="page-head__lede">
           ${editing
             ? 'Change what you recorded. Cancel leaves the saved version untouched.'
@@ -344,6 +348,10 @@ export function mountSurveyForm(root) {
   });
 
   attachGuidance(form);
+
+  // The first new survey on this device opens with the Survey guide: what to
+  // bring and ask before the visit. Editing is later, so it is left alone.
+  if (!form.dataset.id) maybeShowSurveyGuide();
 
   // Anything the user touches counts, so Cancel can ask before discarding.
   dirty = false;
