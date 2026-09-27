@@ -21,6 +21,31 @@ export function requiredBadge(guide) {
   return guide?.badge ? html`<span class="req-badge">${guide.badge}</span>` : '';
 }
 
+// An "i" in a circle, drawn in the button's own colour.
+const INFO_ICON =
+  '<svg class="field__info-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
+  '<circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5" />' +
+  '<path d="M10 9v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />' +
+  '<circle cx="10" cy="6.25" r="1" fill="currentColor" />' +
+  '</svg>';
+
+/**
+ * The ⓘ beside a label, which opens the field's How to fill panel. It sits
+ * next to the label rather than inside it: a <label> may not hold another
+ * control, and its name would join the field's.
+ */
+export function infoButton(guide) {
+  if (!guide?.key || !guide.panel) return '';
+  return html`<button
+    class="field__info"
+    type="button"
+    data-action="open-howto"
+    data-guide="${guide.key}"
+    aria-label="How to fill ${guide.label}"
+    aria-haspopup="dialog"
+  >${raw(INFO_ICON)}</button>`;
+}
+
 const count = (n) => n.toLocaleString('en-US');
 
 function counter(id, max, length) {
@@ -58,21 +83,21 @@ function support(id, { hint, error, guide, value = '' }) {
   return '';
 }
 
-/** A field's label, in a head row when the field carries guidance. */
+/** A field's label, in a head row with its ⓘ when the field carries guidance. */
 function fieldLabel(id, label, guide) {
   const tag = html`<label class="field__label" for="${id}">${label}${requiredBadge(guide)}</label>`;
-  return guide ? html`<div class="field__head">${tag}</div>` : tag;
+  return guide ? html`<div class="field__head">${tag}${infoButton(guide)}</div>` : tag;
 }
 
 /**
  * A group's legend. With guidance, the name and badge sit in their own span,
- * which the fieldset is labelled by, so anything else placed in the legend
- * later stays out of the group's accessible name.
+ * which the fieldset is labelled by, so the ⓘ beside them stays out of the
+ * group's accessible name.
  */
 function groupLegend(name, legend, guide) {
   if (!guide) return html`<legend class="choice-group__legend">${legend}</legend>`;
   return html`<legend class="choice-group__legend">
-    <span id="${name}-legend">${legend}${requiredBadge(guide)}</span>
+    <span id="${name}-legend">${legend}${requiredBadge(guide)}</span>${infoButton(guide)}
   </legend>`;
 }
 

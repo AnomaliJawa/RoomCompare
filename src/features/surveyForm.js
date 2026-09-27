@@ -14,6 +14,7 @@ import {
   radioGroup,
   likertField,
   requiredBadge,
+  infoButton,
 } from '../components/fields.js';
 import {
   KOS_TYPES,
@@ -186,6 +187,7 @@ export function renderSurveyForm({ id } = {}) {
           <div class="field">
             <div class="field__head">
               <label class="field__label" for="f-distanceKm">Distance to campus${requiredBadge(guide('distance'))}</label>
+              ${infoButton(guide('distance'))}
             </div>
             <input class="field__control numeric" id="f-distanceKm" name="distanceKm" type="text"
               value="${kos.distanceKm == null ? '' : formatDistance(kos.distanceKm)}" readonly
@@ -218,7 +220,7 @@ export function renderSurveyForm({ id } = {}) {
             label: 'Room photos',
             name: 'roomPhotoIds',
             mediaIds: room.photoIds ?? [],
-            hint: guide('roomPhotos').helper,
+            guide: guide('roomPhotos'),
           })}
         `,
       )}
@@ -240,7 +242,7 @@ export function renderSurveyForm({ id } = {}) {
             label: 'Bathroom photos',
             name: 'bathroomPhotoIds',
             mediaIds: survey?.bathroom?.photoIds ?? [],
-            hint: guide('bathroomPhotos').helper,
+            guide: guide('bathroomPhotos'),
           })}
         `,
       )}
@@ -262,7 +264,7 @@ export function renderSurveyForm({ id } = {}) {
             label: 'Shared facility photos',
             name: 'sharedPhotoIds',
             mediaIds: survey?.shared?.photoIds ?? [],
-            hint: guide('sharedPhotos').helper,
+            guide: guide('sharedPhotos'),
           })}
         `,
       )}
@@ -299,7 +301,7 @@ export function renderSurveyForm({ id } = {}) {
             label: 'Videos (optional)',
             name: 'videoIds',
             mediaIds: survey?.additional?.videoIds ?? [],
-            hint: guide('videos').helper,
+            guide: guide('videos'),
           })}
         `,
       )}

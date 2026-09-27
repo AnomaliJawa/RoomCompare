@@ -3,6 +3,7 @@ import { formatBytes } from '../utils/image.js';
 import { addPhotos, addVideo, loadMedia, MAX_VIDEOS } from '../media.js';
 import { urlFor, releaseUrl } from '../db.js';
 import { MAX_PHOTOS_PER_SECTION } from '../constants.js';
+import { infoButton } from './fields.js';
 
 /**
  * Photo and video picker.
@@ -32,15 +33,21 @@ function limitFor(kind) {
 
 /* --- Markup -------------------------------------------------------------- */
 
-/** `hint` replaces the default limit line under the drop zone's prompt. */
-export function uploaderField({ section, kind = 'photo', label, name, mediaIds = [], hint = null }) {
+/**
+ * `guide` (content/guidance.js) adds the field's ⓘ, and its helper replaces
+ * the default limit line under the drop zone's prompt.
+ */
+export function uploaderField({ section, kind = 'photo', label, name, mediaIds = [], guide = null }) {
   const max = limitFor(kind);
   const noun = kind === 'video' ? 'videos' : 'photos';
+  const hint = guide?.helper ?? null;
 
   return html`
     <div class="uploader" data-uploader="${section}" data-kind="${kind}">
       <div class="uploader__head">
-        <span class="field__label" id="${section}-uploader-label">${label}</span>
+        <span class="field__head">
+          <span class="field__label" id="${section}-uploader-label">${label}</span>${infoButton(guide)}
+        </span>
         <span class="uploader__count" data-count>${mediaIds.length} of ${max}</span>
       </div>
 

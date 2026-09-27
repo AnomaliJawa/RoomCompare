@@ -29,6 +29,7 @@ import { renderCommunity, mountCommunity, filterCommunity } from './features/com
 import { filterDialogContent } from './components/filterPanel.js';
 import { candidatePickerDialog } from './components/candidatePicker.js';
 import { enableSheetDismiss } from './components/sheet.js';
+import { openHowTo, initHowTo } from './components/howToPanel.js';
 import { renderCompare, mountCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
@@ -454,6 +455,10 @@ function wireActions() {
 
   onAction('close-filters', () => qs('#app-filters')?.close());
 
+  // A field's ⓘ opens its How to fill panel.
+  onAction('open-howto', ({ target }) => openHowTo(target.dataset.guide, target));
+  onAction('close-howto', () => qs('#app-howto')?.close());
+
   onAction('clear-community-filters', () => store.clearCommunityFilters());
 
   onAction('submit-survey', async ({ target, event }) => {
@@ -671,9 +676,11 @@ async function start() {
   startEventBridge();
   wireActions();
 
-  // On a phone these two are sheets, dismissed by dragging their head down.
+  // On a phone these are sheets, dismissed by dragging their head down.
   enableSheetDismiss(qs('#app-filters'), '.filter-dialog__head');
   enableSheetDismiss(qs('#app-picker'), '.picker-dialog__head');
+  enableSheetDismiss(qs('#app-howto'), '.howto__head');
+  initHowTo();
 
   // iOS Safari has applied :active only where a touch listener exists on the
   // element or an ancestor. Without this no-op, the pressed states in
