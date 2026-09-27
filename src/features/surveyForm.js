@@ -48,7 +48,7 @@ let autosaveTimer = null;
  * Photos are stored the moment they are chosen — a survey is filled in while
  * standing in the room, and an interrupted session should not lose them — and
  * a stored file needs a survey to belong to. Media left by a form that is
- * never saved is swept on the next boot.
+ * never saved is swept after the next login.
  */
 let draftId = null;
 
@@ -302,7 +302,7 @@ export function mountSurveyForm(root) {
 
   mapHandle?.destroy();
   mountMapPickers(form, {
-    onDistance: (km) => {
+    onDistance: (km, { initial = false } = {}) => {
       const field = qs('#f-distanceKm', form);
       const readout = qs('[data-distance-readout]', form);
       if (!field) return;
@@ -310,7 +310,9 @@ export function mountSurveyForm(root) {
       if (readout) {
         readout.textContent = km == null ? 'Pin both places to measure the distance.' : formatDistance(km);
       }
-      markDirty();
+      // A pin move fires no input event, so it is marked here — but not the
+      // first reading of pins that were already saved.
+      if (!initial) markDirty();
     },
   }).then((handle) => {
     mapHandle = handle;

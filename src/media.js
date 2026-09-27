@@ -1,6 +1,14 @@
 import * as db from './db.js';
+import { getState } from './store.js';
 import { downscaleImage, acceptVideo, MediaError } from './utils/image.js';
 import { MAX_PHOTOS_PER_SECTION } from './constants.js';
+
+/**
+ * Photos stay on the device that took them; the server holds survey records
+ * only. Each asset records the account it was added under, so cleaning up one
+ * account's leftovers can never touch another's on a shared device.
+ */
+const currentOwner = () => getState().user?.id ?? null;
 
 /**
  * Resize-then-store, the seam the uploader will sit on.
@@ -25,6 +33,7 @@ export async function addPhoto(file, { surveyId, section }) {
     const record = {
       id: newId(),
       surveyId,
+      ownerId: currentOwner(),
       section,
       blob: processed.blob,
       mimeType: processed.mimeType,
@@ -58,6 +67,7 @@ export async function addVideo(file, { surveyId }) {
     const record = {
       id: newId(),
       surveyId,
+      ownerId: currentOwner(),
       section: 'video',
       blob: checked.blob,
       mimeType: checked.mimeType,
@@ -121,14 +131,19 @@ export async function restoreMedia(records) {
  *
  * Photos are stored as soon as they are chosen, so a form abandoned without
  * saving — or a tab closed mid-survey — leaves files with nothing pointing at
- * them. Sweeping on boot keeps that from accumulating silently.
+ * them. Sweeping after each login keeps that from accumulating silently.
  */
-export async function sweepOrphanedMedia(knownSurveyIds) {
+export async function sweepOrphanedMedia(knownSurveyIds, ownerId) {
+  // Only this account's assets are candidates. Another account's photos on a
+  // shared device, and photos from before accounts existed, belong to surveys
+  // this account cannot see — they are not orphans, and they exist nowhere
+  // else.
+  if (!ownerId) return 0;
   const known = new Set(knownSurveyIds);
-  const owners = await db.listMediaOwners();
-  const orphans = owners.filter((owner) => !known.has(owner));
-  for (const orphan of orphans) {
-    await db.deleteMediaForSurvey(orphan);
+  const orphans = (await db.listMediaMeta()).filter((asset) => asset.ownerId === ownerId && !known.has(asset.surveyId));
+  for (const asset of orphans) {
+    db.releaseUrl(asset.id);
+    await db.deleteMedia(asset.id);
   }
   return orphans.length;
 }

@@ -34,6 +34,16 @@ const boot = storage.load();
 const seeded = boot.status !== storage.LOAD_STATUS.OK;
 
 const state = {
+  /**
+   * The logged-in account, or null. Held in memory only: the session itself
+   * is an HttpOnly cookie that script cannot read.
+   */
+  user: null,
+  /**
+   * Whose account the surveys below belong to. Null for a copy recorded
+   * before accounts existed, and after a logout.
+   */
+  ownerId: seeded ? null : boot.data.ownerId ?? null,
   surveys: seeded ? structuredClone(ownSurveys) : boot.data.surveys,
   communitySurveys: structuredClone(communitySurveys),
   starredIds: seeded ? ['com-kartika'] : boot.data.starredIds,
@@ -70,12 +80,18 @@ const state = {
       : boot.status === storage.LOAD_STATUS.UNAVAILABLE
         ? 'Saving is off in this browser mode. Your surveys will not be kept after you close this tab.'
         : null,
+  /**
+   * How the account's copy is doing, when that is worth saying: offline, or
+   * a change the server refused. Separate from storageNotice, which every
+   * successful local save clears.
+   */
+  syncNotice: null,
 };
 
 // A first run writes the seed immediately, so the next visit loads from
 // storage rather than re-seeding.
 if (seeded && state.storageStatus === 'ok') {
-  storage.save({ surveys: state.surveys, starredIds: state.starredIds });
+  storage.save({ surveys: state.surveys, starredIds: state.starredIds, ownerId: null });
 }
 
 export function getState() {
@@ -106,6 +122,7 @@ function commit() {
     const result = storage.save({
       surveys: state.surveys,
       starredIds: state.starredIds,
+      ownerId: state.ownerId,
     });
 
     if (result === storage.SAVE_RESULT.OK) {
@@ -127,6 +144,58 @@ function commit() {
 export function clearStorageNotice() {
   state.storageNotice = null;
   notify();
+}
+
+/* --- Account ------------------------------------------------------------- */
+
+export function setUser(user) {
+  state.user = user;
+  notify();
+}
+
+export function setSyncNotice(message) {
+  if (state.syncNotice === message) return;
+  state.syncNotice = message;
+  notify();
+}
+
+/**
+ * Surveys recorded on this device before accounts existed, which the user
+ * can add to their account. Never the samples: those were never theirs.
+ */
+export function unclaimedSurveys() {
+  if (state.ownerId !== null) return [];
+  const samples = new Set(ownSurveys.map((survey) => survey.id));
+  return state.surveys.filter((survey) => !samples.has(survey.id));
+}
+
+/**
+ * Make the account's surveys this device's working copy. sync.js has already
+ * sent anything this device held back, so the account's list is complete.
+ */
+export function adoptSurveys(surveys, ownerId) {
+  state.surveys = surveys;
+  state.ownerId = ownerId;
+  // A selection can only point at surveys this copy still holds.
+  state.compareSelection = state.compareSelection.filter((id) => findSurvey(id));
+  closeComparisonIfTooFew();
+  commit();
+}
+
+/**
+ * Logging out. The account's surveys leave the screen and this device's
+ * cache — on a shared phone, the next person must not see them. Changes not
+ * yet sent wait in sync.js's queue, under the account, for its next login.
+ */
+export function forgetAccount() {
+  state.user = null;
+  state.surveys = [];
+  state.ownerId = null;
+  state.compareSelection = [];
+  state.compareShown = false;
+  state.search = '';
+  state.syncNotice = null;
+  commit();
 }
 
 /** Discard stored data and return to the sample surveys. */
@@ -265,6 +334,18 @@ export function showComparison() {
 export function clearCompare() {
   state.compareSelection = [];
   state.compareShown = false;
+  notify();
+}
+
+/**
+ * Put back a selection that Start over cleared. Only kos that can still be
+ * compared come back — one may have been deleted or unstarred in the
+ * seconds since — and the table reopens only if it still has two.
+ */
+export function restoreCompare(selection, shown) {
+  const comparable = new Set(comparableSurveys().map((survey) => survey.id));
+  state.compareSelection = selection.filter((id) => comparable.has(id)).slice(0, MAX_COMPARE);
+  state.compareShown = Boolean(shown) && state.compareSelection.length >= MIN_COMPARE;
   notify();
 }
 

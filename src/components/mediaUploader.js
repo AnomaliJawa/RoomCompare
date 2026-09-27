@@ -11,10 +11,14 @@ import { MAX_PHOTOS_PER_SECTION } from '../constants.js';
  * a survey is recorded standing in someone else's room on a phone, and an
  * interrupted session should not lose the photos already taken. The survey id
  * is therefore assigned when the form opens, not when it is saved, and any
- * media left behind by an abandoned form is swept on the next boot.
+ * media left behind by an abandoned form is swept after the next login.
  *
  * The chosen ids travel in a hidden input so the existing form read picks
  * them up with everything else.
+ *
+ * Files never leave the device they were added on; only the survey record
+ * travels to the account. A survey opened on another device therefore lists
+ * ids this device has no file for, and they are kept, not dropped.
  */
 
 const ACCEPT = {
@@ -97,6 +101,35 @@ function thumbnail(record, kind) {
   </li>`;
 }
 
+/**
+ * A file the survey lists but this device does not hold: added on another
+ * device, or cleared from this browser's storage. It says so in place of a
+ * broken image, and can still be removed.
+ */
+function elsewhere(id, kind) {
+  const remove = html`<button
+    class="uploader__remove"
+    type="button"
+    data-remove="${id}"
+    aria-label="Remove ${kind} not on this device"
+  >Remove</button>`;
+
+  if (kind === 'video') {
+    return html`<li class="uploader__item uploader__item--file">
+      <div class="uploader__file">
+        <span class="uploader__file-name">Video</span>
+        <span class="meta">Not on this device</span>
+      </div>
+      ${remove}
+    </li>`;
+  }
+
+  return html`<li class="uploader__item">
+    <span class="uploader__elsewhere">Not on this device</span>
+    ${remove}
+  </li>`;
+}
+
 function mountOne(node, { surveyId, onChange }) {
   const kind = node.dataset.kind;
   const section = node.dataset.uploader;
@@ -124,11 +157,21 @@ function mountOne(node, { surveyId, onChange }) {
 
   async function paint() {
     const records = await loadMedia(ids);
-    // An id with no record left means the file is gone; drop it rather than
-    // rendering a broken tile.
-    ids = records.map((record) => record.id);
-    mount(grid, html`${records.map((record) => thumbnail(record, kind))}`);
+    const held = new Map(records.map((record) => [record.id, record]));
+    // An id with no file here stays in the list. Dropping it would take the
+    // photo away from the device that does hold it, the next time this
+    // survey is saved from here.
+    mount(grid, html`${ids.map((id) => (held.has(id) ? thumbnail(held.get(id), kind) : elsewhere(id, kind)))}`);
     syncCount();
+  }
+
+  /**
+   * Repaint after the user adds or removes a file. Only that counts as a
+   * change: the first paint lands after the form has reset its dirty flag,
+   * and reporting it would make every untouched form ask before Cancel.
+   */
+  async function repaint() {
+    await paint();
     onChange?.();
   }
 
@@ -169,7 +212,7 @@ function mountOne(node, { surveyId, onChange }) {
           if (result.ok) ids.push(result.record.id);
           else failures.push(result);
         }
-        await paint();
+        await repaint();
         report(failures);
       } else {
         const { stored, failed } = await addPhotos(files, {
@@ -178,7 +221,7 @@ function mountOne(node, { surveyId, onChange }) {
           existingCount: ids.length,
         });
         ids.push(...stored.map((record) => record.id));
-        await paint();
+        await repaint();
         report(failed);
       }
     } finally {
@@ -219,7 +262,7 @@ function mountOne(node, { surveyId, onChange }) {
     // Anything left unreferenced after a save is pruned then.
     ids = ids.filter((item) => item !== id);
     releaseUrl(id);
-    await paint();
+    await repaint();
     status.textContent = 'Photo removed. It is deleted when you save.';
   });
 

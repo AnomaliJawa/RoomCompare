@@ -1,5 +1,4 @@
 import { html, raw } from '../utils/dom.js';
-import { numberToCurrency } from '../utils/format.js';
 import { MAX_COMPARE, MIN_COMPARE } from '../constants.js';
 
 /**
@@ -10,13 +9,20 @@ import { MAX_COMPARE, MIN_COMPARE } from '../constants.js';
  * user asks for rather than something that appears mid-selection. Once it is
  * open, adding and removing update it in place — nobody wants to press
  * Compare again after swapping one kos out.
+ *
+ * Add kos lives here too, beside the selection it changes. It opens the
+ * picker in a dialog (see main.js); Compare stays last, as the primary action.
+ *
+ * Every slot, filled or empty, is one equal card: the name alone, no rent
+ * (the comparison's first rows carry it), on a single line, so a long name
+ * cannot make its card bigger than the others. The full name stays in the
+ * title, the table header and the picker.
  */
 
 function chip(survey) {
   return html`
     <li class="compare-chip">
-      <span class="compare-chip__name">${survey.kos.name}</span>
-      <span class="compare-chip__rent numeric">${numberToCurrency(survey.kos.rent)}</span>
+      <span class="compare-chip__name" title="${survey.kos.name}">${survey.kos.name}</span>
       <button
         class="compare-chip__remove"
         type="button"
@@ -42,7 +48,7 @@ export function compareBar(selected, { shown }) {
 
   return html`
     <section class="compare-bar" aria-label="Selected for comparison">
-      <ul class="compare-bar__chips">
+      <ul class="compare-bar__chips" style="--slots: ${MAX_COMPARE}">
         ${selected.map((survey) => chip(survey))}
         ${slots}
       </ul>
@@ -58,6 +64,9 @@ export function compareBar(selected, { shown }) {
               </button>`,
             )
           : ''}
+        <button class="btn btn--secondary" type="button" data-action="open-picker" aria-haspopup="dialog">
+          Add kos
+        </button>
         ${!shown
           ? raw(
               html`<button

@@ -128,14 +128,26 @@ function openLightbox(records, startIndex, returnFocusTo) {
 
 /* --- Mounting ------------------------------------------------------------ */
 
-function renderRecords(node, records) {
+/**
+ * Files never leave the device they were added on; only the survey record
+ * travels to the account. On any other device its files are listed but not
+ * here, which is worth saying plainly rather than implying they were lost.
+ */
+function notHere(count, kind) {
+  const noun = kind === 'video' ? 'video' : 'photo';
+  const what = count === 1 ? `1 ${noun} is` : `${count} ${noun}s are`;
+  return `${what} not on this device. Photos and videos stay on the device they were added on.`;
+}
+
+function renderRecords(node, records, expected) {
   const grid = qs('[data-grid]', node);
   const status = qs('[data-status]', node);
   const kind = node.dataset.kind;
+  const missing = expected - records.length;
 
   if (!records.length) {
     mount(grid, '');
-    status.textContent = 'Those files are no longer stored.';
+    status.textContent = notHere(missing, kind);
     return;
   }
 
@@ -149,7 +161,7 @@ function renderRecords(node, records) {
         </div>`,
       )}`,
     );
-    status.textContent = '';
+    status.textContent = missing ? notHere(missing, kind) : '';
     return;
   }
 
@@ -166,7 +178,7 @@ function renderRecords(node, records) {
       </button>`,
     )}`,
   );
-  status.textContent = '';
+  status.textContent = missing ? notHere(missing, kind) : '';
 
   grid.addEventListener('click', (event) => {
     const button = event.target.closest('[data-open]');
@@ -187,7 +199,7 @@ export async function mountGalleries(root) {
       const ids = node.dataset.ids ? node.dataset.ids.split(',').filter(Boolean) : [];
       const records = await loadMedia(ids);
       loaded.push(...records.map((record) => record.id));
-      renderRecords(node, records);
+      renderRecords(node, records, ids.length);
     }),
   );
 

@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="styles/layout.css" />
     <link rel="stylesheet" href="styles/components.css" />
   </head>
-  <body>
+  <body data-auth="pending">
     <a class="skip-link" href="#app-root">Skip to content</a>
 
     <header class="nav">
@@ -36,6 +36,7 @@
           <a class="nav__link" data-nav="surveys" href="#/surveys">My surveys</a>
           <a class="nav__link" data-nav="community" href="#/community">Community</a>
           <a class="nav__link" data-nav="compare" href="#/compare">Compare</a>
+          <button class="nav__link nav__logout-menu" type="button" data-action="logout">Log out</button>
         </nav>
 
         <div class="nav__actions">
@@ -46,6 +47,7 @@
             aria-controls="nav-links"
             aria-expanded="false"
           >Menu</button>
+          <button class="btn btn--quiet nav__logout" type="button" data-action="logout">Log out</button>
           <a class="btn btn--primary" href="#/surveys/new">Add survey</a>
         </div>
       </div>
@@ -53,11 +55,12 @@
 
     <div class="column column--notice" id="storage-notice" role="status" aria-live="polite"></div>
 
-    <main class="column" id="app-root" tabindex="-1"></main>
+    <main class="column" id="app-root" tabindex="-1"><p class="meta">Loading…</p></main>
 
     <dialog class="dialog" id="app-dialog" aria-modal="true"></dialog>
     <dialog class="lightbox-dialog" id="app-lightbox" aria-modal="true" aria-label="Photo viewer"></dialog>
     <dialog class="dialog dialog--wide" id="app-filters" aria-modal="true" aria-labelledby="filter-dialog-title"></dialog>
+    <dialog class="dialog dialog--wide dialog--picker" id="app-picker" aria-modal="true" aria-labelledby="picker-dialog-title"></dialog>
     <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>
 
     <script type="module" src="src/main.js"></script>

@@ -193,20 +193,24 @@ export async function getMediaForSurvey(surveyId) {
   );
 }
 
-/** Distinct surveyIds that currently hold media. Used to find orphans. */
-export async function listMediaOwners() {
-  const owners = await withStore('readonly', (store) => {
-    const box = { value: new Set() };
-    const request = store.index(SURVEY_INDEX).openKeyCursor();
+/**
+ * Who each asset belongs to, without reading any image data: the cursor's
+ * values hold Blob handles, not bytes.
+ */
+export async function listMediaMeta() {
+  const meta = await withStore('readonly', (store) => {
+    const box = { value: [] };
+    const request = store.openCursor();
     request.onsuccess = () => {
       const cursor = request.result;
       if (!cursor) return;
-      box.value.add(cursor.key);
+      const { id, surveyId, ownerId = null } = cursor.value;
+      box.value.push({ id, surveyId, ownerId });
       cursor.continue();
     };
     return box;
   });
-  return owners ? [...owners] : [];
+  return meta ?? [];
 }
 
 export async function countMedia() {

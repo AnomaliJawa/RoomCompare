@@ -86,6 +86,7 @@ export function mapPickerField({
           value="${address ?? ''}"
           placeholder="${placeholder}"
           autocomplete="off"
+          enterkeyhint="search"
           data-address
           aria-describedby="${name}-search-status"
         />
@@ -336,17 +337,20 @@ export async function mountMapPickers(root, { onDistance } = {}) {
     });
   }
 
-  const recalculate = () => {
+  const recalculate = ({ initial = false } = {}) => {
     const read = (name) => {
       const node = qs(`[data-mappicker="${name}"]`, root);
       if (!node) return null;
       return { lat: qs('[data-lat]', node).value, lng: qs('[data-lng]', node).value };
     };
-    onDistance?.(distanceBetween(read('kosLocation'), read('campusLocation')));
+    onDistance?.(distanceBetween(read('kosLocation'), read('campusLocation')), { initial });
   };
 
-  const handles = nodes.map((node) => mountOne(node, L, recalculate));
-  recalculate();
+  const handles = nodes.map((node) => mountOne(node, L, () => recalculate()));
+  // Fills the readout for pins already saved. Flagged, because this runs
+  // after the map loads — well after the form reset its dirty flag — and is
+  // not the user's change.
+  recalculate({ initial: true });
 
   return {
     mapAvailable: Boolean(L),

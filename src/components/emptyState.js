@@ -50,14 +50,14 @@ export const nothingSelected = () =>
   emptyState({
     title: 'Add two kos to start comparing',
     body:
-      'Pick from the surveys you have recorded, and any community surveys you have starred. ' +
+      'Use Add kos to pick from the surveys you have recorded, and any community surveys you have starred. ' +
       'You can compare up to three at once.',
   });
 
 export const needsOneMore = (name) =>
   emptyState({
     title: 'Add one more kos',
-    body: `A comparison needs at least two. ${name} is ready to go.`,
+    body: `A comparison needs at least two. ${name} is ready to go; use Add kos to pick another.`,
     actions: [{ label: 'Add survey', href: '#/surveys/new' }],
   });
 
