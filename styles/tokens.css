@@ -102,11 +102,33 @@
   --gutter-narrow:   var(--space-4);
   --nav-height:      64px;
 
+  /* --- Touch --------------------------------------------------------------
+     Apple's default control size on iPhone and iPad is 44×44pt. A survey is
+     recorded on a phone, standing in someone else's room, so on a touch
+     screen every control reaches this. A mouse keeps the denser 40px. */
+
+  --target-min: 44px;
+
   /* --- Motion -------------------------------------------------------------
      Response to action only. One orchestrated moment: the comparison
      columns resolving. All of it disabled under reduced-motion. */
 
   --duration-fast: 120ms;
   --duration-base: 200ms;
+  --duration-slow: 300ms;  /* a sheet travelling the height of a phone  */
   --ease:          cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-out:      cubic-bezier(0.32, 0.72, 0, 1);  /* arrives, then settles */
+}
+
+/* --- Increase Contrast ------------------------------------------------------
+   The system setting on iPhone, iPad and Mac (and Windows' contrast themes)
+   arrives as `prefers-contrast: more`. The hairlines and the muted text are
+   where the palette runs closest to its minimum, so both darken: rules to
+   3.2:1 or better against paper and surface, muted text to 7.5:1. */
+
+@media (prefers-contrast: more) {
+  :root {
+    --rule:  #848d86;
+    --muted: #4a524c;
+  }
 }

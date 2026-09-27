@@ -93,13 +93,19 @@ export function load() {
   return { status: LOAD_STATUS.OK, data: parsed };
 }
 
-export function save({ surveys, starredIds }) {
+/**
+ * `ownerId` says whose account this copy belongs to. It is null for data
+ * recorded before accounts existed, and after a logout; the app only shows
+ * the copy to the account that owns it.
+ */
+export function save({ surveys, starredIds, ownerId = null }) {
   if (!isAvailable()) return SAVE_RESULT.UNAVAILABLE;
 
   const payload = {
     schemaVersion: SCHEMA_VERSION,
     surveys,
     starredIds,
+    ownerId,
     updatedAt: new Date().toISOString(),
   };
 
@@ -115,6 +121,20 @@ export function save({ surveys, starredIds }) {
         error.name === 'QuotaExceededError' ||
         error.name === 'NS_ERROR_DOM_QUOTA_REACHED');
     return quota ? SAVE_RESULT.QUOTA : SAVE_RESULT.FAILED;
+  }
+}
+
+/**
+ * Surveys recorded here before accounts existed, which the user chose not
+ * to add to their account. Kept aside rather than deleted, like unreadable
+ * data: it may be the only copy of something they recorded.
+ */
+export function keepUnclaimed(surveys) {
+  try {
+    window.localStorage.setItem(`${STORAGE_KEY}:unclaimed-${Date.now()}`, JSON.stringify(surveys));
+    return true;
+  } catch {
+    return false;
   }
 }
 

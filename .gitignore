@@ -3,3 +3,9 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# The server's SQLite database: accounts and their surveys.
+data/
+
+# Written when the server tests and devserver.py import server.py.
+__pycache__/

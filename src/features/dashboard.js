@@ -22,9 +22,50 @@ function emptyHero() {
   });
 }
 
+/**
+ * The strip is the full comparison in miniature, and takes its shape: one
+ * card per criterion under a tinted heading, the kos names once above them,
+ * and every table on one column set so values line up from card to card.
+ *
+ * Nothing scrolls inside it. The criterion column that used to sit beside
+ * the values is now the heading of each card, which leaves the kos columns
+ * the whole width; on a phone, where even that is too narrow, the columns
+ * stack (see components.css). Explicit ARIA roles keep the tables tables
+ * when the narrow layout turns them into blocks.
+ */
 function heroStrip(surveys) {
   const cheapest = Math.min(...surveys.map((s) => s.kos.rent ?? Infinity));
   const nearest = Math.min(...surveys.map((s) => s.kos.distanceKm ?? Infinity));
+
+  const criteria = [
+    {
+      id: 'strip-rent',
+      label: 'Monthly rent',
+      value: (s) => (s.kos.rent == null ? null : numberToCurrency(s.kos.rent)),
+      best: (s) => s.kos.rent === cheapest,
+    },
+    {
+      id: 'strip-distance',
+      label: 'To campus',
+      value: (s) => (s.kos.distanceKm == null ? null : formatDistance(s.kos.distanceKm)),
+      best: (s) => s.kos.distanceKm === nearest,
+    },
+  ];
+
+  const columns = html`<colgroup>${surveys.map(() => html`<col />`)}</colgroup>`;
+  const names = html`<tr role="row">
+    ${surveys.map((s) => html`<th scope="col" role="columnheader">${s.kos.name}</th>`)}
+  </tr>`;
+
+  const cell = (criterion, s) => {
+    const value = criterion.value(s);
+    return html`<td class="numeric${criterion.best(s) ? ' strip__best' : ''}" role="cell">
+      <span class="strip__kos" aria-hidden="true">${s.kos.name}</span>
+      ${value === null
+        ? html`<span class="strip__value unrecorded">Not recorded</span>`
+        : html`<span class="strip__value">${value}</span>`}
+    </td>`;
+  };
 
   return html`
     <section class="hero">
@@ -34,45 +75,31 @@ function heroStrip(surveys) {
           Everything you recorded in one place, so you can weigh the options
           without opening your gallery, your notes and a chat thread at once.
         </p>
-        <div class="row">
-          <a class="btn btn--primary" href="#/compare">Compare kos</a>
-        </div>
       </div>
       <div class="hero__strip">
-        <table class="strip">
-          <thead>
-            <tr>
-              <th class="strip__label" scope="col">Criterion</th>
-              ${raw(surveys.map((s) => html`<th scope="col">${s.kos.name}</th>`).join(''))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th class="strip__label" scope="row">Monthly rent</th>
-              ${raw(
-                surveys
-                  .map(
-                    (s) => html`<td class="numeric ${s.kos.rent === cheapest ? 'strip__best' : ''}">
-                      ${numberToCurrency(s.kos.rent)}
-                    </td>`,
-                  )
-                  .join(''),
-              )}
-            </tr>
-            <tr>
-              <th class="strip__label" scope="row">To campus</th>
-              ${raw(
-                surveys
-                  .map(
-                    (s) => html`<td class="numeric ${s.kos.distanceKm === nearest ? 'strip__best' : ''}">
-                      ${formatDistance(s.kos.distanceKm)}
-                    </td>`,
-                  )
-                  .join(''),
-              )}
-            </tr>
-          </tbody>
-        </table>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#/compare">Compare kos</a>
+        </div>
+        <div class="strip-sections">
+          <div class="strip-section strip-section--names" aria-hidden="true">
+            <table class="strip">
+              ${columns}
+              <thead>${names}</thead>
+            </table>
+          </div>
+          ${criteria.map(
+            (criterion) => html`<section class="strip-section" aria-labelledby="${criterion.id}">
+              <h3 class="strip-section__title" id="${criterion.id}">${criterion.label}</h3>
+              <table class="strip" role="table" aria-labelledby="${criterion.id}">
+                ${columns}
+                <thead class="visually-hidden" role="rowgroup">${names}</thead>
+                <tbody role="rowgroup">
+                  <tr role="row">${surveys.map((s) => cell(criterion, s))}</tr>
+                </tbody>
+              </table>
+            </section>`,
+          )}
+        </div>
       </div>
     </section>
   `;

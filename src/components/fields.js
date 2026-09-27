@@ -37,6 +37,12 @@ export function textField({
   // Error key, when it differs from the form name. The kos location has both
   // a name field and a map pin; only one of them can own "kosLocation".
   field = name,
+  // Survey fields keep autocomplete off: a browser suggestion for "Kos name"
+  // is always wrong. Account fields name their purpose, so password managers
+  // fill them and phones offer the right keyboard.
+  autocomplete = 'off',
+  inputmode = '',
+  plain = false,
 }) {
   const described = describedBy(id, { hint, error });
   return html`
@@ -49,7 +55,9 @@ export function textField({
         type="${type}"
         value="${value ?? ''}"
         placeholder="${placeholder}"
-        autocomplete="off"
+        autocomplete="${autocomplete}"
+        ${inputmode ? raw(`inputmode="${inputmode}"`) : ''}
+        ${plain ? raw('autocapitalize="none" spellcheck="false"') : ''}
         ${described ? raw(`aria-describedby="${described}"`) : ''}
         ${action ? raw(`data-action="${action}"`) : ''}
       />

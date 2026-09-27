@@ -1,9 +1,8 @@
 import { html, qs } from '../utils/dom.js';
-import { getState, comparableSurveys, selectedForCompare } from '../store.js';
+import { getState, selectedForCompare } from '../store.js';
 import { nothingSelected, needsOneMore } from '../components/emptyState.js';
 import { incompleteDataBanner } from '../components/banner.js';
 import { compareBar } from '../components/compareBar.js';
-import { candidatePicker } from '../components/candidatePicker.js';
 import { comparisonTable } from '../components/comparisonTable.js';
 // The only line coupling the comparison to the optional score. Delete this
 // import and the mount below to remove the feature entirely.
@@ -17,11 +16,16 @@ import { MIN_COMPARE } from '../constants.js';
  * describes: kos go into the bar, and Compare opens the table. Once it is
  * open, adding or removing updates it in place rather than sending the user
  * back to press Compare again after swapping one kos out.
+ *
+ * The picker opens in a dialog from Add kos in the compare bar rather than
+ * sitting in a column beside the table, so the comparison gets the column's
+ * full width — the same move the community filters made, for the same
+ * reason. The dialog lives outside #app-root (see main.js) because this view
+ * is rebuilt on every store change and would close it mid-selection.
  */
 
 export function renderCompare() {
-  const { compareSelection, compareShown } = getState();
-  const candidates = comparableSurveys();
+  const { compareShown } = getState();
   const selected = selectedForCompare();
   const ready = selected.length >= MIN_COMPARE;
 
@@ -60,16 +64,7 @@ export function renderCompare() {
 
     ${compareBar(selected, { shown: compareShown })}
 
-    <div class="compare-layout">
-      <section class="panel">
-        <div class="section__head">
-          <h2>Add kos</h2>
-        </div>
-        ${candidatePicker(candidates, compareSelection)}
-      </section>
-
-      <div class="compare-result">${result}</div>
-    </div>
+    <div class="compare-result">${result}</div>
   `;
 }
 

@@ -1,15 +1,17 @@
 import { mount, qs, qsa, debounce, html } from './utils/dom.js';
-import { defineRoute, setNotFound, startRouter, navigate, currentRoute } from './router.js';
+import { defineRoute, setNotFound, startRouter, navigate, currentRoute, currentPath } from './router.js';
 import { onAction, startEventBridge } from './events.js';
 import { toast, dismissToast, confirmDialog } from './components/feedback.js';
 import { loadSurveyMedia, restoreMedia, sweepOrphanedMedia, pruneSurveyMedia } from './media.js';
 import { banner } from './components/banner.js';
 import { showErrors, clearErrors, watchForRepair } from './components/formErrors.js';
-import { validateSurvey, findDuplicateName } from './utils/validate.js';
+import { validateSurvey, findDuplicateName, validateLogin, validateRegistration } from './utils/validate.js';
 import { normalizeRentInput } from './utils/format.js';
 import { STATUS, MAX_COMPARE } from './constants.js';
 import * as store from './store.js';
-import { seedPhotos } from './seed/seedPhotos.js';
+import * as api from './api.js';
+import * as sync from './sync.js';
+import { renderLogin, renderRegister, readCredentials } from './features/auth.js';
 
 import { renderDashboard } from './features/dashboard.js';
 import { renderSurveyList, mountSurveyList } from './features/surveyList.js';
@@ -25,12 +27,23 @@ import {
 } from './features/surveyForm.js';
 import { renderCommunity, mountCommunity, filterCommunity } from './features/community.js';
 import { filterDialogContent } from './components/filterPanel.js';
+import { candidatePickerDialog } from './components/candidatePicker.js';
+import { enableSheetDismiss } from './components/sheet.js';
 import { renderCompare, mountCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
 
 /** The most recent delete, restorable until its toast expires. */
 let pendingUndo = null;
+
+/** The selection Start over cleared, restorable until its toast expires. */
+let pendingCompareUndo = null;
+
+/** Where a logged-out visitor was headed, so logging in takes them there. */
+let returnTo = null;
+
+/** Why the server could not be asked about a session, shown on the login page. */
+let serverProblem = null;
 
 /**
  * Whatever the current view mounted. Views that hold resources — object urls
@@ -47,6 +60,9 @@ function releaseView() {
 /* --- Routes -------------------------------------------------------------- */
 
 const ROUTES = [
+  // The only routes open without an account.
+  { path: '/login', name: 'login', render: renderLogin, nav: null, public: true },
+  { path: '/register', name: 'register', render: renderRegister, nav: null, public: true },
   { path: '/dashboard', name: 'dashboard', render: renderDashboard, nav: null },
   { path: '/surveys', name: 'surveys', render: renderSurveyList, nav: 'surveys', mount: mountSurveyList },
   { path: '/surveys/new', name: 'survey-new', render: renderSurveyForm, nav: 'surveys', mount: mountSurveyForm },
@@ -63,10 +79,11 @@ const ROUTES = [
  * uploaded thumbnails, and re-rendering would discard all of it mid-edit.
  * Autosave writes to the store on a timer, so this is not hypothetical.
  */
-const SELF_MANAGED_ROUTES = new Set(['survey-new', 'survey-edit']);
+const SELF_MANAGED_ROUTES = new Set(['survey-new', 'survey-edit', 'login', 'register']);
 
 /** Re-render the active route in place, without touching the URL. */
 function refresh() {
+  renderAccount();
   const active = ROUTES.find((route) => route.name === currentRoute().name);
   if (!active) return;
 
@@ -77,6 +94,7 @@ function refresh() {
   }
 
   renderFilterDialog();
+  renderPickerDialog();
 
   const params = currentRoute().params;
   releaseView();
@@ -94,21 +112,40 @@ function refresh() {
 function renderStorageNotice() {
   const region = qs('#storage-notice');
   if (!region) return;
-  const { storageNotice, storageStatus } = store.getState();
+  const { storageNotice, storageStatus, syncNotice, user } = store.getState();
 
-  if (!storageNotice) {
+  // The account's notice means nothing on the login page.
+  const accountNotice = user ? syncNotice : null;
+  if (!storageNotice && !accountNotice) {
     region.innerHTML = '';
     return;
   }
 
   mount(
     region,
-    banner({
-      message: storageNotice,
-      tone: storageStatus === 'ok' ? 'info' : 'alert',
-      action: { name: 'dismiss-storage-notice', label: 'Dismiss' },
-    }),
+    html`${storageNotice
+      ? banner({
+          message: storageNotice,
+          tone: storageStatus === 'ok' ? 'info' : 'alert',
+          action: { name: 'dismiss-storage-notice', label: 'Dismiss' },
+        })
+      : ''}${accountNotice
+      ? banner({ message: accountNotice, action: { name: 'dismiss-sync-notice', label: 'Dismiss' } })
+      : ''}`,
   );
+}
+
+/**
+ * The shell follows the session: logged out, the nav shows the wordmark
+ * alone, since every other destination needs an account.
+ */
+function renderAccount() {
+  const { user } = store.getState();
+  document.body.dataset.auth = user ? 'in' : 'out';
+  qsa('[data-action="logout"]').forEach((button) => {
+    if (user) button.title = `Logged in as ${user.email}`;
+    else button.removeAttribute('title');
+  });
 }
 
 /**
@@ -122,6 +159,23 @@ function renderFilterDialog() {
   const { communitySurveys, communityFilters, starredIds } = store.getState();
   const showing = filterCommunity(communitySurveys, communityFilters, starredIds).length;
   mount(node, filterDialogContent(communityFilters, { total: communitySurveys.length, showing }));
+}
+
+/**
+ * Keep the kos picker current while it is open, so Selected and "Maximum of
+ * 3" change as the user picks. The list is rebuilt under the pointer, which
+ * would drop keyboard focus to the page; it goes back to the kos just
+ * toggled instead.
+ */
+function renderPickerDialog() {
+  const node = qs('#app-picker');
+  if (!node || !node.open) return;
+  const active = node.contains(document.activeElement) ? document.activeElement : null;
+  const id = active?.dataset.id;
+  mount(node, candidatePickerDialog(store.comparableSurveys(), store.getState().compareSelection));
+  if (!active) return;
+  const target = (id && qs(`[data-id="${CSS.escape(id)}"]`, node)) || qs('[data-action="close-picker"]', node);
+  target?.focus();
 }
 
 function syncNav(active) {
@@ -244,7 +298,47 @@ function wireActions() {
   });
 
   onAction('show-comparison', () => store.showComparison());
-  onAction('clear-compare', () => store.clearCompare());
+
+  // Start over sits beside Add kos, so a slipped tap would throw away a
+  // shortlist chosen with care. It is undoable rather than confirmed:
+  // asking first would slow every deliberate use to guard the rare mistake.
+  onAction('clear-compare', () => {
+    const { compareSelection, compareShown } = store.getState();
+    pendingCompareUndo = { selection: [...compareSelection], shown: compareShown };
+    store.clearCompare();
+    // Start over has just disappeared with the table; Add kos is where the
+    // next choice starts.
+    qs('[data-action="open-picker"]')?.focus();
+    toast('Comparison cleared', {
+      action: { name: 'undo-clear-compare', label: 'Undo' },
+      onExpire: () => {
+        pendingCompareUndo = null;
+      },
+    });
+  });
+
+  onAction('undo-clear-compare', () => {
+    if (!pendingCompareUndo) return;
+    const { selection, shown } = pendingCompareUndo;
+    pendingCompareUndo = null;
+    store.restoreCompare(selection, shown);
+    dismissToast();
+    toast('Comparison restored');
+  });
+
+  onAction('open-picker', () => {
+    const node = qs('#app-picker');
+    if (!node) return;
+    mount(node, candidatePickerDialog(store.comparableSurveys(), store.getState().compareSelection));
+    node.showModal();
+  });
+
+  onAction('close-picker', () => qs('#app-picker')?.close());
+
+  // The Add kos button is rebuilt with the view whenever a kos is picked, so
+  // the browser's own focus return would land on a node that no longer
+  // exists. Send it to the current button instead.
+  qs('#app-picker')?.addEventListener('close', () => qs('[data-action="open-picker"]')?.focus());
 
   onAction('cancel-form', async () => {
     if (isFormDirty()) {
@@ -255,13 +349,65 @@ function wireActions() {
       });
       if (!discard) return;
     }
-    // Photos chosen on an abandoned form are swept on the next boot.
+    // Photos chosen on an abandoned form are swept after the next login.
     teardownSurveyForm();
     clearDraftId();
     navigate('/surveys');
   });
 
   onAction('dismiss-storage-notice', () => store.clearStorageNotice());
+  onAction('dismiss-sync-notice', () => store.setSyncNotice(null));
+
+  onAction(
+    'submit-login',
+    ({ target }) => submitCredentials(target, { validate: validateLogin, call: api.login, label: 'Log in', busy: 'Logging in…' }),
+    'submit',
+  );
+
+  onAction(
+    'submit-register',
+    ({ target }) =>
+      submitCredentials(target, {
+        validate: validateRegistration,
+        call: api.register,
+        label: 'Create account',
+        busy: 'Creating account…',
+        done: 'Account created',
+      }),
+    'submit',
+  );
+
+  onAction('logout', async () => {
+    // Anything waiting goes now if it can; only what still cannot is worth
+    // asking about.
+    await sync.flush();
+    const waiting = sync.pendingCount();
+    if (waiting) {
+      const leave = await confirmDialog({
+        title: 'Log out before everything is saved?',
+        body: `${waiting === 1 ? 'One change has' : `${waiting} changes have`} not reached your account yet. ${
+          waiting === 1 ? 'It stays' : 'They stay'
+        } on this device and will be sent the next time you log in here.`,
+        confirmLabel: 'Log out',
+        cancelLabel: 'Stay logged in',
+        tone: 'primary',
+      });
+      if (!leave) return;
+    }
+    try {
+      await api.logout();
+    } catch (error) {
+      // The session is an HttpOnly cookie only the server can end. Clearing
+      // the screen without it would look logged out and not be.
+      toast(error.offline ? 'You’re offline, so you can’t log out yet. Try again once you’re connected.' : error.message);
+      return;
+    }
+    sync.stop();
+    store.forgetAccount();
+    closeMobileNav();
+    navigate('/login');
+    toast('Logged out');
+  });
 
   // A new survey autosaves as a draft so a dropped tab mid-visit costs
   // nothing. It is deliberately quiet: no navigation, no toast stealing
@@ -384,6 +530,95 @@ function wireActions() {
   }, 'submit');
 }
 
+/* --- Account --------------------------------------------------------------- */
+
+/**
+ * Surveys recorded here before accounts existed are offered to the first
+ * account that logs in. Left out, they are kept aside on this device rather
+ * than deleted (storage.keepUnclaimed).
+ */
+function claimSurveys(count) {
+  const one = count === 1;
+  return confirmDialog({
+    title: 'Add surveys from this device to your account?',
+    body: `${one ? 'One survey was' : `${count} surveys were`} recorded on this device before you had an account. Added, ${
+      one ? 'it is' : 'they are'
+    } there wherever you log in. Left out, ${one ? 'it stays' : 'they stay'} stored on this device, out of sight.`,
+    confirmLabel: 'Add to my account',
+    cancelLabel: 'Leave out',
+    tone: 'primary',
+  });
+}
+
+function sessionEnded() {
+  store.setUser(null);
+  navigate('/login');
+  toast('Your session has ended. Log in again to keep saving to your account.');
+}
+
+/**
+ * Make an account the current one: its surveys become this device's working
+ * copy, and changes start flowing to it. Resolves false if it did not work
+ * out, in which case nobody is logged in.
+ */
+async function signIn(user) {
+  store.setUser(user);
+  try {
+    if (!(await sync.start(user, { claimSurveys, onSessionEnded: sessionEnded }))) return false;
+  } catch (error) {
+    sync.stop();
+    store.setUser(null);
+    throw error;
+  }
+  // Photos left by forms abandoned before saving: this account's only.
+  sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id), user.id).catch(() => null);
+  return true;
+}
+
+/** Log in or register: the browser's checks first, then the server's answer. */
+async function submitCredentials(form, { validate, call, label, busy, done = null }) {
+  const credentials = readCredentials(form);
+  watchForRepair(form, () => validate(readCredentials(form)));
+  if (!showErrors(form, validate(credentials))) return;
+
+  const button = qs('button[type="submit"]', form);
+  const notice = qs('[data-auth-notice]');
+  if (notice) notice.innerHTML = '';
+  button.disabled = true;
+  button.textContent = busy;
+
+  try {
+    const { user } = await call(credentials);
+    if (!(await signIn(user))) throw new api.ApiError(401, 'Your session could not be started. Try again.');
+    serverProblem = null;
+    const next = returnTo ?? '/dashboard';
+    returnTo = null;
+    navigate(next);
+    if (done) toast(done);
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = label;
+    if (error.errors) {
+      const fields = Object.keys(error.errors);
+      showErrors(form, { ok: false, errors: error.errors, firstField: fields[0], sectionCounts: {} });
+    } else if (notice) {
+      mount(notice, banner({ message: error.message, tone: 'alert' }));
+    }
+  }
+}
+
+/** At boot: is someone already logged in on this browser? */
+async function restoreSession() {
+  try {
+    const { user } = await api.me();
+    await signIn(user);
+  } catch (error) {
+    // 401 is the ordinary answer for nobody logged in. Anything else — no
+    // server, no connection — is worth saying on the login page.
+    if (error.status !== 401) serverProblem = error.message;
+  }
+}
+
 /* --- Boot ---------------------------------------------------------------- */
 
 function notFound(path) {
@@ -400,17 +635,32 @@ function notFound(path) {
   syncNav(null);
 }
 
-function start() {
+async function start() {
   ROUTES.forEach((route) => {
     defineRoute({
       path: route.path,
       name: route.name,
       render: (params) => {
+        // Every route but logging in and registering needs an account. A
+        // visitor sent to log in is taken on to where they were headed.
+        const signedIn = Boolean(store.getState().user);
+        if (!route.public && !signedIn) {
+          returnTo = currentPath();
+          navigate('/login', { replace: true });
+          return;
+        }
+        if (route.public && signedIn) {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
         releaseView();
         mount(root(), route.render(params));
         viewHandle = route.mount?.(root()) ?? null;
         syncNav(route.nav);
+        renderAccount();
         renderStorageNotice();
+        const notice = route.public && serverProblem ? qs('[data-auth-notice]') : null;
+        if (notice) mount(notice, banner({ message: serverProblem, tone: 'alert' }));
         closeMobileNav();
         window.scrollTo(0, 0);
       },
@@ -421,29 +671,23 @@ function start() {
   startEventBridge();
   wireActions();
 
-  if (store.wasSeeded()) {
-    // Sample photographs, attached once so the galleries are not all
-    // placeholders on a first look. Deliberately not awaited: the app is
-    // usable while they load, and each survey updates as its own arrive.
-    seedPhotos().then((assigned) => {
-      if (!assigned) return;
-      Object.entries(assigned).forEach(([surveyId, sections]) => {
-        const survey = store.findSurvey(surveyId);
-        if (!survey) return;
-        store.updateSurvey(surveyId, {
-          room: { ...survey.room, photoIds: sections.room },
-          bathroom: { ...survey.bathroom, photoIds: sections.bathroom },
-          shared: { ...survey.shared, photoIds: sections.shared },
-        });
-      });
-    });
-  } else {
-    // Files chosen on a form that was never saved have nothing pointing at
-    // them. Clearing them here keeps abandoned drafts from accumulating.
-    sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id)).catch(() => null);
-  }
+  // On a phone these two are sheets, dismissed by dragging their head down.
+  enableSheetDismiss(qs('#app-filters'), '.filter-dialog__head');
+  enableSheetDismiss(qs('#app-picker'), '.picker-dialog__head');
+
+  // iOS Safari has applied :active only where a touch listener exists on the
+  // element or an ancestor. Without this no-op, the pressed states in
+  // components.css would not show on an iPhone that still behaves that way.
+  document.addEventListener('touchstart', () => {}, { passive: true });
+
   // Any store write re-renders the active route.
   store.subscribe(refresh);
+
+  // The session decides the first screen, so ask before routing. Sample
+  // surveys are no longer attached to a first run: an account starts with its
+  // own, and the orphan sweep now runs per account, in signIn().
+  await restoreSession();
+  renderAccount();
   startRouter();
 }
 

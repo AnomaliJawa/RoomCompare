@@ -158,6 +158,40 @@ describe('comparison selection', () => {
   });
 });
 
+describe('undoing Start over', () => {
+  it('puts the selection back, and the open table with it', async () => {
+    const store = await freshStore();
+    const ids = store.getState().surveys.slice(0, 3).map((s) => s.id);
+    ids.forEach((id) => store.toggleCompare(id));
+    store.showComparison();
+
+    store.clearCompare();
+    store.restoreCompare(ids, true);
+    expect(store.getState().compareSelection).toEqual(ids);
+    expect(store.getState().compareShown).toBe(true);
+  });
+
+  it('leaves out a kos deleted in the meantime, and keeps the table shut below two', async () => {
+    const store = await freshStore();
+    const ids = store.getState().surveys.slice(0, 2).map((s) => s.id);
+    ids.forEach((id) => store.toggleCompare(id));
+    store.showComparison();
+
+    store.clearCompare();
+    store.deleteSurvey(ids[1]);
+    store.restoreCompare(ids, true);
+    expect(store.getState().compareSelection).toEqual([ids[0]]);
+    expect(store.getState().compareShown).toBe(false);
+  });
+
+  it('never restores more than the comparison holds', async () => {
+    const store = await freshStore();
+    const ids = store.getState().surveys.slice(0, 5).map((s) => s.id);
+    store.restoreCompare(ids, false);
+    expect(store.getState().compareSelection).toHaveLength(3);
+  });
+});
+
 describe('starring', () => {
   it('is kept apart from the survey record', async () => {
     const store = await freshStore();

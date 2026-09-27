@@ -24,8 +24,13 @@ import {
 
 const MISSING = Symbol('missing');
 
-function textRow(label, values, { best = null } = {}) {
-  return { kind: 'text', label, values, best };
+/**
+ * `prose` marks a value written by the user as sentences rather than a
+ * figure — notes. It keeps the writer's line breaks, wraps at any length, and
+ * on narrow screens sits under its kos name instead of beside it.
+ */
+function textRow(label, values, { best = null, prose = false } = {}) {
+  return { kind: 'text', label, values, best, prose };
 }
 
 function facilityRows(all, pick) {
@@ -95,7 +100,7 @@ export function buildGroups(surveys) {
       label: 'Additional information',
       rows: [
         textRow('Security', surveys.map((s) => likertLabel(s.additional.security) ?? MISSING)),
-        textRow('Notes', surveys.map((s) => s.additional.notes || MISSING)),
+        textRow('Notes', surveys.map((s) => s.additional.notes || MISSING), { prose: true }),
         textRow(
           'Photos recorded',
           surveys.map((s) => {
@@ -136,52 +141,84 @@ function cell(row, value, index, kosName) {
     return html`<td role="cell">${label}<span class="ledger__cell-value unrecorded">Not recorded</span></td>`;
   }
   const best = row.best === index ? ' ledger__best' : '';
-  return html`<td class="numeric${best}" role="cell">${label}<span class="ledger__cell-value">${value}</span></td>`;
+  const kind = row.prose ? 'ledger__prose' : 'numeric';
+  return html`<td class="${kind}${best}" role="cell">${label}<span class="ledger__cell-value">${value}</span></td>`;
+}
+
+/**
+ * One column set, shared by every table in the comparison. With
+ * `table-layout: fixed` the columns take their widths from here rather than
+ * from their contents, so "Monthly rent" in the first section and "Laundry"
+ * in the fifth sit on exactly the same vertical lines.
+ */
+function columns(count) {
+  return html`<colgroup>
+    <col class="ledger__col-criterion" />
+    ${Array.from({ length: count }, () => html`<col />`)}
+  </colgroup>`;
+}
+
+/* Names only. A kos is removed from its chip in the compare bar, or by
+   toggling it off in the picker; a Remove here only duplicated the chip's. */
+function headerRow(surveys) {
+  return html`<tr role="row">
+    <th class="ledger__criterion" scope="col" role="columnheader">Criterion</th>
+    ${surveys.map(
+      (survey, index) => html`<th scope="col" role="columnheader" style="--column: ${index}">
+        <span class="ledger__kos">${survey.kos.name}</span>
+      </th>`,
+    )}
+  </tr>`;
+}
+
+/**
+ * A category as its own card. The heading names the table, so a screen
+ * reader announces "Room, table" and heading navigation reaches each
+ * category. The column headers are repeated inside every table for assistive
+ * technology — each table has to stand on its own — but shown only once, in
+ * the card above the first section.
+ */
+function section(group, index, surveys) {
+  const id = `ledger-group-${index}`;
+  return html`<section class="ledger-section" aria-labelledby="${id}">
+    <h2 class="ledger-section__title" id="${id}">${group.label}</h2>
+    <table class="ledger ledger--sectioned" role="table" aria-labelledby="${id}">
+      ${columns(surveys.length)}
+      <thead class="visually-hidden" role="rowgroup">${headerRow(surveys)}</thead>
+      <tbody role="rowgroup">
+        ${group.rows.map(
+          (row) => html`<tr role="row" data-differs="${rowDiffers(row) ? 'true' : 'false'}">
+            <th class="ledger__criterion" scope="row" role="rowheader">${row.label}</th>
+            ${row.values.map((value, index) =>
+              raw(
+                String(cell(row, value, index, surveys[index].kos.name)).replace(
+                  '<td',
+                  `<td style="--column: ${index}"`,
+                ),
+              ),
+            )}
+          </tr>`,
+        )}
+      </tbody>
+    </table>
+  </section>`;
 }
 
 export function comparisonTable(surveys) {
   const groups = buildGroups(surveys);
 
+  // One scroller around everything: if the page ever gets narrow enough to
+  // scroll sideways, every section moves together and the columns stay lined
+  // up, instead of each card scrolling on its own.
   return html`
-    <div class="ledger-wrap">
-      <table class="ledger" role="table" data-reveal>
-        <thead role="rowgroup">
-          <tr role="row">
-            <th class="ledger__criterion" scope="col" role="columnheader">Criterion</th>
-            ${surveys.map(
-              (survey, index) => html`<th scope="col" role="columnheader" style="--column: ${index}">
-                <span class="ledger__kos">${survey.kos.name}</span>
-                <button
-                  class="btn btn--quiet btn--small"
-                  type="button"
-                  data-action="remove-compare"
-                  data-id="${survey.id}"
-                >Remove</button>
-              </th>`,
-            )}
-          </tr>
-        </thead>
-        ${groups.map(
-          (group) => html`<tbody role="rowgroup">
-            <tr class="ledger__group" role="row">
-              <th colspan="${surveys.length + 1}" scope="colgroup" role="columnheader">${group.label}</th>
-            </tr>
-            ${group.rows.map(
-              (row) => html`<tr role="row" data-differs="${rowDiffers(row) ? 'true' : 'false'}">
-                <th class="ledger__criterion" scope="row" role="rowheader">${row.label}</th>
-                ${row.values.map((value, index) =>
-                  raw(
-                    String(cell(row, value, index, surveys[index].kos.name)).replace(
-                      '<td',
-                      `<td style="--column: ${index}"`,
-                    ),
-                  ),
-                )}
-              </tr>`,
-            )}
-          </tbody>`,
-        )}
-      </table>
+    <div class="ledger-sections" data-reveal>
+      <div class="ledger-section ledger-section--columns">
+        <table class="ledger ledger--sectioned" role="table" aria-label="Kos in this comparison">
+          ${columns(surveys.length)}
+          <thead role="rowgroup">${headerRow(surveys)}</thead>
+        </table>
+      </div>
+      ${groups.map((group, index) => section(group, index, surveys))}
     </div>
   `;
 }

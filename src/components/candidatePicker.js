@@ -42,3 +42,31 @@ export function candidatePicker(candidates, selection) {
     </ul>
   `;
 }
+
+/**
+ * The picker as a dialog, opened from Add kos above the comparison. Same
+ * shape as the filter dialog: a scrolling body between a fixed head and foot,
+ * with the count in the foot updating as kos are picked.
+ */
+export function candidatePickerDialog(candidates, selection) {
+  return html`
+    <div class="picker-dialog">
+      <div class="picker-dialog__head">
+        <h2 class="dialog__title" id="picker-dialog-title">Add kos</h2>
+        <button class="btn btn--quiet btn--small" type="button" data-action="close-picker">Close</button>
+      </div>
+
+      <div class="picker-dialog__body">
+        <p class="meta">
+          Your own surveys, and any community survey you have starred. Up to ${MAX_COMPARE} at once.
+        </p>
+        ${candidatePicker(candidates, selection)}
+      </div>
+
+      <div class="picker-dialog__foot">
+        <p class="meta" role="status" aria-live="polite">${selection.length} of ${MAX_COMPARE} selected.</p>
+        <button class="btn btn--primary" type="button" data-action="close-picker">Done</button>
+      </div>
+    </div>
+  `;
+}

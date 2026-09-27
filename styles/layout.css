@@ -72,7 +72,9 @@
   transition: color var(--duration-fast) var(--ease);
 }
 
-.nav__link:hover { color: var(--ink); }
+@media (hover: hover) {
+  .nav__link:hover { color: var(--ink); }
+}
 
 .nav__link[aria-current="page"] {
   border-bottom-color: var(--accent);
@@ -92,6 +94,33 @@
 }
 
 .nav .nav__toggle { display: none; }
+
+/* Logged out — and while the session is still being checked — every
+   destination but logging in needs an account, so the nav is the wordmark
+   alone. Specific enough to beat an open phone menu. */
+body[data-auth="out"] .nav__links,
+body[data-auth="out"] .nav__actions,
+body[data-auth="pending"] .nav__links,
+body[data-auth="pending"] .nav__actions { display: none; }
+
+/* Log out lives beside Add survey on a wide screen. On a narrow one the
+   actions row has room for only two buttons, Menu and Add survey, so it
+   moves to the foot of the menu. */
+.nav .nav__logout-menu { display: none; }
+
+/* On a touch screen the wordmark is a 44px target like everything else in
+   the bar, and the two actions sit 12px apart — Apple's spacing between
+   bezelled controls — so a thumb aimed at Menu does not land on Add
+   survey. */
+@media (pointer: coarse) {
+  .nav__wordmark {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+  }
+
+  .nav__actions { gap: var(--space-3); }
+}
 
 /* --- Content column ------------------------------------------------------ */
 
@@ -127,6 +156,10 @@
   display: flex;
   flex-shrink: 0;
   gap: var(--space-2);
+}
+
+@media (pointer: coarse) {
+  .page-head__actions { gap: var(--space-3); }
 }
 
 /* --- Sections ------------------------------------------------------------ */
@@ -208,6 +241,9 @@
     display: inline-flex;
     order: 3;
   }
+
+  .nav .nav__logout { display: none; }
+  .nav .nav__logout-menu { display: flex; }
 
   .grid-split { grid-template-columns: 1fr; }
 }
