@@ -20,8 +20,7 @@ import {
   renderSurveyForm,
   mountSurveyForm,
   readSurveyForm,
-  formSurveyId,
-  clearDraftId,
+  newSurveyId,
   isFormDirty,
   teardownSurveyForm,
 } from './features/surveyForm.js';
@@ -167,14 +166,20 @@ function renderFilterDialog() {
  * Keep the kos picker current while it is open, so Selected and "Maximum of
  * 3" change as the user picks. The list is rebuilt under the pointer, which
  * would drop keyboard focus to the page; it goes back to the kos just
- * toggled instead.
+ * toggled instead. The list keeps its scroll position too: it holds every
+ * community kos below the user's own, and a pick far down would otherwise
+ * send it back to the top. Safari does not focus a tapped button, so focus
+ * alone would not bring it back there.
  */
 function renderPickerDialog() {
   const node = qs('#app-picker');
   if (!node || !node.open) return;
   const active = node.contains(document.activeElement) ? document.activeElement : null;
   const id = active?.dataset.id;
-  mount(node, candidatePickerDialog(store.comparableSurveys(), store.getState().compareSelection));
+  const scrolled = qs('.picker-dialog__body', node)?.scrollTop ?? 0;
+  mount(node, candidatePickerDialog(store.compareCandidates(), store.getState().compareSelection));
+  const body = qs('.picker-dialog__body', node);
+  if (body) body.scrollTop = scrolled;
   if (!active) return;
   const target = (id && qs(`[data-id="${CSS.escape(id)}"]`, node)) || qs('[data-action="close-picker"]', node);
   target?.focus();
@@ -331,7 +336,7 @@ function wireActions() {
   onAction('open-picker', () => {
     const node = qs('#app-picker');
     if (!node) return;
-    mount(node, candidatePickerDialog(store.comparableSurveys(), store.getState().compareSelection));
+    mount(node, candidatePickerDialog(store.compareCandidates(), store.getState().compareSelection));
     node.showModal();
   });
 
@@ -353,7 +358,6 @@ function wireActions() {
     }
     // Photos chosen on an abandoned form are swept after the next login.
     teardownSurveyForm();
-    clearDraftId();
     navigate('/surveys');
   });
 
@@ -521,7 +525,7 @@ function wireActions() {
       toast(intent === 'publish' ? 'Published' : 'Survey updated');
     } else {
       store.addSurvey({
-        id: target.dataset.surveyId || formSurveyId(),
+        id: target.dataset.surveyId || newSurveyId(),
         ownerId: 'me',
         status: intent === 'publish' ? STATUS.PUBLISHED : STATUS.DRAFT,
         createdAt: new Date().toISOString(),
@@ -535,7 +539,6 @@ function wireActions() {
     pruneSurveyMedia(editingId || target.dataset.surveyId, keptMedia).catch(() => null);
 
     teardownSurveyForm();
-    clearDraftId();
     navigate('/surveys');
   }, 'submit');
 }

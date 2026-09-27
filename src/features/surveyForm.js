@@ -60,17 +60,16 @@ let autosaveTimer = null;
  * standing in the room, and an interrupted session should not lose them — and
  * a stored file needs a survey to belong to. Media left by a form that is
  * never saved is swept after the next login.
+ *
+ * Every new form gets its own, carried on the form element. The id used to be
+ * kept here until Save or Cancel cleared it, so a form left any other way —
+ * through the nav, after autosave had already kept it as a draft — passed its
+ * id to the next new survey. That survey's autosave overwrote the draft,
+ * saving it added a second record under the same id, and the server, which
+ * keeps one record per id, kept only one of them.
  */
-let draftId = null;
-
-export function formSurveyId(editingId) {
-  if (editingId) return editingId;
-  if (!draftId) draftId = `svy-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-  return draftId;
-}
-
-export function clearDraftId() {
-  draftId = null;
+export function newSurveyId() {
+  return `svy-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function section(index, title, intro, body) {
@@ -102,7 +101,7 @@ export function renderSurveyForm({ id } = {}) {
 
   const kos = survey?.kos ?? {};
   const room = survey?.room ?? {};
-  const surveyId = formSurveyId(survey?.id);
+  const surveyId = survey?.id ?? newSurveyId();
 
   const actions = editing
     ? html`

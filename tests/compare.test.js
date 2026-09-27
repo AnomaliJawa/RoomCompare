@@ -3,6 +3,7 @@ import { comparisonTable } from '../src/components/comparisonTable.js';
 import { candidatePickerDialog } from '../src/components/candidatePicker.js';
 import { compareBar } from '../src/components/compareBar.js';
 import { ownSurveys } from '../src/seed/ownSurveys.js';
+import { communitySurveys } from '../src/seed/communitySurveys.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -125,19 +126,60 @@ describe('the compare bar', () => {
 });
 
 describe('the kos picker dialog', () => {
-  const candidates = ownSurveys.slice(0, 5);
+  const candidates = { own: ownSurveys.slice(0, 5), community: communitySurveys.slice(0, 4) };
+  const everyKos = [...candidates.own, ...candidates.community];
+  const text = (node) => node.textContent.trim();
+  const listed = (group) => [...group.querySelectorAll('.listing__title')].map(text);
 
   it('is titled for the dialog and counts the selection', () => {
-    const host = render(candidatePickerDialog(candidates, [candidates[0].id]));
+    const host = render(candidatePickerDialog(candidates, [candidates.own[0].id]));
     expect(host.querySelector('#picker-dialog-title').textContent.trim()).toBe('Add kos');
     expect(host.querySelector('[role="status"]').textContent.trim()).toBe(`1 of ${MAX_COMPARE} selected.`);
   });
 
+  it('lists your own surveys and every community survey, each under its source', () => {
+    const host = render(candidatePickerDialog(candidates, []));
+    const groups = [...host.querySelectorAll('.picker-group')];
+    // Each group is named by its own heading.
+    const titles = groups.map((group) => group.querySelector(`#${group.getAttribute('aria-labelledby')}`));
+    expect(titles.map(text)).toEqual(['My surveys', 'Community']);
+    expect(listed(groups[0])).toEqual(candidates.own.map((s) => s.kos.name));
+    expect(listed(groups[1])).toEqual(candidates.community.map((s) => s.kos.name));
+  });
+
+  it('lets kos from both sources be picked together', () => {
+    const picked = [candidates.own[0].id, candidates.community[0].id];
+    const host = render(candidatePickerDialog(candidates, picked));
+    const selected = [...host.querySelectorAll('[data-action="toggle-compare"]')]
+      .filter((button) => text(button) === 'Selected')
+      .map((button) => button.dataset.id);
+    expect(selected).toEqual(picked);
+  });
+
+  it('says what to do when you have no surveys of your own', () => {
+    const host = render(candidatePickerDialog({ own: [], community: candidates.community }, []));
+    const [own, community] = host.querySelectorAll('.picker-group');
+    expect(own.querySelector('.listing')).toBeNull();
+    expect(text(own.querySelector('.meta'))).toBe('You have not recorded a kos yet.');
+    // It leaves the Compare page, so it closes the dialog on the way.
+    const add = own.querySelector('a[href="#/surveys/new"]');
+    expect(text(add)).toBe('Add survey');
+    expect(add.dataset.action).toBe('close-picker');
+    expect(listed(community)).toEqual(candidates.community.map((s) => s.kos.name));
+  });
+
+  it('says so when there are no community surveys', () => {
+    const host = render(candidatePickerDialog({ own: candidates.own, community: [] }, []));
+    const community = host.querySelectorAll('.picker-group')[1];
+    expect(community.querySelector('.listing')).toBeNull();
+    expect(text(community.querySelector('.meta'))).toBe('No community surveys to show right now.');
+  });
+
   it('refuses a fourth kos with a reason, rather than dropping one', () => {
-    const picked = candidates.slice(0, MAX_COMPARE).map((s) => s.id);
+    const picked = everyKos.slice(0, MAX_COMPARE).map((s) => s.id);
     const host = render(candidatePickerDialog(candidates, picked));
     const blocked = [...host.querySelectorAll('[data-action="toggle-compare"][disabled]')];
-    expect(blocked).toHaveLength(candidates.length - MAX_COMPARE);
+    expect(blocked).toHaveLength(everyKos.length - MAX_COMPARE);
     for (const button of blocked) expect(button.textContent.trim()).toBe(`Maximum of ${MAX_COMPARE}`);
   });
 

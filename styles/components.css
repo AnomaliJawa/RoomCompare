@@ -1931,6 +1931,30 @@ a.listing__title::after {
    narrow-screen rule below, so phones still get the full-screen sheet. */
 .dialog--picker { width: min(560px, calc(100vw - var(--space-6))); }
 
+/* The picker lists each source under its own name. The name takes the
+   narrow face that labels table columns, so it reads as structure rather
+   than as one more kos. */
+.picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.picker-group__title {
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.picker-group__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 /* The Survey guide is three short lists. */
 .dialog--guide { width: min(480px, calc(100vw - var(--space-6))); }
 

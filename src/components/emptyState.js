@@ -50,7 +50,7 @@ export const nothingSelected = () =>
   emptyState({
     title: 'Add two kos to start comparing',
     body:
-      'Use Add kos to pick from the surveys you have recorded, and any community surveys you have starred. ' +
+      'Use Add kos to pick from the surveys you have recorded and the community’s. ' +
       'You can compare up to three at once.',
   });
 

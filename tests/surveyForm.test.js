@@ -131,3 +131,24 @@ describe('guidance on the survey form', () => {
     expect(distance.placeholder).toBe('Fills in once both pins are set');
   });
 });
+
+describe('the survey id', () => {
+  const formId = (markup) => show(markup).querySelector('#survey-form').dataset.surveyId;
+
+  // A form left through the nav, after autosave had kept it as a draft, used
+  // to pass its id to the next new survey, which then overwrote the draft.
+  it('is new for every new survey form, however the last one was left', async () => {
+    const { renderSurveyForm } = await load();
+    const first = formId(renderSurveyForm());
+    const second = formId(renderSurveyForm());
+    expect(first).toMatch(/^svy-/);
+    expect(second).toMatch(/^svy-/);
+    expect(second).not.toBe(first);
+  });
+
+  it("stays the survey's own when it is edited", async () => {
+    const { store, renderSurveyForm } = await load();
+    store.addSurvey(saved);
+    expect(formId(renderSurveyForm({ id: 'svy-scored' }))).toBe('svy-scored');
+  });
+});

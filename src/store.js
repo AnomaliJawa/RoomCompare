@@ -227,12 +227,20 @@ export function isStarred(id) {
   return state.starredIds.includes(id);
 }
 
-/** Everything eligible for comparison: the user's own surveys plus starred ones. */
+/**
+ * What can be compared, by where it comes from: every survey of the user's
+ * own and every community survey. Stars do not decide it. They once did, and
+ * a new account, which starts with no surveys, was offered only the one
+ * community kos starred on a first visit.
+ */
+export function compareCandidates() {
+  return { own: state.surveys, community: state.communitySurveys };
+}
+
+/** The same candidates as one list. */
 export function comparableSurveys() {
-  const starredCommunity = state.communitySurveys.filter((survey) =>
-    state.starredIds.includes(survey.id),
-  );
-  return [...state.surveys, ...starredCommunity];
+  const { own, community } = compareCandidates();
+  return [...own, ...community];
 }
 
 export function selectedForCompare() {
@@ -339,8 +347,8 @@ export function clearCompare() {
 
 /**
  * Put back a selection that Start over cleared. Only kos that can still be
- * compared come back — one may have been deleted or unstarred in the
- * seconds since — and the table reopens only if it still has two.
+ * compared come back — one may have been deleted in the seconds since — and
+ * the table reopens only if it still has two.
  */
 export function restoreCompare(selection, shown) {
   const comparable = new Set(comparableSurveys().map((survey) => survey.id));
