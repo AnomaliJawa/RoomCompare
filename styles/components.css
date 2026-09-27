@@ -1340,7 +1340,13 @@ a.listing__title::after {
   gap: var(--space-3);
 }
 
+/* Leaflet numbers its own layers from 200 (tiles) to 1000 (zoom buttons).
+   Without a stacking context of its own, the map competed with the page on
+   those numbers, and scrolled over the sticky nav (z-index 50). `isolate`
+   keeps Leaflet's order inside the map and stacks the map as one ordinary
+   part of the page: markers, popups and controls work as before. */
 .mappicker__canvas {
+  isolation: isolate;
   height: 240px;
   border: var(--border-hair);
   border-radius: var(--radius-md);
