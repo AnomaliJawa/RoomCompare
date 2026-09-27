@@ -1,7 +1,7 @@
 /**
  * Guidance copy for the survey form: section intros, a helper line under
- * every field, the required badges, the 1–4 score rubrics, and the How to
- * fill panel behind each field's ⓘ.
+ * every field, the 1–4 score rubrics, and the How to fill panel behind each
+ * field's ⓘ. What a field is required for is said in its panel's rules.
  *
  * The wording comes from "Guidelines Feature Concept – RoomCompare" and is
  * changed there first, then here. It is plain data, kept apart from the
@@ -27,12 +27,6 @@ export const SECTION_INTROS = {
   shared: 'Record the facilities tenants share for daily needs, including Wi-Fi.',
   surroundings: 'Record useful places within a 10-minute walk of the kos.',
   additional: 'Add anything else that affects your choice: security, notes, and videos.',
-};
-
-/** Badge wording by what a field is required for. */
-export const REQUIRED_BADGE = {
-  draft: 'Required',
-  publish: 'Required to publish',
 };
 
 /** The panel's parts, in the order they are shown. */
@@ -62,8 +56,6 @@ const COORDINATES_EXAMPLE =
 
 /**
  * One entry per field, keyed as the form keys it.
- * - `required`: what the field is needed for — a draft ('draft', which also
- *   covers publishing), a published survey ('publish'), or neither.
  * - `counter`: a character limit to count against as the user types.
  * - `panel`: the How to fill panel, by part (PANEL_PARTS).
  * - `photos`: what to photograph, for the photo fields.
@@ -72,7 +64,6 @@ export const FIELD_GUIDE = {
   // 1. Kos information
   name: {
     label: 'Kos name',
-    required: 'draft',
     helper: 'The name on the signboard or listing. Max 80 characters.',
     counter: 80,
     panel: {
@@ -85,7 +76,6 @@ export const FIELD_GUIDE = {
   },
   rent: {
     label: 'Monthly rent',
-    required: 'publish',
     helper: 'Rent per month in rupiah, max Rp100.000.000.',
     panel: {
       what: 'Rent per month in rupiah, for the room you surveyed.',
@@ -97,7 +87,6 @@ export const FIELD_GUIDE = {
   },
   type: {
     label: 'Kos type',
-    required: 'publish',
     helper: 'Who is allowed to rent here.',
     panel: {
       what: 'Who is allowed to rent here.',
@@ -108,7 +97,6 @@ export const FIELD_GUIDE = {
   },
   kosLocation: {
     label: 'Pin the kos',
-    required: 'publish',
     helper: 'Search the address, then drop the pin on the kos entrance.',
     panel: {
       what: 'Where the kos is, with the pin on its entrance.',
@@ -120,7 +108,6 @@ export const FIELD_GUIDE = {
   },
   kosLocationName: {
     label: 'Kos location name',
-    required: null,
     helper: 'A short label for the area.',
     panel: {
       what: 'A short label for the area.',
@@ -131,7 +118,6 @@ export const FIELD_GUIDE = {
   },
   campusLocationName: {
     label: 'Campus name',
-    required: null,
     helper: "The campus you'll commute to most.",
     panel: {
       what: "The campus you'll commute to most.",
@@ -142,7 +128,6 @@ export const FIELD_GUIDE = {
   },
   campusLocation: {
     label: 'Pin the campus',
-    required: null,
     helper: 'Pin your campus to calculate the distance.',
     panel: {
       what: 'Where you commute to, pinned to calculate the distance.',
@@ -153,7 +138,6 @@ export const FIELD_GUIDE = {
   },
   distance: {
     label: 'Distance to campus',
-    required: null,
     helper: 'Straight-line distance between the kos pin and the campus pin.',
     panel: {
       what: 'Straight-line distance between the kos pin and the campus pin.',
@@ -165,19 +149,16 @@ export const FIELD_GUIDE = {
   // 2. Room
   lengthM: {
     label: 'Room length',
-    required: null,
     helper: SIZE_HELPER,
     panel: ROOM_SIZE_PANEL,
   },
   widthM: {
     label: 'Room width',
-    required: null,
     helper: SIZE_HELPER,
     panel: ROOM_SIZE_PANEL,
   },
   roomFacility: {
     label: 'Room facilities',
-    required: null,
     helper: 'Tick everything in the room. Unticked means not available.',
     panel: {
       what: "Everything in the room that's ready to use.",
@@ -190,7 +171,6 @@ export const FIELD_GUIDE = {
   },
   cleanliness: {
     label: 'Cleanliness',
-    required: 'publish',
     helper: 'Rate the room as it is today, 1–4.',
     panel: {
       what: 'How clean the room is today, on a 1–4 scale.',
@@ -202,7 +182,6 @@ export const FIELD_GUIDE = {
   },
   internet: {
     label: 'Internet quality',
-    required: 'publish',
     helper: 'Test inside the room, then rate 1–4.',
     panel: {
       what: 'How well the internet works inside the room, on a 1–4 scale.',
@@ -214,7 +193,6 @@ export const FIELD_GUIDE = {
   },
   roomPhotos: {
     label: 'Room photos',
-    required: null,
     helper: PHOTO_HELPER,
     panel: {
       what: 'Photos of the room as it is on the day.',
@@ -238,7 +216,6 @@ export const FIELD_GUIDE = {
   // 3. Bathroom
   bathroomFacility: {
     label: 'Bathroom facilities',
-    required: null,
     helper: 'Tick everything available. Unticked means not available.',
     panel: {
       what: 'What the bathroom has.',
@@ -252,7 +229,6 @@ export const FIELD_GUIDE = {
   },
   bathroomPhotos: {
     label: 'Bathroom photos',
-    required: null,
     helper: PHOTO_HELPER,
     panel: {
       what: 'Photos of the bathroom as it is on the day.',
@@ -266,7 +242,6 @@ export const FIELD_GUIDE = {
   // 4. Shared facilities
   sharedFacility: {
     label: 'Shared facilities',
-    required: null,
     helper: 'Tick what all tenants can use. Unticked means not available.',
     panel: {
       what: 'What all tenants can use.',
@@ -282,7 +257,6 @@ export const FIELD_GUIDE = {
   },
   sharedPhotos: {
     label: 'Shared facility photos',
-    required: null,
     helper: PHOTO_HELPER,
     panel: {
       what: 'Photos of the spaces tenants share.',
@@ -295,7 +269,6 @@ export const FIELD_GUIDE = {
   // 5. Surroundings
   surrounding: {
     label: 'Around the kos',
-    required: null,
     helper: 'Tick places within a 10-minute walk (about 800 m).',
     panel: {
       what: 'Useful places within a 10-minute walk (about 800 m).',
@@ -311,7 +284,6 @@ export const FIELD_GUIDE = {
   // 6. Additional information
   security: {
     label: 'Security',
-    required: 'publish',
     helper: 'Rate how safe the kos feels, 1–4.',
     panel: {
       what: 'How safe the kos feels, on a 1–4 scale.',
@@ -324,7 +296,6 @@ export const FIELD_GUIDE = {
   },
   notes: {
     label: 'Additional notes',
-    required: null,
     helper: 'Anything else worth remembering. Max 1,000 characters.',
     counter: 1000,
     panel: {
@@ -338,7 +309,6 @@ export const FIELD_GUIDE = {
   },
   videos: {
     label: 'Videos',
-    required: null,
     helper: 'Up to 2 videos, max 20 MB each.',
     panel: {
       what: 'Short videos of the kos.',

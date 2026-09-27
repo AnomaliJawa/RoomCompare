@@ -14,7 +14,6 @@ import {
   checkboxGroup,
   radioGroup,
   likertField,
-  requiredBadge,
   infoButton,
 } from '../components/fields.js';
 import {
@@ -25,12 +24,11 @@ import {
   SURROUNDINGS,
   MAX_PHOTOS_PER_SECTION,
 } from '../constants.js';
-import { SECTION_INTROS, FIELD_GUIDE, REQUIRED_BADGE, rubricText } from '../content/guidance.js';
+import { SECTION_INTROS, FIELD_GUIDE, rubricText } from '../content/guidance.js';
 
-/** A field's guidance, with its badge wording resolved. */
+/** A field's guidance, with its key, which its ⓘ opens the panel by. */
 function guide(key) {
-  const entry = FIELD_GUIDE[key];
-  return { key, ...entry, badge: entry.required ? REQUIRED_BADGE[entry.required] : '' };
+  return { key, ...FIELD_GUIDE[key] };
 }
 
 /** A 1–4 field with its helper and the description of the saved level. */
@@ -190,7 +188,7 @@ export function renderSurveyForm({ id } = {}) {
           </div>
           <div class="field">
             <div class="field__head">
-              <label class="field__label" for="f-distanceKm">Distance to campus${requiredBadge(guide('distance'))}</label>
+              <label class="field__label" for="f-distanceKm">Distance to campus</label>
               ${infoButton(guide('distance'))}
             </div>
             <input class="field__control numeric" id="f-distanceKm" name="distanceKm" type="text"

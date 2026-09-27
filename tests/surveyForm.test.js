@@ -64,27 +64,15 @@ describe('guidance on the survey form', () => {
     expect(helpers.sort()).toEqual(Object.values(FIELD_GUIDE).map((guide) => guide.helper).sort());
   });
 
-  it('shows what is required as soon as it opens, before any Publish', async () => {
+  it('names each field by its label alone, with no required badges', async () => {
     const { renderSurveyForm } = await load();
     const page = show(renderSurveyForm());
 
-    const badges = Object.fromEntries(
-      [...page.querySelectorAll('.req-badge')].map((badge) => [badge.closest('[data-field]').dataset.field, text(badge)]),
-    );
-    expect(badges).toEqual({
-      name: 'Required',
-      rent: 'Required to publish',
-      type: 'Required to publish',
-      kosLocation: 'Required to publish',
-      cleanliness: 'Required to publish',
-      internet: 'Required to publish',
-      security: 'Required to publish',
-    });
-
-    // The badge is part of what each field is called, not decoration beside it.
-    expect(text(page.querySelector('label[for="f-name"]'))).toMatch(/^Kos name\s*Required$/);
+    expect(page.querySelector('.req-badge')).toBeNull();
+    expect(text(page.querySelector('label[for="f-name"]'))).toBe('Kos name');
+    expect(text(page.querySelector('#kosLocation-label'))).toBe('Pin the kos');
     const group = page.querySelector('fieldset[data-field="cleanliness"]');
-    expect(text(document.getElementById(group.getAttribute('aria-labelledby')))).toMatch(/^Cleanliness\s*Required to publish$/);
+    expect(text(document.getElementById(group.getAttribute('aria-labelledby')))).toBe('Cleanliness');
   });
 
   it('counts the name and the notes as the user types, and flags going over', async () => {

@@ -148,31 +148,15 @@
 }
 
 /* --- Field guidance (the survey form) ------------------------------------
-   Every survey field says what it needs before it is filled in: a badge on
-   the label for what it is required for, a helper line under the control,
-   and a live count where there is a character limit. */
+   Every survey field says what it needs before it is filled in: a helper
+   line under the control, a live count where there is a character limit,
+   and an ⓘ beside the label for the details. */
 
 .field__head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-}
-
-/* A word inside a rule, like the section error count: status is carried by
-   words and rules here, never by a coloured pill. */
-.req-badge {
-  display: inline-block;
-  margin-left: var(--space-2);
-  padding: 0 var(--space-1);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-narrow);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  white-space: nowrap;
 }
 
 .field__support {

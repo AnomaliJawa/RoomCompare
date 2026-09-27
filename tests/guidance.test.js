@@ -38,15 +38,19 @@ describe('the guidance copy', () => {
     Object.values(SECTION_INTROS).forEach((intro) => expect(intro).toBeTruthy());
   });
 
-  // The badges promise what validation enforces. If a rule changes in
-  // validate.js without the copy, this fails rather than the form misleading.
-  it('marks exactly the fields that saving and publishing require', () => {
-    const required = (level) =>
-      Object.entries(FIELD_GUIDE).filter(([, guide]) => guide.required && (level === 'publish' || guide.required === 'draft'));
+  // Each panel's rules say what saving and publishing need, as validation
+  // enforces it. If a rule changes in validate.js without the copy, this
+  // fails rather than the panel misleading.
+  it('says in the panel rules exactly what saving and publishing require', () => {
+    const rulesStartWith = (prefix) =>
+      Object.entries(FIELD_GUIDE)
+        .filter(([, guide]) => guide.panel.rules.startsWith(prefix))
+        .map(([key]) => key)
+        .sort();
     const errors = (mode) => Object.keys(validateSurvey(empty, { mode }).errors).sort();
 
-    expect(required('draft').map(([key]) => key).sort()).toEqual(errors('draft'));
-    expect(required('publish').map(([key]) => key).sort()).toEqual(errors('publish'));
+    expect(rulesStartWith('Required, even for a draft')).toEqual(errors('draft'));
+    expect(rulesStartWith('Required')).toEqual(errors('publish'));
   });
 
   it('quotes the limits the app actually enforces', () => {
