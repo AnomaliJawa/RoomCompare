@@ -8,10 +8,18 @@ Each test class starts the server on a free port with a throwaway database.
 Password hashing runs at 1,000 iterations here instead of 600,000, so the
 suite takes seconds, not minutes; the stored format records the count, so
 nothing else changes.
+
+The account, throttle and survey tests run twice: against server.py with
+SQLite, as it runs locally, and against the Vercel function (api/index.py)
+with Redis, as it runs in production, talking to an in-memory stand-in for
+Upstash over its REST API.
 """
 
 import http.cookiejar
+import http.server
+import importlib.util
 import json
+import os
 import sqlite3
 import sys
 import tempfile
@@ -21,11 +29,17 @@ import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 import server  # noqa: E402
+import fake_upstash  # noqa: E402
+
+_spec = importlib.util.spec_from_file_location("vercel_index", ROOT / "api" / "index.py")
+vercel = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(vercel)
 
 # The server logs every refused request; here those refusals are the point.
 server.Handler.log_message = lambda self, fmt, *args: None
@@ -66,21 +80,69 @@ class ServerTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
-        cls.db_path = Path(cls.tmp.name) / "test.sqlite3"
-        cls.httpd = server.create_server("127.0.0.1", 0, cls.db_path, iterations=1000, login_limit=cls.login_limit)
+        cls.httpd = cls.start()
         cls.base = f"http://127.0.0.1:{cls.httpd.server_address[1]}"
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
 
     @classmethod
+    def start(cls):
+        cls.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        cls.db_path = Path(cls.tmp.name) / "test.sqlite3"
+        return server.create_server("127.0.0.1", 0, cls.db_path, iterations=1000, login_limit=cls.login_limit)
+
+    @classmethod
     def tearDownClass(cls):
         cls.httpd.shutdown()
         cls.httpd.server_close()
+        cls.stop()
+
+    @classmethod
+    def stop(cls):
         cls.tmp.cleanup()
 
     def client(self):
         return Client(self.base)
+
+    # What a test needs to reach behind the API for, per backend.
+
+    def expire_sessions(self):
+        with sqlite3.connect(self.db_path) as db:
+            db.execute("UPDATE sessions SET expires_at = '2000-01-01T00:00:00Z'")
+
+    def stored_password_hash(self, email):
+        with sqlite3.connect(self.db_path) as db:
+            return db.execute("SELECT password_hash FROM users WHERE email = ?", (email,)).fetchone()[0]
+
+
+class OnVercel:
+    """The production shape: the Vercel function, Redis, Upstash's REST API."""
+
+    TOKEN = "test-token"
+
+    @classmethod
+    def start(cls):
+        cls.redis = fake_upstash.FakeRedis()
+        cls.upstash, url = fake_upstash.serve(cls.redis, cls.TOKEN)
+        send = server.UpstashTransport(url, cls.TOKEN)
+        # Plain http in the tests, so no Secure cookie; production sets it.
+        vercel._application = server.App(
+            server.RedisBackend(send), 1000, False, server.RedisThrottle(send, cls.login_limit, server.LOGIN_WINDOW_SECONDS)
+        )
+        return http.server.ThreadingHTTPServer(("127.0.0.1", 0), vercel.handler)
+
+    @classmethod
+    def stop(cls):
+        cls.upstash.shutdown()
+        cls.upstash.server_close()
+        vercel._application = None
+
+    def expire_sessions(self):
+        self.redis.expire("rc:session:")
+
+    def stored_password_hash(self, email):
+        user_id = self.redis.data[f"rc:email:{email}"]
+        return json.loads(self.redis.data[f"rc:user:{user_id}"])["password_hash"]
 
 
 def survey(survey_id, name="Kos Melati", created="2026-09-01T08:00:00.000Z"):
@@ -145,14 +207,12 @@ class Accounts(ServerTestCase):
     def test_an_expired_session_is_refused(self):
         browser = self.client()
         browser.register()
-        with sqlite3.connect(self.db_path) as db:
-            db.execute("UPDATE sessions SET expires_at = '2000-01-01T00:00:00Z'")
+        self.expire_sessions()
         self.assertEqual(browser.call("GET", "/api/me")[0], 401)
 
     def test_passwords_are_stored_only_as_salted_hashes(self):
         _, _, _, email = self.client().register(password="a very secret phrase")
-        with sqlite3.connect(self.db_path) as db:
-            stored = db.execute("SELECT password_hash FROM users WHERE email = ?", (email,)).fetchone()[0]
+        stored = self.stored_password_hash(email)
         self.assertTrue(stored.startswith("pbkdf2_sha256$1000$"))
         self.assertNotIn("a very secret phrase", stored)
 
@@ -252,6 +312,59 @@ class StaticFiles(ServerTestCase):
                      "/package.json", "/src/", "/src/../server.py", "/src/%2e%2e/server.py", "/docs/PRD.md"]:
             with self.subTest(path=path):
                 self.assertEqual(browser.call("GET", path)[0], 404)
+
+
+# --- The same suites on Vercel ------------------------------------------------
+
+
+class VercelAccounts(OnVercel, Accounts):
+    pass
+
+
+class VercelThrottle(OnVercel, Throttle):
+    pass
+
+
+class VercelSurveys(OnVercel, Surveys):
+    pass
+
+
+class VercelOnly(OnVercel, ServerTestCase):
+    login_limit = 2
+
+    def test_the_throttle_counts_each_visitor_by_the_address_vercel_forwards(self):
+        _, _, _, email = self.client().register(password="right password")
+        wrong = {"email": email, "password": "nope nope"}
+        for _ in range(2):
+            self.client().call("POST", "/api/login", wrong, headers={"X-Forwarded-For": "203.0.113.7"})
+        blocked = self.client().call("POST", "/api/login", wrong, headers={"X-Forwarded-For": "203.0.113.7"})
+        self.assertEqual(blocked[0], 429)
+        # Another visitor is not held up by the first one's failures.
+        other = self.client().call("POST", "/api/login", wrong, headers={"X-Forwarded-For": "198.51.100.4"})
+        self.assertEqual(other[0], 401)
+
+    def test_without_storage_it_says_so_instead_of_failing(self):
+        kept = vercel._application
+        vercel._application = None
+        try:
+            with mock.patch.dict(os.environ, {}, clear=True):
+                # Logging in is the first thing that needs storage; asking
+                # who is logged in, with no cookie, rightly answers 401 without it.
+                status, body, _ = self.client().call("POST", "/api/login", {"email": "a@b.co", "password": "longenough"})
+        finally:
+            vercel._application = kept
+        self.assertEqual(status, 503)
+        self.assertIn("storage is not connected", body["error"])
+
+    def test_either_upstash_naming_configures_redis_and_secure_cookies(self):
+        for names in (("UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"), ("KV_REST_API_URL", "KV_REST_API_TOKEN")):
+            env = {names[0]: "https://example.upstash.io", names[1]: "token", "ROOMCOMPARE_PBKDF2_ITERATIONS": "1000"}
+            with self.subTest(names=names), mock.patch.dict(os.environ, env, clear=True):
+                app = server.app_from_env()
+                self.assertIsInstance(app.backend, server.RedisBackend)
+                self.assertIsInstance(app.throttle, server.RedisThrottle)
+                self.assertTrue(app.secure_cookies)
+                self.assertEqual(app.backend.send.url, "https://example.upstash.io/pipeline")
 
 
 if __name__ == "__main__":

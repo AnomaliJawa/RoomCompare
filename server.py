@@ -15,9 +15,14 @@ or module after an edit, which looks exactly like a change that did not work.
 Photos are not sent here. They stay in the browser's IndexedDB on the device
 that took them; only survey records travel.
 
-http.server is not a hardened production server. This is sized for a
-usability study and a classroom demo. docs/ARCHITECTURE.md says what to
-change before it faces the open internet.
+On Vercel the same handler runs as a function (api/index.py), with its
+records in Upstash Redis instead of SQLite: a function's disk does not
+persist. See RedisBackend and app_from_env.
+
+http.server is not a hardened production server. Run as a process, this is
+sized for a usability study and a classroom demo: put it behind HTTPS with
+ROOMCOMPARE_SECURE_COOKIES=1, and key the login throttle on the forwarded
+client address, before it faces the open internet.
 """
 
 import argparse
@@ -105,6 +110,10 @@ def utcnow():
 def stamp(moment):
     # One fixed format, so stored timestamps compare correctly as strings.
     return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def parse_stamp(text):
+    return datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
 
 def b64(raw):
@@ -224,6 +233,196 @@ class Store:
             db.close()
 
 
+class Conflict(Exception):
+    """The email already has an account."""
+
+
+class SQLiteBackend:
+    """Accounts, sessions and surveys in one SQLite file: local and self-hosted."""
+
+    def __init__(self, path):
+        self.store = Store(path)
+        self.path = self.store.path
+
+    def create_user(self, user, password_hash, created):
+        try:
+            with self.store.transaction() as db:
+                db.execute(
+                    "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (user["id"], user["email"], user["name"], password_hash, created),
+                )
+        except sqlite3.IntegrityError:
+            raise Conflict()
+
+    def find_user(self, email):
+        with self.store.transaction() as db:
+            row = db.execute("SELECT id, email, name, password_hash FROM users WHERE email = ?", (email,)).fetchone()
+        return dict(row) if row else None
+
+    def create_session(self, token_hash, user_id, now, expires):
+        with self.store.transaction() as db:
+            db.execute("DELETE FROM sessions WHERE expires_at <= ?", (now,))
+            db.execute(
+                "INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+                (token_hash, user_id, now, expires),
+            )
+
+    def session_user(self, token_hash, now):
+        with self.store.transaction() as db:
+            row = db.execute(
+                "SELECT users.id, users.email, users.name, sessions.expires_at FROM sessions"
+                " JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ?",
+                (token_hash,),
+            ).fetchone()
+            if row is None:
+                return None
+            if row["expires_at"] <= now:
+                db.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+                return None
+            return {"id": row["id"], "email": row["email"], "name": row["name"]}
+
+    def end_session(self, token_hash):
+        with self.store.transaction() as db:
+            db.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+
+    def list_surveys(self, user_id):
+        with self.store.transaction() as db:
+            rows = db.execute(
+                "SELECT data FROM surveys WHERE user_id = ? ORDER BY created_at DESC, rowid DESC",
+                (user_id,),
+            ).fetchall()
+        return [json.loads(row["data"]) for row in rows]
+
+    def put_survey(self, user_id, survey_id, data, created, now):
+        with self.store.transaction() as db:
+            db.execute(
+                "INSERT INTO surveys (user_id, id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
+                " ON CONFLICT (user_id, id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
+                (user_id, survey_id, data, created, now),
+            )
+
+    def delete_survey(self, user_id, survey_id):
+        with self.store.transaction() as db:
+            db.execute("DELETE FROM surveys WHERE user_id = ? AND id = ?", (user_id, survey_id))
+
+
+class RedisBackend:
+    """The same records in Redis, for hosts whose disk does not persist.
+
+    On Vercel a function's files are read-only apart from a scratch folder
+    that is wiped between runs and not shared between copies, so a SQLite file
+    there would lose every account. `send` runs a batch of Redis commands and
+    returns their results in order: UpstashTransport in production, an
+    in-memory stand-in in the tests.
+
+    rc:email:<email>     -> user id      (SET NX: one account per email)
+    rc:user:<id>         -> user JSON, with the password hash
+    rc:session:<hash>    -> user id      (expires with the session)
+    rc:surveys:<user id> -> hash of survey id -> {created_at, updated_at, survey}
+    """
+
+    def __init__(self, send):
+        self.send = send
+
+    def one(self, *command):
+        return self.send([list(command)])[0]
+
+    def create_user(self, user, password_hash, created):
+        if self.one("SET", f"rc:email:{user['email']}", user["id"], "NX") is None:
+            raise Conflict()
+        record = dict(user, password_hash=password_hash, created_at=created)
+        self.one("SET", f"rc:user:{user['id']}", json.dumps(record))
+
+    def user(self, user_id):
+        raw = self.one("GET", f"rc:user:{user_id}")
+        return json.loads(raw) if raw else None
+
+    def find_user(self, email):
+        user_id = self.one("GET", f"rc:email:{email}")
+        return self.user(user_id) if user_id else None
+
+    def create_session(self, token_hash, user_id, now, expires):
+        seconds = int((parse_stamp(expires) - parse_stamp(now)).total_seconds())
+        self.one("SET", f"rc:session:{token_hash}", user_id, "EX", str(seconds))
+
+    def session_user(self, token_hash, now):
+        # Redis drops the key when the session expires, so there is no date to check.
+        user_id = self.one("GET", f"rc:session:{token_hash}")
+        user = self.user(user_id) if user_id else None
+        return {"id": user["id"], "email": user["email"], "name": user["name"]} if user else None
+
+    def end_session(self, token_hash):
+        self.one("DEL", f"rc:session:{token_hash}")
+
+    def list_surveys(self, user_id):
+        flat = self.one("HGETALL", f"rc:surveys:{user_id}") or []
+        records = [json.loads(value) for value in flat[1::2]]
+        records.sort(key=lambda record: record["created_at"], reverse=True)
+        return [record["survey"] for record in records]
+
+    def put_survey(self, user_id, survey_id, data, created, now):
+        key = f"rc:surveys:{user_id}"
+        existing = self.one("HGET", key, survey_id)
+        # An update keeps the survey's place in the list, as SQLite's upsert does.
+        created = json.loads(existing)["created_at"] if existing else created
+        record = {"created_at": created, "updated_at": now, "survey": json.loads(data)}
+        self.one("HSET", key, survey_id, json.dumps(record, separators=(",", ":"), ensure_ascii=False))
+
+    def delete_survey(self, user_id, survey_id):
+        self.one("HDEL", f"rc:surveys:{user_id}", survey_id)
+
+
+class UpstashTransport:
+    """Upstash's REST API: Redis commands as JSON over HTTPS, standard library only."""
+
+    def __init__(self, url, token, timeout=10):
+        self.url = url.rstrip("/") + "/pipeline"
+        self.token = token
+        self.timeout = timeout
+
+    def __call__(self, commands):
+        request = urllib.request.Request(
+            self.url,
+            data=json.dumps(commands).encode("utf-8"),
+            method="POST",
+            headers={"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=self.timeout) as response:
+            replies = json.loads(response.read())
+        results = []
+        for reply in replies:
+            if "error" in reply:
+                raise RuntimeError(f"Redis refused a command: {reply['error']}")
+            results.append(reply.get("result"))
+        return results
+
+
+class RedisThrottle:
+    """The login throttle, kept in Redis.
+
+    A Vercel app runs as many copies at once, each with its own memory, so a
+    count held in one would not stop attempts spread across the others. The
+    window is fixed from the first failure rather than sliding: close enough
+    for its purpose.
+    """
+
+    def __init__(self, send, limit, window):
+        self.send = send
+        self.limit = limit
+        self.window = window
+
+    def blocked(self, key):
+        return int(self.send([["GET", f"rc:throttle:{key}"]])[0] or 0) >= self.limit
+
+    def fail(self, key):
+        count = self.send([["INCR", f"rc:throttle:{key}"]])[0]
+        if count == 1:
+            self.send([["EXPIRE", f"rc:throttle:{key}", str(self.window)]])
+
+    def reset(self, key):
+        self.send([["DEL", f"rc:throttle:{key}"]])
+
+
 class LoginThrottle:
     """Refuses further logins after too many failures for one address and email.
 
@@ -256,8 +455,8 @@ class LoginThrottle:
 
 
 class App:
-    def __init__(self, store, iterations, secure_cookies, throttle):
-        self.store = store
+    def __init__(self, backend, iterations, secure_cookies, throttle):
+        self.backend = backend
         self.iterations = iterations
         self.secure_cookies = secure_cookies
         self.throttle = throttle
@@ -265,6 +464,21 @@ class App:
         # as long to refuse as a wrong password and does not reveal which
         # emails have accounts.
         self.decoy_hash = hash_password(secrets.token_hex(16), iterations)
+
+
+def app_from_env():
+    """The app as Vercel runs it: Redis for storage, HTTPS-only cookies.
+
+    Connecting Upstash Redis to the project sets the URL and token, as
+    UPSTASH_REDIS_REST_* or KV_REST_API_* depending on the prefix chosen.
+    """
+    url = os.environ.get("UPSTASH_REDIS_REST_URL") or os.environ.get("KV_REST_API_URL")
+    token = os.environ.get("UPSTASH_REDIS_REST_TOKEN") or os.environ.get("KV_REST_API_TOKEN")
+    if not url or not token:
+        raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, "RoomCompare's storage is not connected yet. Try again later.")
+    send = UpstashTransport(url, token)
+    iterations = int(os.environ.get("ROOMCOMPARE_PBKDF2_ITERATIONS", DEFAULT_ITERATIONS))
+    return App(RedisBackend(send), iterations, True, RedisThrottle(send, LOGIN_LIMIT, LOGIN_WINDOW_SECONDS))
 
 
 # --- HTTP ---------------------------------------------------------------------
@@ -436,32 +650,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             parts.append("Secure")
         return "; ".join(parts)
 
-    def start_session(self, db, user_id):
+    def start_session(self, user_id):
         token = secrets.token_urlsafe(32)
         now = utcnow()
-        db.execute("DELETE FROM sessions WHERE expires_at <= ?", (stamp(now),))
-        db.execute(
-            "INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
-            (token_digest(token), user_id, stamp(now), stamp(now + timedelta(days=SESSION_DAYS))),
-        )
+        self.app.backend.create_session(token_digest(token), user_id, stamp(now), stamp(now + timedelta(days=SESSION_DAYS)))
         return self.cookie(token, SESSION_DAYS * 24 * 60 * 60)
 
     def current_user(self):
         token = self.session_token()
         if not token:
             return None
-        with self.app.store.transaction() as db:
-            row = db.execute(
-                "SELECT users.id, users.email, users.name, sessions.expires_at FROM sessions"
-                " JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ?",
-                (token_digest(token),),
-            ).fetchone()
-            if row is None:
-                return None
-            if row["expires_at"] <= stamp(utcnow()):
-                db.execute("DELETE FROM sessions WHERE token_hash = ?", (token_digest(token),))
-                return None
-            return {"id": row["id"], "email": row["email"], "name": row["name"]}
+        return self.app.backend.session_user(token_digest(token), stamp(utcnow()))
+
+    def client_ip(self):
+        """Who is asking, for the login throttle. Behind a proxy, overridden."""
+        return self.client_address[0]
 
     def require_user(self):
         user = self.current_user()
@@ -478,41 +681,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         user = {"id": uuid.uuid4().hex, "email": email, "name": name}
         password_hash = hash_password(password, self.app.iterations)
         try:
-            with self.app.store.transaction() as db:
-                db.execute(
-                    "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-                    (user["id"], email, name, password_hash, stamp(utcnow())),
-                )
-                cookie = self.start_session(db, user["id"])
-        except sqlite3.IntegrityError:
+            self.app.backend.create_user(user, password_hash, stamp(utcnow()))
+        except Conflict:
             message = "An account with that email already exists. Log in instead."
             raise ApiError(HTTPStatus.CONFLICT, message, {"email": message})
+        cookie = self.start_session(user["id"])
         self.send_json(HTTPStatus.CREATED, {"user": user}, cookie=cookie)
 
     def login(self):
         errors, email, password = check_login(self.read_json())
         if errors:
             raise ApiError(HTTPStatus.BAD_REQUEST, first_error(errors), errors)
-        key = f"{self.client_address[0]}|{email}"
+        key = f"{self.client_ip()}|{email}"
         if self.app.throttle.blocked(key):
             raise ApiError(HTTPStatus.TOO_MANY_REQUESTS, "Too many attempts. Wait a few minutes, then try again.")
-        with self.app.store.transaction() as db:
-            row = db.execute("SELECT id, email, name, password_hash FROM users WHERE email = ?", (email,)).fetchone()
-            matched = verify_password(password, row["password_hash"] if row else self.app.decoy_hash)
-            if row is None or not matched:
-                self.app.throttle.fail(key)
-                # One message for both cases: which half was wrong is not the
-                # server's to say.
-                raise ApiError(HTTPStatus.UNAUTHORIZED, "Email or password is incorrect.")
-            cookie = self.start_session(db, row["id"])
+        row = self.app.backend.find_user(email)
+        matched = verify_password(password, row["password_hash"] if row else self.app.decoy_hash)
+        if row is None or not matched:
+            self.app.throttle.fail(key)
+            # One message for both cases: which half was wrong is not the
+            # server's to say.
+            raise ApiError(HTTPStatus.UNAUTHORIZED, "Email or password is incorrect.")
+        cookie = self.start_session(row["id"])
         self.app.throttle.reset(key)
         self.send_json(HTTPStatus.OK, {"user": {"id": row["id"], "email": row["email"], "name": row["name"]}}, cookie=cookie)
 
     def logout(self):
         token = self.session_token()
         if token:
-            with self.app.store.transaction() as db:
-                db.execute("DELETE FROM sessions WHERE token_hash = ?", (token_digest(token),))
+            self.app.backend.end_session(token_digest(token))
         self.send_json(HTTPStatus.NO_CONTENT, cookie=self.cookie("", 0))
 
     # --- Surveys ----------------------------------------------------------------
@@ -521,12 +718,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     # each account sees and changes nothing but its own.
 
     def list_surveys(self, user):
-        with self.app.store.transaction() as db:
-            rows = db.execute(
-                "SELECT data FROM surveys WHERE user_id = ? ORDER BY created_at DESC, rowid DESC",
-                (user["id"],),
-            ).fetchall()
-        self.send_json(HTTPStatus.OK, {"surveys": [json.loads(row["data"]) for row in rows]})
+        self.send_json(HTTPStatus.OK, {"surveys": self.app.backend.list_surveys(user["id"])})
 
     def put_survey(self, user, survey_id):
         survey = self.read_json().get("survey")
@@ -537,19 +729,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise ApiError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "That survey is too large to save.")
         now = stamp(utcnow())
         created = survey.get("createdAt") if isinstance(survey.get("createdAt"), str) else now
-        with self.app.store.transaction() as db:
-            db.execute(
-                "INSERT INTO surveys (user_id, id, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
-                " ON CONFLICT (user_id, id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at",
-                (user["id"], survey_id, data, created, now),
-            )
+        self.app.backend.put_survey(user["id"], survey_id, data, created, now)
         self.send_json(HTTPStatus.NO_CONTENT)
 
     def delete_survey(self, user, survey_id):
         # Deleting what is already gone succeeds: a retried delete after a
         # dropped connection must not look like a failure.
-        with self.app.store.transaction() as db:
-            db.execute("DELETE FROM surveys WHERE user_id = ? AND id = ?", (user["id"], survey_id))
+        self.app.backend.delete_survey(user["id"], survey_id)
         self.send_json(HTTPStatus.NO_CONTENT)
 
 
@@ -585,7 +771,7 @@ def create_server(host="", port=5173, db_path=None, *, iterations=None, secure_c
     iterations = iterations or int(os.environ.get("ROOMCOMPARE_PBKDF2_ITERATIONS", DEFAULT_ITERATIONS))
     if secure_cookies is None:
         secure_cookies = os.environ.get("ROOMCOMPARE_SECURE_COOKIES") == "1"
-    app = App(Store(db_path), iterations, secure_cookies, LoginThrottle(login_limit, LOGIN_WINDOW_SECONDS))
+    app = App(SQLiteBackend(db_path), iterations, secure_cookies, LoginThrottle(login_limit, LOGIN_WINDOW_SECONDS))
     handler = functools.partial(Handler, directory=str(root))
     # Every interface by default, both address families, so "localhost" is
     # fast and a phone on the same network can still reach the app.
@@ -607,7 +793,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     httpd = create_server(args.host, args.port, args.db)
-    print(f"RoomCompare on http://localhost:{args.port} (API at /api, data in {httpd.app.store.path})")
+    print(f"RoomCompare on http://localhost:{args.port} (API at /api, data in {httpd.app.backend.path})")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
