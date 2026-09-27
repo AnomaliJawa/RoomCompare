@@ -101,33 +101,6 @@ export const BEST_MATCH_WEIGHTS = [
   { key: 'security', label: 'Security', weight: 0.12 },
 ];
 
-/** Guidance panels, quoted from the PRD's survey form specification. */
-export const GUIDELINES = {
-  kos:
-    'Fill in the basic information about the kos, including its name, type, ' +
-    'location, distance to campus, and monthly rental price. Use the map to ' +
-    'accurately mark the kos and campus locations so the system can ' +
-    'automatically calculate the distance between them.',
-  room:
-    "Provide the room's dimensions, available facilities, cleanliness, " +
-    'internet quality, and photos based on your actual observation during the ' +
-    'kos survey.',
-  bathroom:
-    'Select all available bathroom facilities based on your observation during ' +
-    "the kos survey, then upload up to 10 photos showing the bathroom's actual " +
-    'condition.',
-  shared:
-    'Select all shared facilities available at the kos and upload up to 10 ' +
-    'photos that show their actual condition.',
-  surroundings:
-    'Select all relevant facilities or places available around the kos that may ' +
-    'support your daily needs, such as food, healthcare, banking, or worship.',
-  additional:
-    "Rate the kos's overall security based on your observation, add any " +
-    'important information that is not covered in the previous sections, and ' +
-    'optionally upload videos to provide a more complete view of the kos.',
-};
-
 /** Comparison groups, in PRD order. Section 6 is added — see plan ambiguity 2. */
 export const COMPARISON_GROUPS = [
   { key: 'kos', label: 'Kos information' },
