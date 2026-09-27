@@ -64,7 +64,7 @@ export function compareBar(selected, { shown }) {
               </button>`,
             )
           : ''}
-        <button class="btn btn--secondary" type="button" data-action="open-picker" aria-haspopup="dialog">
+        <button class="btn btn--secondary compare-bar__add" type="button" data-action="open-picker" aria-haspopup="dialog">
           Add kos
         </button>
         ${!shown

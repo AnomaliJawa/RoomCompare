@@ -2270,11 +2270,16 @@ a.listing__title::after {
   .compare-bar__chips { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* Stacked on a phone, the reversed column puts the count last. Add kos is
+   lifted to the top, above Compare, at the user's request: pick the kos,
+   then compare them, top to bottom, as the wide bar reads left to right and
+   as focus moves. */
 @media (max-width: 640px) {
   .compare-bar { flex-direction: column; align-items: stretch; }
   .compare-bar__actions { flex-direction: column-reverse; align-items: stretch; }
   .compare-bar__actions > .meta { margin-right: 0; }
   .compare-bar__actions .btn { width: 100%; }
+  .compare-bar__add { order: 1; }
 }
 
 /* --- Sectioned ledger on narrow screens -----------------------------------
