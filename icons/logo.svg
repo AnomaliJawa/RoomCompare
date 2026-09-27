@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
+  <title>RoomCompare logo</title>
+  <defs>
+    <mask id="rc-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+      <rect width="200" height="200" fill="#fff"/>
+      <path d="M128 42 L78 84 L78 162 L178 162 L178 84 Z" fill="none" stroke="#000" stroke-width="26" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <path d="M72 42 L22 84 L22 162 L122 162 L122 84 Z" fill="#1F5D4C" stroke="#1F5D4C" stroke-width="10" stroke-linejoin="round" mask="url(#rc-gap)"/>
+  <path d="M128 42 L78 84 L78 162 L178 162 L178 84 Z" fill="none" stroke="#1F5D4C" stroke-width="10" stroke-linejoin="round"/>
+</svg>
