@@ -189,9 +189,11 @@
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* The ⓘ that opens a field's How to fill panel. A quiet icon beside the
-   label; on a touch screen it takes a 44px hit area (touch rules below). */
-.field__info {
+/* The ⓘ that opens a field's How to fill panel, and the ? beside the survey
+   form's title that opens the Survey guide. Quiet icons beside what they
+   explain; on a touch screen each takes a 44px hit area (touch rules). */
+.field__info,
+.page-head__help {
   display: inline-grid;
   place-items: center;
   padding: var(--space-1);
@@ -206,15 +208,18 @@
               color var(--duration-fast) var(--ease);
 }
 
-.field__info-icon { display: block; }
+.field__info-icon,
+.page-head__help-icon { display: block; }
 
-.field__info:active {
+.field__info:active,
+.page-head__help:active {
   background: var(--accent-tint);
   color: var(--accent-press);
 }
 
 @media (hover: hover) {
-  .field__info:hover {
+  .field__info:hover,
+  .page-head__help:hover {
     background: var(--accent-tint);
     color: var(--accent);
   }
@@ -2002,17 +2007,37 @@ a.listing__title::after {
    narrow-screen rule below, so phones still get the full-screen sheet. */
 .dialog--picker { width: min(560px, calc(100vw - var(--space-6))); }
 
+/* The Survey guide is three short lists. */
+.dialog--guide { width: min(480px, calc(100vw - var(--space-6))); }
+
+.guide-dialog__heading {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.guide-dialog__list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  list-style: disc;
+}
+
+.guide-dialog__list--steps { list-style: decimal; }
+
+.guide-dialog__list li + li { margin-top: var(--space-1); }
+
 /* The kos picker shares the filter dialog's shape: fixed head and foot, a
    body that scrolls between them. */
 .filter-dialog,
-.picker-dialog {
+.picker-dialog,
+.guide-dialog {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
 .filter-dialog__head,
-.picker-dialog__head {
+.picker-dialog__head,
+.guide-dialog__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2023,7 +2048,8 @@ a.listing__title::after {
 
 /* The body scrolls, so the actions stay reachable with 24 facilities open. */
 .filter-dialog__body,
-.picker-dialog__body {
+.picker-dialog__body,
+.guide-dialog__body {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -2040,7 +2066,8 @@ a.listing__title::after {
 }
 
 .filter-dialog__foot,
-.picker-dialog__foot {
+.picker-dialog__foot,
+.guide-dialog__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2053,7 +2080,8 @@ a.listing__title::after {
 /* The body scrolls on its own: reaching the end of 24 facilities must not
    start scrolling, or bouncing, the page underneath. */
 .filter-dialog__body,
-.picker-dialog__body { overscroll-behavior: contain; }
+.picker-dialog__body,
+.guide-dialog__body { overscroll-behavior: contain; }
 
 /* --- How to fill panel ----------------------------------------------------
    One dialog for every field's ⓘ. On a wide screen it sits beside the ⓘ
@@ -2166,23 +2194,27 @@ a.listing__title::after {
   /* A panel is a few short paragraphs: the sheet fits them and leaves the
      field it explains in view above. `auto`, with the dialog pinned to both
      edges, would stretch it to the full height. */
-  .dialog--howto { height: fit-content; }
+  .dialog--howto,
+  .dialog--guide { height: fit-content; }
 
   .filter-dialog__head,
   .picker-dialog__head,
+  .guide-dialog__head,
   .howto__head { touch-action: none; }
 
   /* The sheet's own close button clears the home indicator. */
   .howto__body { padding-bottom: max(var(--space-4), env(safe-area-inset-bottom)); }
 
   .filter-dialog__foot,
-  .picker-dialog__foot {
+  .picker-dialog__foot,
+  .guide-dialog__foot {
     flex-direction: column-reverse;
     padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
   }
 
   .filter-dialog__foot .btn,
-  .picker-dialog__foot .btn { width: 100%; }
+  .picker-dialog__foot .btn,
+  .guide-dialog__foot .btn { width: 100%; }
 }
 
 /* A sheet rises from the edge it is anchored to. `backwards`, not `both`:
@@ -2416,11 +2448,13 @@ a.listing__title::after {
 
   .btn--small,
   .compare-chip__remove,
-  .field__info { position: relative; }
+  .field__info,
+  .page-head__help { position: relative; }
 
   .btn--small::after,
   .compare-chip__remove::after,
-  .field__info::after {
+  .field__info::after,
+  .page-head__help::after {
     content: "";
     position: absolute;
     top: 50%;

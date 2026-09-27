@@ -376,6 +376,44 @@ export const RUBRICS = {
   ],
 };
 
+/**
+ * The Survey guide, shown the first time the survey form opens and again
+ * from the ? beside its title: what to prepare before visiting a kos. The
+ * concept's three sentences, as lists, so each item can be ticked off.
+ */
+export const SURVEY_GUIDE = {
+  title: 'Survey guide',
+  sections: [
+    {
+      heading: 'Bring',
+      items: [
+        'A tape measure, or a measuring app',
+        'A charged phone with space for photos and videos',
+        'The Speedtest by Ookla app',
+      ],
+    },
+    {
+      heading: 'Ask the owner',
+      items: [
+        'The monthly price, and what it includes (electricity, water, Wi-Fi)',
+        'The kos type',
+        'The deposit and payment period',
+        'Curfew and guest rules',
+        'Extra fees',
+      ],
+    },
+    {
+      heading: 'On site',
+      ordered: true,
+      items: [
+        'Save a draft as soon as you have the kos name.',
+        'Fill in the rest as you walk around.',
+        'Publish when all required fields are done.',
+      ],
+    },
+  ],
+};
+
 /** The line shown under a scale for one level, e.g. "3 Good: …". */
 export function rubricLine(level) {
   const base = `${level.score} ${level.label}: ${level.text}`;

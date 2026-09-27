@@ -147,6 +147,13 @@ body[data-auth="pending"] .nav__actions { display: none; }
 
 .page-head__text { min-width: 0; }
 
+/* A title with a control that belongs to it, like the survey form's ?. */
+.page-head__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .page-head__lede {
   margin-top: var(--space-2);
   color: var(--muted);
