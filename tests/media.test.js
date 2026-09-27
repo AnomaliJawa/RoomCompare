@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { uploaderField, mountUploaders } from '../src/components/mediaUploader.js';
 import { galleryField, mountGalleries } from '../src/components/photoGallery.js';
+import { loadMedia } from '../src/media.js';
 import { MAX_PHOTOS_PER_SECTION } from '../src/constants.js';
 
 // jsdom has no IndexedDB, so no file is on "this device" — exactly the case of
@@ -26,6 +27,56 @@ async function roomUploader(mediaIds) {
 
 afterEach(() => {
   document.body.innerHTML = '';
+  vi.unstubAllGlobals();
+});
+
+/** The app's own sample files, served; anything else is a 404. */
+function serveSamples(files = ['room-1-1', 'room-1-2', 'bathroom-2-1']) {
+  const fetch = vi.fn(async (url) => {
+    const name = decodeURIComponent(String(url).replace(/^seed-photos\//, '').replace(/\.jpg$/, ''));
+    return files.includes(name)
+      ? { ok: true, blob: async () => new Blob([name], { type: 'image/jpeg' }) }
+      : { ok: false, blob: async () => null };
+  });
+  vi.stubGlobal('fetch', fetch);
+  return fetch;
+}
+
+describe('sample photos', () => {
+  it('load from the files that ship with the app, in the order asked, beside stored ones', async () => {
+    const fetch = serveSamples();
+    const records = await loadMedia(['seed:room-1-1', 'p-stored', 'seed:bathroom-2-1']);
+    expect(records.map((r) => [r.id, r.originalName])).toEqual([
+      ['seed:room-1-1', 'room-1-1.jpg'],
+      ['seed:bathroom-2-1', 'bathroom-2-1.jpg'],
+    ]);
+    expect(fetch).toHaveBeenCalledWith('seed-photos/room-1-1.jpg');
+    // "p-stored" is looked up in this browser's storage, not fetched.
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('are fetched once per page, since the server tells the browser not to cache', async () => {
+    const fetch = serveSamples();
+    await loadMedia(['seed:room-1-2']);
+    await loadMedia(['seed:room-1-2']);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('are left out when a file cannot be loaded, and tried again later', async () => {
+    const fetch = serveSamples([]);
+    expect(await loadMedia(['seed:shared-9-9'])).toEqual([]);
+    await loadMedia(['seed:shared-9-9']);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('show as photos in the form, not as files kept on another device', async () => {
+    serveSamples();
+    vi.stubGlobal('URL', Object.assign(Object.create(URL), { createObjectURL: () => 'blob:sample', revokeObjectURL: () => {} }));
+    const { host } = await roomUploader(['seed:room-1-1']);
+    expect(host.querySelector('img.uploader__thumb').getAttribute('alt')).toBe('room-1-1.jpg');
+    expect(host.querySelector('.uploader__elsewhere')).toBeNull();
+    expect(host.querySelector('[data-ids]').value).toBe('seed:room-1-1');
+  });
 });
 
 describe('photos added on another device', () => {

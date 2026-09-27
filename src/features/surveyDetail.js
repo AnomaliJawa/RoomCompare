@@ -63,8 +63,49 @@ function section(title, body) {
   `;
 }
 
-function photos(ids, section, label) {
-  return galleryField({ section, label: `${label} photos`, mediaIds: ids ?? [] });
+const count = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`;
+
+/**
+ * Every photo and video in one panel, grouped by the part of the kos it shows.
+ * Spread through the sections, they were hard to review together, and a
+ * survey without any read as four separate "No … recorded" lines.
+ *
+ * The groups follow the form's order, and the galleries are the same ones the
+ * sections held: `data-gallery` keeps its section name, so mountGalleries,
+ * the lightbox and the "not on this device" note work unchanged.
+ */
+function mediaPanel(survey) {
+  const groups = [
+    { title: 'Room', section: 'room', label: 'room photos', ids: survey.room?.photoIds },
+    { title: 'Bathroom', section: 'bathroom', label: 'bathroom photos', ids: survey.bathroom?.photoIds },
+    { title: 'Shared facilities', section: 'shared', label: 'shared facility photos', ids: survey.shared?.photoIds },
+    { title: 'Videos', section: 'video', label: 'videos', ids: survey.additional?.videoIds, kind: 'video' },
+  ].map((group) => ({ ...group, ids: group.ids ?? [] }));
+
+  const photoCount = groups.filter((group) => !group.kind).reduce((sum, group) => sum + group.ids.length, 0);
+  const videoCount = groups.find((group) => group.kind === 'video').ids.length;
+  const summary = [photoCount && count(photoCount, 'photo'), videoCount && count(videoCount, 'video')]
+    .filter(Boolean)
+    .join(', ');
+
+  return html`
+    <section class="panel section" aria-labelledby="media-title">
+      <div class="section__head">
+        <h2 id="media-title">Photos and videos</h2>
+        ${summary ? html`<span class="meta">${summary}</span>` : ''}
+      </div>
+      ${summary
+        ? html`<div class="media-groups">
+            ${groups.map(
+              (group) => html`<div class="media-group">
+                <h3 class="media-group__title">${group.title}</h3>
+                ${galleryField({ section: group.section, label: group.label, mediaIds: group.ids, kind: group.kind })}
+              </div>`,
+            )}
+          </div>`
+        : html`<p class="meta">No photos or videos recorded.</p>`}
+    </section>
+  `;
 }
 
 export function renderSurveyDetail({ id }) {
@@ -152,13 +193,12 @@ export function renderSurveyDetail({ id }) {
             ${raw(definition('Internet quality', likertLabel(survey.room.internet)))}
           </dl>
           ${raw(checklist(ROOM_FACILITIES, survey.room.facilities))}
-          ${photos(survey.room.photoIds, 'room', 'room')}
         `,
       ),
     )}
 
-    ${raw(section('Bathroom', html`${raw(checklist(BATHROOM_FACILITIES, survey.bathroom.facilities))}${photos(survey.bathroom.photoIds, 'bathroom', 'bathroom')}`))}
-    ${raw(section('Shared facilities', html`${raw(checklist(SHARED_FACILITIES, survey.shared.facilities))}${photos(survey.shared.photoIds, 'shared', 'shared facility')}`))}
+    ${raw(section('Bathroom', checklist(BATHROOM_FACILITIES, survey.bathroom.facilities)))}
+    ${raw(section('Shared facilities', checklist(SHARED_FACILITIES, survey.shared.facilities)))}
     ${raw(section('Surroundings', checklist(SURROUNDINGS, survey.surroundings)))}
 
     ${raw(
@@ -169,15 +209,11 @@ export function renderSurveyDetail({ id }) {
             ${raw(definition('Security', likertLabel(survey.additional.security)))}
           </dl>
           <p class="notes">${raw(value(survey.additional.notes))}</p>
-          ${galleryField({
-            section: 'video',
-            kind: 'video',
-            label: 'videos',
-            mediaIds: survey.additional?.videoIds ?? [],
-          })}
         `,
       ),
     )}
+
+    ${mediaPanel(survey)}
   `;
 }
 

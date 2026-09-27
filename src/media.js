@@ -1,7 +1,7 @@
 import * as db from './db.js';
 import { getState } from './store.js';
 import { downscaleImage, acceptVideo, MediaError } from './utils/image.js';
-import { MAX_PHOTOS_PER_SECTION } from './constants.js';
+import { MAX_PHOTOS_PER_SECTION, SAMPLE_PHOTO_PREFIX } from './constants.js';
 
 /**
  * Photos stay on the device that took them; the server holds survey records
@@ -172,8 +172,46 @@ export async function removeMedia(id) {
 }
 
 /** Records for a list of ids, in the order given, skipping any that are gone. */
+/**
+ * Sample photos, fetched once per page from the app's own files and kept, so
+ * a card and its gallery do not each download the same image: the server
+ * sends no-store, so the browser's cache will not help. Only successes are
+ * kept; a failed fetch is tried again next time.
+ */
+const samples = new Map();
+
+function loadSample(id) {
+  if (!samples.has(id)) {
+    const name = id.slice(SAMPLE_PHOTO_PREFIX.length);
+    const record = fetch(`seed-photos/${encodeURIComponent(name)}.jpg`)
+      .then((response) => (response.ok ? response.blob() : null))
+      .catch(() => null)
+      .then((blob) => {
+        if (!blob) {
+          samples.delete(id);
+          return null;
+        }
+        return { id, blob, mimeType: blob.type || 'image/jpeg', originalName: `${name}.jpg`, byteSize: blob.size };
+      });
+    samples.set(id, record);
+  }
+  return samples.get(id);
+}
+
+/**
+ * Records for the given ids, in the order given; ids with nothing behind them
+ * are left out. Sample photo ids resolve to the images that ship with the
+ * app, everything else to what this browser has stored.
+ */
 export async function loadMedia(ids) {
-  return db.getMediaMany(ids);
+  if (!ids?.length) return [];
+  const isSample = (id) => id.startsWith(SAMPLE_PHOTO_PREFIX);
+  const [fromSamples, stored] = await Promise.all([
+    Promise.all(ids.filter(isSample).map(loadSample)),
+    db.getMediaMany(ids.filter((id) => !isSample(id))),
+  ]);
+  const byId = new Map([...fromSamples.filter(Boolean), ...stored].map((record) => [record.id, record]));
+  return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
 /** Everything stored against a survey, whatever section it belongs to. */
