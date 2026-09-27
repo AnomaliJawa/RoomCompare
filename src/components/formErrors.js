@@ -21,12 +21,15 @@ function errorId(field) {
   return `error-${field}`;
 }
 
-/** The control a message should point at, and that focus should land on. */
+/**
+ * The control a message should point at, and that focus should land on.
+ * Never a field's ⓘ: it explains the field, it is not where the answer goes.
+ */
 function controlFor(node, field) {
   return (
     qs(`#f-${field}`, node) ??
     qs(`[name="${field}"]`, node) ??
-    qs('input, select, textarea, button', node)
+    qs('input, select, textarea, button:not(.field__info)', node)
   );
 }
 
