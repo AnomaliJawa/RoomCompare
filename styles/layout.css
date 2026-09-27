@@ -104,8 +104,8 @@ body[data-auth="pending"] .nav__links,
 body[data-auth="pending"] .nav__actions { display: none; }
 
 /* Log out lives beside Add survey on a wide screen. On a narrow one the
-   actions row has room for only two buttons, Menu and Add survey, so it
-   moves to the foot of the menu. */
+   row has room for only Add survey and the menu toggle, so it moves to the
+   foot of the menu. */
 .nav .nav__logout-menu { display: none; }
 
 /* On a touch screen the wordmark is a 44px target like everything else in
@@ -217,7 +217,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
   .nav__links {
     display: none;
     position: absolute;
-    /* Follows the real header height, which grows when the actions wrap. */
+    /* Directly under the header, whatever its height. */
     top: 100%;
     left: 0;
     right: 0;
@@ -244,9 +244,25 @@ body[data-auth="pending"] .nav__actions { display: none; }
     border-left-color: var(--accent);
   }
 
+  /* The toggle is an icon, so each action takes its own width rather than
+     an equal share of the row. */
+  .nav__actions { grid-auto-columns: auto; }
+
+  /* A square as tall as the button beside it: 40px is .btn's min-height.
+     aria-label keeps its name, Menu. */
   .nav .nav__toggle {
     display: inline-flex;
     order: 3;
+    min-width: 40px;
+    padding: var(--space-2);
+  }
+
+  /* While the menu is open the toggle holds its pressed look, so the icon
+     that opened the menu reads as the one that closes it. */
+  .nav .nav__toggle[aria-expanded="true"] {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .nav .nav__logout { display: none; }
@@ -255,19 +271,32 @@ body[data-auth="pending"] .nav__actions { display: none; }
   .grid-split { grid-template-columns: 1fr; }
 }
 
+/* After the block above, so the touch size wins over its 40px. */
+@media (max-width: 900px) and (pointer: coarse) {
+  .nav .nav__toggle { min-width: var(--target-min); }
+}
+
+/* Phones keep one row: wordmark, Add survey and the menu icon. At full
+   size the three need 317px once Add survey's padding narrows, which fits
+   from 360px. The wordmark may clip rather than push the page sideways if
+   a font ever renders wider; the buttons never shrink. */
 @media (max-width: 500px) {
-  .nav__inner {
-    flex-wrap: wrap;
-    height: auto;
-    padding-top: var(--space-3);
-    padding-bottom: var(--space-3);
-    row-gap: var(--space-3);
+  .nav__inner { gap: var(--space-3); }
+
+  .nav__wordmark {
+    min-width: 0;
+    overflow: hidden;
   }
 
-  .nav__actions {
-    width: 100%;
-    margin-left: 0;
-  }
+  .nav__actions .btn--primary { padding-inline: var(--space-3); }
+}
+
+/* Below 360px the row is 288px wide at most: the wordmark steps down one
+   size and the gap before the buttons closes to 8px. The 12px between the
+   two buttons stays, so a thumb aimed at one does not land on the other. */
+@media (max-width: 359px) {
+  .nav__inner { gap: var(--space-2); }
+  .nav__wordmark { font-size: var(--text-base); }
 }
 
 @media (max-width: 640px) {
