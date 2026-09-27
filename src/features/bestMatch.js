@@ -126,9 +126,25 @@ export function computeBestMatch(surveys) {
 
 /* --- Rendering ----------------------------------------------------------- */
 
-function partCell(value) {
-  if (value === null) return html`<td><span class="unrecorded">—</span></td>`;
-  return html`<td class="numeric">${Math.round(value)}</td>`;
+/**
+ * What a figure is, for narrow screens: there the table stacks each criterion
+ * into a list, and bare figures under "Facilities" did not say which kos each
+ * one was. It reads `Kos Pelangi: 58`. The colon sits outside the name, so a
+ * long name can end in an ellipsis and keep it.
+ *
+ * aria-hidden, because the column header names the cell for assistive
+ * technology. The table's explicit roles keep that header when the narrow
+ * layout turns the table into blocks, as in the comparison.
+ */
+function cellLabel(name) {
+  return html`<span class="ledger__cell-label" aria-hidden="true"><span class="bestmatch__cell-name">${name}</span>:</span>`;
+}
+
+function partCell(value, kosName) {
+  if (value === null) {
+    return html`<td role="cell">${cellLabel(kosName)}<span class="ledger__cell-value unrecorded">—</span></td>`;
+  }
+  return html`<td class="numeric" role="cell">${cellLabel(kosName)}<span class="ledger__cell-value">${Math.round(value)}</span></td>`;
 }
 
 function scoreRow(item, leaders) {
@@ -174,20 +190,20 @@ export function bestMatchPanel(surveys) {
         </ul>
 
         <div class="ledger-wrap">
-          <table class="ledger bestmatch__table">
-            <thead>
-              <tr>
-                <th class="ledger__criterion" scope="col">Criterion</th>
-                <th class="numeric" scope="col">Weight</th>
-                ${surveys.map((survey) => html`<th scope="col">${survey.kos.name}</th>`)}
+          <table class="ledger bestmatch__table" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th class="ledger__criterion" scope="col" role="columnheader">Criterion</th>
+                <th class="numeric" scope="col" role="columnheader">Weight</th>
+                ${surveys.map((survey) => html`<th scope="col" role="columnheader">${survey.kos.name}</th>`)}
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               ${BEST_MATCH_WEIGHTS.map(
-                (criterion) => html`<tr>
-                  <th class="ledger__criterion" scope="row">${criterion.label}</th>
-                  <td class="numeric">${Math.round(criterion.weight * 100)}%</td>
-                  ${scored.map((item) => partCell(item.parts[criterion.key]))}
+                (criterion) => html`<tr role="row">
+                  <th class="ledger__criterion" scope="row" role="rowheader">${criterion.label}</th>
+                  <td class="numeric bestmatch__weight" role="cell">${cellLabel('Weight')}<span class="ledger__cell-value">${Math.round(criterion.weight * 100)}%</span></td>
+                  ${scored.map((item) => partCell(item.parts[criterion.key], item.survey.kos.name))}
                 </tr>`,
               )}
             </tbody>

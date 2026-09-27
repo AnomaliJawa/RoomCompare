@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeBestMatch } from '../src/features/bestMatch.js';
+import { computeBestMatch, bestMatchPanel } from '../src/features/bestMatch.js';
 import { BEST_MATCH_WEIGHTS, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../src/constants.js';
 
 function kos(id, over = {}) {
@@ -170,5 +170,50 @@ describe('leaders', () => {
     ]);
     expect(leaders).toEqual([]);
     expect(best).toBeNull();
+  });
+});
+
+// On narrow screens the breakdown stacks each criterion into a list, where a
+// bare figure cannot say which kos it belongs to.
+describe('the breakdown', () => {
+  it('names the kos beside each score, and the weight beside the weight', () => {
+    const surveys = [kos('Kos Pelangi'), kos('Casa Hijau', { room: { cleanliness: null } })];
+    document.body.innerHTML = String(bestMatchPanel(surveys));
+    const { scored } = computeBestMatch(surveys);
+    const figure = (value) => (value === null ? '—' : String(Math.round(value)));
+
+    const rows = [...document.querySelectorAll('.bestmatch__table tbody tr')];
+    expect(rows).toHaveLength(BEST_MATCH_WEIGHTS.length);
+    rows.forEach((row, index) => {
+      const criterion = BEST_MATCH_WEIGHTS[index];
+      const cells = [...row.querySelectorAll('td')].map((td) => [
+        td.querySelector('.ledger__cell-label').textContent,
+        td.querySelector('.ledger__cell-value').textContent,
+      ]);
+      expect(cells).toEqual([
+        ['Weight:', `${Math.round(criterion.weight * 100)}%`],
+        ...scored.map((item) => [`${item.survey.kos.name}:`, figure(item.parts[criterion.key])]),
+      ]);
+    });
+  });
+
+  it('leaves naming each cell to its column header for assistive technology', () => {
+    document.body.innerHTML = String(bestMatchPanel([kos('Kos Pelangi'), kos('Casa Hijau')]));
+    const table = document.querySelector('.bestmatch__table');
+
+    // The narrow layout turns the table into blocks; explicit roles keep it a table.
+    expect(table.getAttribute('role')).toBe('table');
+    expect([...table.querySelectorAll('[role="columnheader"]')].map((th) => th.textContent.trim())).toEqual([
+      'Criterion',
+      'Weight',
+      'Kos Pelangi',
+      'Casa Hijau',
+    ]);
+    expect(table.querySelectorAll('[role="rowheader"]')).toHaveLength(BEST_MATCH_WEIGHTS.length);
+    expect(table.querySelectorAll('[role="cell"]')).toHaveLength(BEST_MATCH_WEIGHTS.length * 3);
+    // So the name shown beside a figure is not read out a second time.
+    for (const label of table.querySelectorAll('.ledger__cell-label')) {
+      expect(label.getAttribute('aria-hidden')).toBe('true');
+    }
   });
 });
