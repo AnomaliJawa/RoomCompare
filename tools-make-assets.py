@@ -1,5 +1,5 @@
 """
-Generate the seed photographs and the app icon.
+Generate the seed photographs, the app icons and the favicon.
 
 The photographs are illustrations, not photography: drawn room scenes at a
 plausible size and compression so the galleries, thumbnails, lightbox and
@@ -246,6 +246,8 @@ def draw_icon(size):
 
 
 def make_icons():
+    """The home-screen icons. They still carry the columns above; the favicon
+    below is the logo."""
     os.makedirs(OUT_ICONS, exist_ok=True)
     with open(os.path.join(OUT_ICONS, 'icon.svg'), 'w', encoding='utf-8', newline='\n') as f:
         f.write(ICON_SVG)
@@ -255,11 +257,56 @@ def make_icons():
         path = os.path.join(OUT_ICONS, name)
         draw_icon(size).save(path, 'PNG', optimize=True)
         made.append(name)
-
-    # A real .ico for browsers that still ask for one at the site root.
-    draw_icon(64).save('favicon.ico', 'ICO', sizes=[(16, 16), (32, 32), (48, 48)])
-    made.append('favicon.ico')
     return made
+
+
+# --- Favicon ---------------------------------------------------------------
+# The logo itself, exactly as the user supplied it (icons/logo.svg): green
+# houses on no background. index.html gives browsers the SVG; this draws the
+# .ico for those that still ask for one. The user chose it over a version on
+# the green tile, knowing its green shows less on a dark tab strip.
+
+# The logo's two houses, copied from icons/logo.svg, in its 200-unit square.
+LOGO_FILLED = [(72, 42), (22, 84), (22, 162), (122, 162), (122, 84)]
+LOGO_OUTLINED = [(128, 42), (78, 84), (78, 162), (178, 162), (178, 84)]
+
+
+def draw_favicon(size):
+    """icons/logo.svg as pixels, its whole square at `size`. Pillow cannot
+    read SVG, so the houses are drawn sixteen times larger and reduced, which
+    smooths their edges much as a browser does. They are drawn as coverage
+    alone: the gap is cut out of the filled house, as the logo's mask cuts
+    it, so the tab shows through it."""
+    ss = 16
+    unit = size * ss / 200
+
+    def stroke(points, width, value):
+        # Round joins, as stroke-linejoin="round" draws them.
+        w = width * unit
+        corners = [(x * unit, y * unit) for x, y in points]
+        for a, b in zip(corners, corners[1:] + corners[:1]):
+            d.line([a, b], fill=value, width=round(w))
+        for x, y in corners:
+            d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=value)
+
+    coverage = Image.new('L', (size * ss, size * ss), 0)
+    d = ImageDraw.Draw(coverage)
+    d.polygon([(x * unit, y * unit) for x, y in LOGO_FILLED], fill=255)
+    stroke(LOGO_FILLED, 10, 255)
+    stroke(LOGO_OUTLINED, 26, 0)
+    stroke(LOGO_OUTLINED, 10, 255)
+
+    img = Image.new('RGBA', coverage.size, ACCENT + (0,))
+    img.putalpha(coverage)
+    return img.resize((size, size), Image.LANCZOS)
+
+
+def make_favicon():
+    # A real .ico for browsers that still ask for one at the site root, each
+    # size drawn at that size rather than shrunk from the largest.
+    frames = [draw_favicon(size) for size in (16, 32, 48)]
+    frames[-1].save('favicon.ico', 'ICO', sizes=[(16, 16), (32, 32), (48, 48)], append_images=frames[:-1])
+    return ['favicon.ico']
 
 
 if __name__ == '__main__':
@@ -267,4 +314,4 @@ if __name__ == '__main__':
     total = sum(size for _, size in photos)
     print(f'photos: {len(photos)} files, {total / 1024:.0f} KB total')
     print(f'  largest: {max(size for _, size in photos) / 1024:.0f} KB')
-    print('icons:', ', '.join(make_icons()))
+    print('icons:', ', '.join(make_icons() + make_favicon()))
