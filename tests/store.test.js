@@ -202,12 +202,46 @@ describe('starring', () => {
     expect(community.starred).toBeUndefined();
   });
 
-  it('brings a starred community survey into the comparison candidates', async () => {
+  it('does not decide what can be compared', async () => {
     const store = await freshStore();
     const community = store.getState().communitySurveys[1];
-    expect(store.comparableSurveys().some((s) => s.id === community.id)).toBe(false);
+    const comparable = () => store.comparableSurveys().some((s) => s.id === community.id);
+    expect(store.isStarred(community.id)).toBe(false);
+    expect(comparable()).toBe(true);
     store.toggleStar(community.id);
-    expect(store.comparableSurveys().some((s) => s.id === community.id)).toBe(true);
+    expect(comparable()).toBe(true);
+  });
+});
+
+describe('comparison candidates', () => {
+  // A new account starts with no surveys, and was offered only the one
+  // community kos starred on a first visit.
+  it('are every survey of your own and every community survey, by source', async () => {
+    const store = await freshStore();
+    const { surveys, communitySurveys } = store.getState();
+    const { own, community } = store.compareCandidates();
+    expect(own.map((s) => s.id)).toEqual(surveys.map((s) => s.id));
+    expect(community.map((s) => s.id)).toEqual(communitySurveys.map((s) => s.id));
+    expect(store.comparableSurveys().map((s) => s.id)).toEqual([...own, ...community].map((s) => s.id));
+  });
+
+  it('can be compared across both sources at once', async () => {
+    const store = await freshStore();
+    const { own, community } = store.compareCandidates();
+    const picked = [own[0].id, community[2].id, community[5].id];
+    picked.forEach((id) => expect(store.toggleCompare(id)).toBe(true));
+    expect(store.showComparison()).toBe(true);
+    expect(store.selectedForCompare().map((s) => s.id)).toEqual(picked);
+  });
+
+  it('come back after Start over, community ones included', async () => {
+    const store = await freshStore();
+    const { own, community } = store.compareCandidates();
+    const picked = [own[0].id, community[3].id];
+    picked.forEach((id) => store.toggleCompare(id));
+    store.clearCompare();
+    store.restoreCompare(picked, true);
+    expect(store.getState().compareSelection).toEqual(picked);
   });
 });
 
