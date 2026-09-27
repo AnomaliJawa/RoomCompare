@@ -8,19 +8,82 @@ import { LIKERT } from '../constants.js';
  * wired with aria-describedby rather than left as red text floating nearby.
  * Checkbox and radio groups are <fieldset>/<legend>, so a screen reader
  * announces what the group is for before reading twelve options.
+ *
+ * A survey field can also carry guidance (content/guidance.js, passed as
+ * `guide`): a badge saying what it is required for, a helper line that is
+ * always shown, and a character limit counted as the user types. The badge
+ * sits inside the label, so it is announced with the field's name. Fields
+ * without a guide render as they always have.
  */
 
-function describedBy(id, { hint, error }) {
+/** "Required" or "Required to publish", from the guide's `badge`. */
+export function requiredBadge(guide) {
+  return guide?.badge ? html`<span class="req-badge">${guide.badge}</span>` : '';
+}
+
+const count = (n) => n.toLocaleString('en-US');
+
+function counter(id, max, length) {
+  return html`<span
+    class="field__count${length > max ? ' field__count--over' : ''}"
+    id="${id}-count"
+    data-count-for="${id}"
+    data-count-max="${max}"
+  >${count(length)}/${count(max)}</span>`;
+}
+
+function describedBy(id, { hint, error, guide }) {
   const ids = [];
-  if (error) ids.push(`${id}-error`);
+  if (guide) {
+    ids.push(`${id}-hint`);
+    if (guide.counter) ids.push(`${id}-count`);
+    if (error) ids.push(`${id}-error`);
+  } else if (error) ids.push(`${id}-error`);
   else if (hint) ids.push(`${id}-hint`);
   return ids.length ? ids.join(' ') : null;
 }
 
-function support(id, { hint, error }) {
+function support(id, { hint, error, guide, value = '' }) {
+  if (guide) {
+    return html`
+      <div class="field__support">
+        <span class="field__hint" id="${id}-hint">${guide.helper}</span>
+        ${guide.counter ? counter(id, guide.counter, String(value ?? '').length) : ''}
+      </div>
+      ${error ? html`<span class="field__error" id="${id}-error">${error}</span>` : ''}
+    `;
+  }
   if (error) return html`<span class="field__error" id="${id}-error">${error}</span>`;
   if (hint) return html`<span class="field__hint" id="${id}-hint">${hint}</span>`;
   return '';
+}
+
+/** A field's label, in a head row when the field carries guidance. */
+function fieldLabel(id, label, guide) {
+  const tag = html`<label class="field__label" for="${id}">${label}${requiredBadge(guide)}</label>`;
+  return guide ? html`<div class="field__head">${tag}</div>` : tag;
+}
+
+/**
+ * A group's legend. With guidance, the name and badge sit in their own span,
+ * which the fieldset is labelled by, so anything else placed in the legend
+ * later stays out of the group's accessible name.
+ */
+function groupLegend(name, legend, guide) {
+  if (!guide) return html`<legend class="choice-group__legend">${legend}</legend>`;
+  return html`<legend class="choice-group__legend">
+    <span id="${name}-legend">${legend}${requiredBadge(guide)}</span>
+  </legend>`;
+}
+
+function groupAttributes(name, guide, { rubric = false } = {}) {
+  if (!guide) return '';
+  const described = [`${name}-hint`, rubric ? `${name}-rubric` : null].filter(Boolean).join(' ');
+  return raw(`aria-labelledby="${name}-legend" aria-describedby="${described}"`);
+}
+
+function groupHelper(name, guide) {
+  return guide ? html`<p class="field__hint choice-group__hint" id="${name}-hint">${guide.helper}</p>` : '';
 }
 
 export function textField({
@@ -43,11 +106,12 @@ export function textField({
   autocomplete = 'off',
   inputmode = '',
   plain = false,
+  guide = null,
 }) {
-  const described = describedBy(id, { hint, error });
+  const described = describedBy(id, { hint, error, guide });
   return html`
     <div class="field" data-field="${field}" data-invalid="${error ? 'true' : 'false'}">
-      <label class="field__label" for="${id}">${label}</label>
+      ${fieldLabel(id, label, guide)}
       <input
         class="field__control${numeric ? ' numeric' : ''}"
         id="${id}"
@@ -61,17 +125,17 @@ export function textField({
         ${described ? raw(`aria-describedby="${described}"`) : ''}
         ${action ? raw(`data-action="${action}"`) : ''}
       />
-      ${raw(support(id, { hint, error }))}
+      ${raw(support(id, { hint, error, guide, value }))}
     </div>
   `;
 }
 
 /** Rupiah amounts, grouped as the user types. The value is read from dataset. */
-export function currencyField({ name, label, value = '', hint = '', error = '', action = '', id = `f-${name}` }) {
-  const described = describedBy(id, { hint, error });
+export function currencyField({ name, label, value = '', hint = '', error = '', action = '', id = `f-${name}`, guide = null }) {
+  const described = describedBy(id, { hint, error, guide });
   return html`
     <div class="field" data-field="${name}" data-invalid="${error ? 'true' : 'false'}">
-      <label class="field__label" for="${id}">${label}</label>
+      ${fieldLabel(id, label, guide)}
       <div class="field__group">
         <span class="field__affix" aria-hidden="true">Rp</span>
         <input
@@ -86,16 +150,26 @@ export function currencyField({ name, label, value = '', hint = '', error = '', 
           ${action ? raw(`data-action="${action}"`) : ''}
         />
       </div>
-      ${raw(support(id, { hint, error }))}
+      ${raw(support(id, { hint, error, guide }))}
     </div>
   `;
 }
 
-export function textareaField({ name, label, value = '', rows = 4, placeholder = '', hint = '', error = '', id = `f-${name}` }) {
-  const described = describedBy(id, { hint, error });
+export function textareaField({
+  name,
+  label,
+  value = '',
+  rows = 4,
+  placeholder = '',
+  hint = '',
+  error = '',
+  id = `f-${name}`,
+  guide = null,
+}) {
+  const described = describedBy(id, { hint, error, guide });
   return html`
     <div class="field" data-field="${name}" data-invalid="${error ? 'true' : 'false'}">
-      <label class="field__label" for="${id}">${label}</label>
+      ${fieldLabel(id, label, guide)}
       <textarea
         class="field__control"
         id="${id}"
@@ -104,7 +178,7 @@ export function textareaField({ name, label, value = '', rows = 4, placeholder =
         placeholder="${placeholder}"
         ${described ? raw(`aria-describedby="${described}"`) : ''}
       >${value ?? ''}</textarea>
-      ${raw(support(id, { hint, error }))}
+      ${raw(support(id, { hint, error, guide, value }))}
     </div>
   `;
 }
@@ -125,11 +199,11 @@ export function selectField({ name, label, value = '', options, action = '', id 
 }
 
 /** A real fieldset, rendered from an enum so the labels cannot drift. */
-export function checkboxGroup({ name, legend, options, selected = [] }) {
+export function checkboxGroup({ name, legend, options, selected = [], guide = null }) {
   const chosen = new Set(selected);
   return html`
-    <fieldset class="choice-group" data-field="${name}">
-      <legend class="choice-group__legend">${legend}</legend>
+    <fieldset class="choice-group" data-field="${name}" ${groupAttributes(name, guide)}>
+      ${groupLegend(name, legend, guide)}
       <div class="choice-group__options">
         ${options.map(
           (option) => html`<label class="choice">
@@ -138,14 +212,20 @@ export function checkboxGroup({ name, legend, options, selected = [] }) {
           </label>`,
         )}
       </div>
+      ${groupHelper(name, guide)}
     </fieldset>
   `;
 }
 
-export function radioGroup({ name, legend, options, value = null }) {
+/**
+ * `rubric` adds a line under the options that describes the chosen level. It
+ * is always present, and empty until a level is chosen, so a screen reader
+ * announces each new description as the choice changes.
+ */
+export function radioGroup({ name, legend, options, value = null, guide = null, rubric = null }) {
   return html`
-    <fieldset class="choice-group" data-field="${name}">
-      <legend class="choice-group__legend">${legend}</legend>
+    <fieldset class="choice-group" data-field="${name}" ${groupAttributes(name, guide, { rubric: rubric !== null })}>
+      ${groupLegend(name, legend, guide)}
       <div class="choice-group__options">
         ${options.map(
           (option) => html`<label class="choice">
@@ -154,6 +234,10 @@ export function radioGroup({ name, legend, options, value = null }) {
           </label>`,
         )}
       </div>
+      ${groupHelper(name, guide)}
+      ${rubric !== null
+        ? html`<p class="rubric" id="${name}-rubric" data-rubric="${name}" aria-live="polite">${rubric}</p>`
+        : ''}
     </fieldset>
   `;
 }
@@ -161,11 +245,14 @@ export function radioGroup({ name, legend, options, value = null }) {
 /**
  * The 1-4 scale, as radios rather than a dropdown: all four points and their
  * meanings are visible at once, which is what a rating scale is for.
+ * `rubric` is the description of the saved level, or '' before one is chosen.
  */
-export function likertField({ name, legend, value = null }) {
+export function likertField({ name, legend, value = null, guide = null, rubric = null }) {
   return radioGroup({
     name,
     legend,
+    guide,
+    rubric,
     value: value === null || value === undefined ? null : Number(value),
     options: LIKERT.map((step) => ({ value: step.value, label: `${step.value} ${step.label}` })),
   });

@@ -1,4 +1,5 @@
 import { html, raw, qs, qsa } from '../utils/dom.js';
+import { requiredBadge } from './fields.js';
 import { DEFAULT_CENTER, distanceBetween, formatCoordinate, isValidPoint } from '../utils/geo.js';
 import { geocodeAddress, shortLabel, GEOCODE_STATUS } from '../utils/geocode.js';
 
@@ -64,13 +65,15 @@ export function mapPickerField({
   point = null,
   addressLabel = 'Address',
   placeholder = 'Street, area, city',
+  guide = null,
 }) {
   const pinned = isValidPoint(point);
   const address = point?.address ?? '';
+  const help = guide?.helper ?? hint;
   return html`
     <div class="mappicker" data-mappicker="${name}" data-field="${name}">
       <div class="mappicker__head">
-        <span class="field__label" id="${name}-label">${label}</span>
+        <span class="field__label" id="${name}-label">${label}${requiredBadge(guide)}</span>
         <button class="btn btn--secondary btn--small" type="button" data-locate>
           Use my location
         </button>
@@ -115,7 +118,7 @@ export function mapPickerField({
 
       <p class="mappicker__readout">
         <span class="meta" data-readout>${formatCoordinate(point)}</span>
-        ${hint ? raw(html`<span class="field__hint">${hint}</span>`) : ''}
+        ${help ? raw(html`<span class="field__hint">${help}</span>`) : ''}
       </p>
 
       <input type="hidden" name="${name}Lat" value="${pinned ? point.lat : ''}" data-lat />

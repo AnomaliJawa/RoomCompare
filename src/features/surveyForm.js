@@ -1,9 +1,8 @@
-import { html, raw, qs, getCheckedValues } from '../utils/dom.js';
+import { html, raw, qs, qsa, getCheckedValues } from '../utils/dom.js';
 import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
 import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
 import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
-import { LIMITS } from '../utils/validate.js';
 import { distanceBetween } from '../utils/geo.js';
 import { formatDistance } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
@@ -14,9 +13,9 @@ import {
   checkboxGroup,
   radioGroup,
   likertField,
+  requiredBadge,
 } from '../components/fields.js';
 import {
-  GUIDELINES,
   KOS_TYPES,
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -24,6 +23,18 @@ import {
   SURROUNDINGS,
   MAX_PHOTOS_PER_SECTION,
 } from '../constants.js';
+import { SECTION_INTROS, FIELD_GUIDE, REQUIRED_BADGE, rubricText } from '../content/guidance.js';
+
+/** A field's guidance, with its badge wording resolved. */
+function guide(key) {
+  const entry = FIELD_GUIDE[key];
+  return { key, ...entry, badge: entry.required ? REQUIRED_BADGE[entry.required] : '' };
+}
+
+/** A 1–4 field with its helper and the description of the saved level. */
+function scoreField(name, legend, value) {
+  return likertField({ name, legend, value, guide: guide(name), rubric: rubricText(name, value) });
+}
 
 /**
  * The survey form.
@@ -62,7 +73,7 @@ export function clearDraftId() {
   draftId = null;
 }
 
-function section(index, title, guideline, body) {
+function section(index, title, intro, body) {
   return html`
     <section class="form-section" data-section="${index}">
       <div class="form-section__head">
@@ -70,7 +81,7 @@ function section(index, title, guideline, body) {
         <h2>${title}</h2>
         <span class="form-section__errors" data-section-errors hidden></span>
       </div>
-      <p class="form-section__guide">${guideline}</p>
+      <p class="form-section__guide">${intro}</p>
       <div class="form-section__body">${body}</div>
     </section>
   `;
@@ -129,13 +140,13 @@ export function renderSurveyForm({ id } = {}) {
       ${section(
         1,
         'Kos information',
-        GUIDELINES.kos,
+        SECTION_INTROS.kos,
         html`
           <div class="form-grid">
-            ${textField({ name: 'name', label: 'Kos name', value: kos.name, placeholder: 'e.g. Kos Melati Residence' })}
-            ${currencyField({ name: 'rent', label: 'Monthly rent', value: kos.rent ?? '' })}
+            ${textField({ name: 'name', label: 'Kos name', value: kos.name, placeholder: 'e.g. Kos Melati Residence', guide: guide('name') })}
+            ${currencyField({ name: 'rent', label: 'Monthly rent', value: kos.rent ?? '', guide: guide('rent') })}
           </div>
-          ${radioGroup({ name: 'type', legend: 'Kos type', value: kos.type, options: KOS_TYPES })}
+          ${radioGroup({ name: 'type', legend: 'Kos type', value: kos.type, options: KOS_TYPES, guide: guide('type') })}
           <div class="form-grid">
             ${textField({
               name: 'kosLocation',
@@ -143,7 +154,7 @@ export function renderSurveyForm({ id } = {}) {
               label: 'Kos location name',
               value: kos.kosLocation?.label,
               placeholder: 'e.g. Lowokwaru, Malang',
-              hint: 'What you will recognise it by in a list.',
+              guide: guide('kosLocationName'),
             })}
             ${textField({
               name: 'campusLocation',
@@ -151,6 +162,7 @@ export function renderSurveyForm({ id } = {}) {
               label: 'Campus name',
               value: kos.campusLocation?.label,
               placeholder: 'e.g. Universitas Brawijaya',
+              guide: guide('campusLocationName'),
             })}
           </div>
           <div class="map-pair">
@@ -159,25 +171,26 @@ export function renderSurveyForm({ id } = {}) {
               label: 'Pin the kos',
               addressLabel: 'Kos address',
               placeholder: 'e.g. Jl. Sumbersari 12, Malang',
-              hint: 'Search the address, tap the map, or drag the marker.',
               point: kos.kosLocation,
+              guide: guide('kosLocation'),
             })}
             ${mapPickerField({
               name: 'campusLocation',
               label: 'Pin the campus',
               addressLabel: 'Campus address',
               placeholder: 'e.g. Universitas Brawijaya',
-              hint: 'The distance below is measured between the two pins.',
               point: kos.campusLocation,
+              guide: guide('campusLocation'),
             })}
           </div>
           <div class="field">
-            <label class="field__label" for="f-distanceKm">Distance to campus</label>
+            <div class="field__head">
+              <label class="field__label" for="f-distanceKm">Distance to campus${requiredBadge(guide('distance'))}</label>
+            </div>
             <input class="field__control numeric" id="f-distanceKm" name="distanceKm" type="text"
-              value="${kos.distanceKm ?? ''}" readonly aria-describedby="f-distanceKm-hint" />
-            <span class="field__hint" id="f-distanceKm-hint" data-distance-readout>
-              ${kos.distanceKm == null ? 'Pin both places to measure the distance.' : formatDistance(kos.distanceKm)}
-            </span>
+              value="${kos.distanceKm == null ? '' : formatDistance(kos.distanceKm)}" readonly
+              placeholder="Fills in once both pins are set" aria-describedby="f-distanceKm-hint" />
+            <span class="field__hint" id="f-distanceKm-hint">${guide('distance').helper}</span>
           </div>
         `,
       )}
@@ -185,20 +198,27 @@ export function renderSurveyForm({ id } = {}) {
       ${section(
         2,
         'Room',
-        GUIDELINES.room,
+        SECTION_INTROS.room,
         html`
           <div class="form-grid">
-            ${textField({ name: 'lengthM', label: 'Room length (m)', value: room.lengthM, type: 'number', numeric: true })}
-            ${textField({ name: 'widthM', label: 'Room width (m)', value: room.widthM, type: 'number', numeric: true })}
+            ${textField({ name: 'lengthM', label: 'Room length (m)', value: room.lengthM, type: 'number', numeric: true, guide: guide('lengthM') })}
+            ${textField({ name: 'widthM', label: 'Room width (m)', value: room.widthM, type: 'number', numeric: true, guide: guide('widthM') })}
           </div>
-          ${checkboxGroup({ name: 'roomFacility', legend: 'Room facilities', options: ROOM_FACILITIES, selected: room.facilities })}
-          ${likertField({ name: 'cleanliness', legend: 'Cleanliness', value: room.cleanliness })}
-          ${likertField({ name: 'internet', legend: 'Internet quality', value: room.internet })}
+          ${checkboxGroup({
+            name: 'roomFacility',
+            legend: 'Room facilities',
+            options: ROOM_FACILITIES,
+            selected: room.facilities,
+            guide: guide('roomFacility'),
+          })}
+          ${scoreField('cleanliness', 'Cleanliness', room.cleanliness)}
+          ${scoreField('internet', 'Internet quality', room.internet)}
           ${uploaderField({
             section: 'room',
             label: 'Room photos',
             name: 'roomPhotoIds',
             mediaIds: room.photoIds ?? [],
+            hint: guide('roomPhotos').helper,
           })}
         `,
       )}
@@ -206,19 +226,21 @@ export function renderSurveyForm({ id } = {}) {
       ${section(
         3,
         'Bathroom',
-        GUIDELINES.bathroom,
+        SECTION_INTROS.bathroom,
         html`
           ${checkboxGroup({
             name: 'bathroomFacility',
             legend: 'Bathroom facilities',
             options: BATHROOM_FACILITIES,
             selected: survey?.bathroom?.facilities,
+            guide: guide('bathroomFacility'),
           })}
           ${uploaderField({
             section: 'bathroom',
             label: 'Bathroom photos',
             name: 'bathroomPhotoIds',
             mediaIds: survey?.bathroom?.photoIds ?? [],
+            hint: guide('bathroomPhotos').helper,
           })}
         `,
       )}
@@ -226,19 +248,21 @@ export function renderSurveyForm({ id } = {}) {
       ${section(
         4,
         'Shared facilities',
-        GUIDELINES.shared,
+        SECTION_INTROS.shared,
         html`
           ${checkboxGroup({
             name: 'sharedFacility',
             legend: 'Shared facilities',
             options: SHARED_FACILITIES,
             selected: survey?.shared?.facilities,
+            guide: guide('sharedFacility'),
           })}
           ${uploaderField({
             section: 'shared',
             label: 'Shared facility photos',
             name: 'sharedPhotoIds',
             mediaIds: survey?.shared?.photoIds ?? [],
+            hint: guide('sharedPhotos').helper,
           })}
         `,
       )}
@@ -246,27 +270,28 @@ export function renderSurveyForm({ id } = {}) {
       ${section(
         5,
         'Surroundings',
-        GUIDELINES.surroundings,
+        SECTION_INTROS.surroundings,
         checkboxGroup({
           name: 'surrounding',
           legend: 'Around the kos',
           options: SURROUNDINGS,
           selected: survey?.surroundings,
+          guide: guide('surrounding'),
         }),
       )}
 
       ${section(
         6,
         'Additional information',
-        GUIDELINES.additional,
+        SECTION_INTROS.additional,
         html`
-          ${likertField({ name: 'security', legend: 'Security', value: survey?.additional?.security })}
+          ${scoreField('security', 'Security', survey?.additional?.security)}
           ${textareaField({
             name: 'notes',
             label: 'Additional notes',
             value: survey?.additional?.notes,
             placeholder: 'Anything the sections above do not cover.',
-            hint: `${(survey?.additional?.notes ?? '').length} of ${LIMITS.NOTES_MAX} characters`,
+            guide: guide('notes'),
           })}
           ${uploaderField({
             section: 'video',
@@ -274,6 +299,7 @@ export function renderSurveyForm({ id } = {}) {
             label: 'Videos (optional)',
             name: 'videoIds',
             mediaIds: survey?.additional?.videoIds ?? [],
+            hint: guide('videos').helper,
           })}
         `,
       )}
@@ -304,12 +330,9 @@ export function mountSurveyForm(root) {
   mountMapPickers(form, {
     onDistance: (km, { initial = false } = {}) => {
       const field = qs('#f-distanceKm', form);
-      const readout = qs('[data-distance-readout]', form);
       if (!field) return;
-      field.value = km ?? '';
-      if (readout) {
-        readout.textContent = km == null ? 'Pin both places to measure the distance.' : formatDistance(km);
-      }
+      // Display only: readSurveyForm recomputes the distance from the pins.
+      field.value = km == null ? '' : formatDistance(km);
       // A pin move fires no input event, so it is marked here — but not the
       // first reading of pins that were already saved.
       if (!initial) markDirty();
@@ -318,17 +341,7 @@ export function mountSurveyForm(root) {
     mapHandle = handle;
   });
 
-  // Live character count, so the notes limit is visible before it is hit.
-  const notes = qs('#f-notes', form);
-  const notesHint = qs('#f-notes-hint', form);
-  if (notes && notesHint) {
-    const updateCount = () => {
-      notesHint.textContent = `${notes.value.length} of ${LIMITS.NOTES_MAX} characters`;
-      notesHint.classList.toggle('field__hint--over', notes.value.length > LIMITS.NOTES_MAX);
-    };
-    notes.addEventListener('input', updateCount);
-    updateCount();
-  }
+  attachGuidance(form);
 
   // Anything the user touches counts, so Cancel can ask before discarding.
   dirty = false;
@@ -336,6 +349,35 @@ export function mountSurveyForm(root) {
   form.addEventListener('change', markDirty);
 
   startAutosave(form);
+}
+
+/**
+ * The guidance that answers as the user fills in the form.
+ *
+ * - Character counters follow every keystroke, so the limit is visible
+ *   before it is hit rather than reported after Publish.
+ * - A 1–4 score shows what the chosen level means, and changes with the
+ *   choice, so two people rating the same room pick the same number.
+ */
+export function attachGuidance(form) {
+  qsa('[data-count-max]', form).forEach((count) => {
+    const control = form.ownerDocument.getElementById(count.dataset.countFor);
+    if (!control) return;
+    const max = Number(count.dataset.countMax);
+    const update = () => {
+      const length = control.value.length;
+      count.textContent = `${length.toLocaleString('en-US')}/${max.toLocaleString('en-US')}`;
+      count.classList.toggle('field__count--over', length > max);
+    };
+    control.addEventListener('input', update);
+    update();
+  });
+
+  form.addEventListener('change', ({ target }) => {
+    if (target.type !== 'radio') return;
+    const rubric = target.closest('fieldset')?.querySelector('[data-rubric]');
+    if (rubric) rubric.textContent = rubricText(rubric.dataset.rubric, target.value);
+  });
 }
 
 let dirty = false;

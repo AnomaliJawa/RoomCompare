@@ -32,7 +32,8 @@ function limitFor(kind) {
 
 /* --- Markup -------------------------------------------------------------- */
 
-export function uploaderField({ section, kind = 'photo', label, name, mediaIds = [] }) {
+/** `hint` replaces the default limit line under the drop zone's prompt. */
+export function uploaderField({ section, kind = 'photo', label, name, mediaIds = [], hint = null }) {
   const max = limitFor(kind);
   const noun = kind === 'video' ? 'videos' : 'photos';
 
@@ -51,9 +52,8 @@ export function uploaderField({ section, kind = 'photo', label, name, mediaIds =
       >
         <span class="uploader__drop-main">Choose ${noun}, or drag them here</span>
         <span class="uploader__drop-hint" id="${section}-uploader-hint">
-          ${kind === 'video'
-            ? `Up to ${max}, 20 MB each.`
-            : `Up to ${max}. Large photos are resized automatically.`}
+          ${hint ??
+          (kind === 'video' ? `Up to ${max}, 20 MB each.` : `Up to ${max}. Large photos are resized automatically.`)}
         </span>
       </button>
 
