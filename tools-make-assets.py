@@ -206,98 +206,118 @@ def make_photos():
     return made
 
 
-# --- Icon ------------------------------------------------------------------
-# Two columns and a rule: the comparison, which is what the product is for.
-INK = (22, 36, 31)
+# --- Logo ------------------------------------------------------------------
+# The user's logo (icons/logo.svg), which the favicon and the home-screen
+# icons below all show as it is. Pillow cannot read SVG, so its two houses
+# are copied here in the logo's own 200-unit square and drawn sixteen times
+# larger, then reduced, which smooths their edges much as a browser does.
 PAPER = (247, 248, 246)
 ACCENT = (31, 93, 76)
 
-ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RoomCompare">
-  <rect width="64" height="64" rx="14" fill="#1f5d4c"/>
-  <rect x="14" y="16" width="14" height="32" rx="2" fill="#f7f8f6"/>
-  <rect x="36" y="24" width="14" height="24" rx="2" fill="#f7f8f6" opacity="0.62"/>
-  <rect x="12" y="50" width="40" height="3" rx="1.5" fill="#f7f8f6"/>
-</svg>
-"""
-
-
-def draw_icon(size):
-    scale = size / 64
-    img = Image.new('RGB', (size, size), ACCENT)
-    d = ImageDraw.Draw(img)
-
-    def box(x, y, w, h, fill):
-        d.rounded_rectangle(
-            [x * scale, y * scale, (x + w) * scale, (y + h) * scale],
-            radius=max(1, int(2 * scale)),
-            fill=fill,
-        )
-
-    box(14, 16, 14, 32, PAPER)
-    box(36, 24, 14, 24, lerp(ACCENT, PAPER, 0.62))
-    box(12, 50, 40, 3, PAPER)
-
-    # Rounded corners, so the icon is not a hard square on a light background.
-    mask = Image.new('L', (size, size), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, size - 1, size - 1], radius=int(14 * scale), fill=255)
-    out = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    out.paste(img, (0, 0), mask)
-    return out
-
-
-def make_icons():
-    """The home-screen icons. They still carry the columns above; the favicon
-    below is the logo."""
-    os.makedirs(OUT_ICONS, exist_ok=True)
-    with open(os.path.join(OUT_ICONS, 'icon.svg'), 'w', encoding='utf-8', newline='\n') as f:
-        f.write(ICON_SVG)
-
-    made = ['icon.svg']
-    for size, name in [(180, 'apple-touch-icon.png'), (192, 'icon-192.png'), (512, 'icon-512.png')]:
-        path = os.path.join(OUT_ICONS, name)
-        draw_icon(size).save(path, 'PNG', optimize=True)
-        made.append(name)
-    return made
-
-
-# --- Favicon ---------------------------------------------------------------
-# The logo itself, exactly as the user supplied it (icons/logo.svg): green
-# houses on no background. index.html gives browsers the SVG; this draws the
-# .ico for those that still ask for one. The user chose it over a version on
-# the green tile, knowing its green shows less on a dark tab strip.
-
-# The logo's two houses, copied from icons/logo.svg, in its 200-unit square.
 LOGO_FILLED = [(72, 42), (22, 84), (22, 162), (122, 162), (122, 84)]
 LOGO_OUTLINED = [(128, 42), (78, 84), (78, 162), (178, 162), (178, 84)]
+SS = 16
 
 
-def draw_favicon(size):
-    """icons/logo.svg as pixels, its whole square at `size`. Pillow cannot
-    read SVG, so the houses are drawn sixteen times larger and reduced, which
-    smooths their edges much as a browser does. They are drawn as coverage
-    alone: the gap is cut out of the filled house, as the logo's mask cuts
-    it, so the tab shows through it."""
-    ss = 16
-    unit = size * ss / 200
+def logo_coverage(size, left, top, width):
+    """The houses as coverage, 0 to 255, on a canvas SS times `size`, with the
+    logo's square at `left`, `top` and `width` pixels of the final image. The
+    gap is cut out of the filled house, as the logo's mask cuts it."""
+    unit = width * SS / 200
+
+    def at(x, y):
+        return (left * SS + x * unit, top * SS + y * unit)
 
     def stroke(points, width, value):
         # Round joins, as stroke-linejoin="round" draws them.
         w = width * unit
-        corners = [(x * unit, y * unit) for x, y in points]
+        corners = [at(x, y) for x, y in points]
         for a, b in zip(corners, corners[1:] + corners[:1]):
             d.line([a, b], fill=value, width=round(w))
         for x, y in corners:
             d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=value)
 
-    coverage = Image.new('L', (size * ss, size * ss), 0)
+    coverage = Image.new('L', (size * SS, size * SS), 0)
     d = ImageDraw.Draw(coverage)
-    d.polygon([(x * unit, y * unit) for x, y in LOGO_FILLED], fill=255)
+    d.polygon([at(x, y) for x, y in LOGO_FILLED], fill=255)
     stroke(LOGO_FILLED, 10, 255)
     stroke(LOGO_OUTLINED, 26, 0)
     stroke(LOGO_OUTLINED, 10, 255)
+    return coverage
 
-    img = Image.new('RGBA', coverage.size, ACCENT + (0,))
-    img.putalpha(coverage)
+
+# --- Home-screen icons -----------------------------------------------------
+# The logo as it is, on a square of the pages' own off-white: a phone fills a
+# see-through icon with black, so an icon needs a background where a favicon
+# does not. The user chose off-white over white, and over the logo reversed
+# out of green. The logo's square spans three quarters of the icon, which
+# keeps the houses inside the circle Android's round crop leaves.
+LOGO_ON_ICON = 0.75
+
+ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="RoomCompare">
+  <defs>
+    <mask id="rc-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+      <rect width="200" height="200" fill="#fff"/>
+      <path d="M128 42 L78 84 L78 162 L178 162 L178 84 Z" fill="none" stroke="#000" stroke-width="26" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <rect width="200" height="200" rx="45" fill="#f7f8f6"/>
+  <g transform="translate(25 25) scale(0.75)">
+    <path d="M72 42 L22 84 L22 162 L122 162 L122 84 Z" fill="#1F5D4C" stroke="#1F5D4C" stroke-width="10" stroke-linejoin="round" mask="url(#rc-gap)"/>
+    <path d="M128 42 L78 84 L78 162 L178 162 L178 84 Z" fill="none" stroke="#1F5D4C" stroke-width="10" stroke-linejoin="round"/>
+  </g>
+</svg>
+"""
+
+
+def draw_home_icon(size, *, rounded):
+    """The logo on its off-white square. `rounded` cuts iOS-like corners for
+    places that show an icon as it is; iOS and Android round or crop a full
+    square themselves, and iOS would fill cut corners with black."""
+    canvas = size * SS
+    inset = size * (1 - LOGO_ON_ICON) / 2
+    houses = logo_coverage(size, inset, inset, size * LOGO_ON_ICON)
+
+    square = Image.new('L', (canvas, canvas), 0 if rounded else 255)
+    if rounded:
+        ImageDraw.Draw(square).rounded_rectangle([0, 0, canvas - 1, canvas - 1], radius=canvas * 0.225, fill=255)
+    img = Image.new('RGBA', (canvas, canvas), PAPER + (0,))
+    img.putalpha(square)
+    img = Image.composite(Image.new('RGBA', (canvas, canvas), ACCENT + (255,)), img, houses)
+    img = img.resize((size, size), Image.LANCZOS)
+    return img if rounded else img.convert('RGB')
+
+
+def make_icons():
+    os.makedirs(OUT_ICONS, exist_ok=True)
+    with open(os.path.join(OUT_ICONS, 'icon.svg'), 'w', encoding='utf-8', newline='\n') as f:
+        f.write(ICON_SVG)
+
+    made = ['icon.svg']
+    icons = [
+        (180, 'apple-touch-icon.png', False),  # iOS rounds it
+        (512, 'icon-maskable-512.png', False),  # Android crops it to its shape
+        (192, 'icon-192.png', True),  # shown as it is: a desktop install, a plain launcher
+        (512, 'icon-512.png', True),
+    ]
+    for size, name, rounded in icons:
+        draw_home_icon(size, rounded=rounded).save(os.path.join(OUT_ICONS, name), 'PNG', optimize=True)
+        made.append(name)
+    return made
+
+
+# --- Favicon ---------------------------------------------------------------
+# The logo itself, exactly as the user supplied it: green houses on no
+# background. index.html gives browsers icons/logo.svg; this draws the .ico
+# for those that still ask for one. The user chose it over a version on the
+# green tile, knowing its green shows less on a dark tab strip.
+
+
+def draw_favicon(size):
+    """icons/logo.svg as pixels, its whole square at `size`, on no background:
+    the tab shows through the gap."""
+    img = Image.new('RGBA', (size * SS, size * SS), ACCENT + (0,))
+    img.putalpha(logo_coverage(size, 0, 0, size))
     return img.resize((size, size), Image.LANCZOS)
 
 
