@@ -9,3 +9,7 @@ data/
 
 # Written when the server tests and devserver.py import server.py.
 __pycache__/
+
+# Vercel's build copies the app's files here (vercel.json).
+public/
+.vercel/
