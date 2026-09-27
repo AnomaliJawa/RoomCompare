@@ -10,16 +10,10 @@ import { LIKERT } from '../constants.js';
  * announces what the group is for before reading twelve options.
  *
  * A survey field can also carry guidance (content/guidance.js, passed as
- * `guide`): a badge saying what it is required for, a helper line that is
- * always shown, and a character limit counted as the user types. The badge
- * sits inside the label, so it is announced with the field's name. Fields
+ * `guide`): a helper line that is always shown, a character limit counted
+ * as the user types, and an ⓘ that opens its How to fill panel. Fields
  * without a guide render as they always have.
  */
-
-/** "Required" or "Required to publish", from the guide's `badge`. */
-export function requiredBadge(guide) {
-  return guide?.badge ? html`<span class="req-badge">${guide.badge}</span>` : '';
-}
 
 // An "i" in a circle, drawn in the button's own colour.
 const INFO_ICON =
@@ -85,19 +79,19 @@ function support(id, { hint, error, guide, value = '' }) {
 
 /** A field's label, in a head row with its ⓘ when the field carries guidance. */
 function fieldLabel(id, label, guide) {
-  const tag = html`<label class="field__label" for="${id}">${label}${requiredBadge(guide)}</label>`;
+  const tag = html`<label class="field__label" for="${id}">${label}</label>`;
   return guide ? html`<div class="field__head">${tag}${infoButton(guide)}</div>` : tag;
 }
 
 /**
- * A group's legend. With guidance, the name and badge sit in their own span,
- * which the fieldset is labelled by, so the ⓘ beside them stays out of the
- * group's accessible name.
+ * A group's legend. With guidance, the name sits in its own span, which the
+ * fieldset is labelled by, so the ⓘ beside it stays out of the group's
+ * accessible name.
  */
 function groupLegend(name, legend, guide) {
   if (!guide) return html`<legend class="choice-group__legend">${legend}</legend>`;
   return html`<legend class="choice-group__legend">
-    <span id="${name}-legend">${legend}${requiredBadge(guide)}</span>${infoButton(guide)}
+    <span id="${name}-legend">${legend}</span>${infoButton(guide)}
   </legend>`;
 }
 

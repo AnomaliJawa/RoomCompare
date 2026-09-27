@@ -1,5 +1,5 @@
 import { html, raw, qs, qsa } from '../utils/dom.js';
-import { requiredBadge, infoButton } from './fields.js';
+import { infoButton } from './fields.js';
 import { DEFAULT_CENTER, distanceBetween, formatCoordinate, isValidPoint } from '../utils/geo.js';
 import { geocodeAddress, shortLabel, GEOCODE_STATUS } from '../utils/geocode.js';
 
@@ -74,7 +74,7 @@ export function mapPickerField({
     <div class="mappicker" data-mappicker="${name}" data-field="${name}">
       <div class="mappicker__head">
         <span class="field__head">
-          <span class="field__label" id="${name}-label">${label}${requiredBadge(guide)}</span>${infoButton(guide)}
+          <span class="field__label" id="${name}-label">${label}</span>${infoButton(guide)}
         </span>
         <button class="btn btn--secondary btn--small" type="button" data-locate>
           Use my location
