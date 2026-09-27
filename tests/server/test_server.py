@@ -21,6 +21,7 @@ import importlib.util
 import json
 import os
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import threading
@@ -365,6 +366,35 @@ class VercelOnly(OnVercel, ServerTestCase):
                 self.assertIsInstance(app.throttle, server.RedisThrottle)
                 self.assertTrue(app.secure_cookies)
                 self.assertEqual(app.backend.send.url, "https://example.upstash.io/pipeline")
+
+    def test_nothing_in_the_function_looks_like_a_wsgi_or_asgi_app(self):
+        # Vercel's Python runtime serves a module-level `app` or `application`
+        # in preference to `handler`. A function by either name that is not a
+        # WSGI or ASGI app stops the runtime starting, and every /api request
+        # then fails with FUNCTION_INVOCATION_FAILED. The first deploy did.
+        for name in ("app", "application"):
+            self.assertFalse(hasattr(vercel, name), f"api/index.py defines `{name}`")
+
+    def test_the_redis_client_runs_on_server_pys_own_imports(self):
+        # This file imports urllib.request, which made it an attribute of the
+        # urllib package for server.py too, and hid that server.py never
+        # imported it. On Vercel nothing else does, and every call to Redis
+        # failed with AttributeError. A fresh interpreter has only server.py's
+        # own imports; fake_upstash loads nothing that pulls urllib.request in.
+        script = (
+            "import sys\n"
+            "sys.path[:0] = sys.argv[1:3]\n"
+            "import server, fake_upstash\n"
+            "httpd, url = fake_upstash.serve(fake_upstash.FakeRedis(), 'token')\n"
+            "print(server.UpstashTransport(url, 'token')([['SET', 'k', 'v'], ['GET', 'k']]))\n"
+            "httpd.shutdown()\n"
+        )
+        done = subprocess.run(
+            [sys.executable, "-c", script, str(ROOT), str(Path(__file__).parent)],
+            capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(done.stdout.strip(), "['OK', 'v']")
 
 
 if __name__ == "__main__":
