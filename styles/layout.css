@@ -190,6 +190,13 @@ body[data-auth="pending"] .nav__actions { display: none; }
   gap: var(--space-5);
 }
 
+/* The dashboard's panels sit 24px under the hero, or under the empty state
+   that replaces it: the same step as under the page head and between the
+   panels. Neither is a .section, so `.section + .section` never applied and
+   the two touched. */
+.hero + .grid-split,
+.empty + .grid-split { margin-top: var(--space-5); }
+
 .stack {
   display: flex;
   flex-direction: column;

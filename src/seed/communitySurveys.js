@@ -1,12 +1,16 @@
 import { STATUS } from '../constants.js';
+import { withSamplePhotos } from './samplePhotos.js';
 
 /**
  * Shared survey results from other RoomCompare users.
  *
  * Read-only reference data, held as a static module rather than written to
  * storage: it cannot be corrupted and it does not consume the user's quota.
- * There are no accounts in this build, so authorship is simulated — the
- * README says so plainly, to avoid it reading as an unfinished feature.
+ * Accounts keep each user's own surveys and share nothing, so authorship
+ * is simulated.
+ *
+ * Photos come from the sample set that ships with the app. The rotation
+ * starts two sets on from the user's own samples, so the two lists differ.
  *
  * The prototype's Community tab listed the user's OWN published surveys,
  * which is not what the requirement describes. These are separate records.
@@ -14,7 +18,7 @@ import { STATUS } from '../constants.js';
 
 const CAMPUS = { lat: -7.9526, lng: 112.6148, label: 'Universitas Brawijaya' };
 
-export const communitySurveys = [
+export const communitySurveys = withSamplePhotos([
   {
     id: 'com-kartika',
     ownerId: 'user-rahma',
@@ -323,4 +327,4 @@ export const communitySurveys = [
     surroundings: ['Eatery (warung makan)', 'Minimarket / supermarket', 'Gym / sports facilities'],
     additional: { security: 3, notes: 'Has AC at this price, but the internet drops in the evening.', videoIds: [] },
   },
-];
+], { offset: 2 });

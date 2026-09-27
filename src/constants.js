@@ -141,3 +141,11 @@ export const COMPARISON_GROUPS = [
 export const MAX_COMPARE = 3;
 export const MIN_COMPARE = 2;
 export const MAX_PHOTOS_PER_SECTION = 10;
+
+/**
+ * Sample photographs ship with the app as seed-photos/<name>.jpg. A photo id
+ * with this prefix names one of those files ("seed:room-2-1") rather than a
+ * file stored in the browser, so the sample surveys show their photos on
+ * every device and nothing is stored for them. media.js resolves these ids.
+ */
+export const SAMPLE_PHOTO_PREFIX = 'seed:';

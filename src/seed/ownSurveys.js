@@ -1,12 +1,13 @@
 import { STATUS } from '../constants.js';
+import { withSamplePhotos } from './samplePhotos.js';
 
 /**
  * First-run sample data, in the shape defined by the data model: one group per
  * survey-form section, so a single object serves recording, detail and
  * comparison without reshaping.
  *
- * `photoIds` are empty until the media layer lands, so cards and detail views
- * exercise the no-photos placeholder state.
+ * Photos come from the sample set that ships with the app, added by
+ * withSamplePhotos (see samplePhotos.js).
  *
  * `distanceKm` is derived from the two coordinates whenever either changes and
  * then persisted, so comparison does not recompute it on every render.
@@ -14,7 +15,7 @@ import { STATUS } from '../constants.js';
 
 const CAMPUS = { lat: -7.9526, lng: 112.6148, label: 'Universitas Brawijaya' };
 
-export const ownSurveys = [
+export const ownSurveys = withSamplePhotos([
   {
     id: 'svy-melati',
     ownerId: 'me',
@@ -324,4 +325,4 @@ export const ownSurveys = [
       videoIds: [],
     },
   },
-];
+]);

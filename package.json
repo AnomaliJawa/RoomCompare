@@ -9,7 +9,8 @@
     "test": "vitest run && python -m unittest discover -s tests/server",
     "test:web": "vitest run",
     "test:server": "python -m unittest discover -s tests/server -v",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed:demo": "node tools-seed-demo.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.1",

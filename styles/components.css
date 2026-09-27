@@ -1359,6 +1359,32 @@ a.listing__title::after {
 
 .gallery__status:empty { display: none; }
 
+/* --- Photos and videos (detail view) ---------------------------------------
+   One panel holds every gallery, a group for each part of the kos. A group's
+   title is a label, as in the definition lists above it; the panel's h2 is
+   the heading. The class outranks the base h3 size; the leading is restated
+   because the base sets headings tight. */
+
+.media-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.media-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.media-group__title {
+  color: var(--muted);
+  font-family: var(--font-narrow);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-body);
+}
+
 /* --- Lightbox ------------------------------------------------------------
    The second of the two places a shadow is used: this floats above the page. */
 
