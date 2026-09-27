@@ -46,7 +46,12 @@
             data-action="toggle-nav"
             aria-controls="nav-links"
             aria-expanded="false"
-          >Menu</button>
+            aria-label="Menu"
+          >
+            <svg class="nav__toggle-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 5h14M3 10h14M3 15h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
           <button class="btn btn--quiet nav__logout" type="button" data-action="logout">Log out</button>
           <a class="btn btn--primary" href="#/surveys/new">Add survey</a>
         </div>
