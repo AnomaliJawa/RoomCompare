@@ -1783,6 +1783,49 @@ a.listing__title::after {
   .bestmatch__table tbody tr:not(.ledger__group) { padding: var(--space-3) var(--space-4); }
 }
 
+/* --- Best Match breakdown on narrow screens --------------------------------
+   Stacked, each criterion lists one figure per kos, and bare figures under
+   "Facilities" did not say which kos each one was. Each reads
+   `Kos Pelangi: 58`: the name first and in ink, since it is what the eye
+   scans for, then the score in semibold, one space after the colon whatever
+   the name's length. A long name ends in an ellipsis rather than wrapping,
+   so every score stays on its kos's line. The weight belongs to the
+   criterion, not to a kos, so it keeps the quiet label style. Placed after
+   the narrow ledger rules above so it wins on source order. */
+
+@media (max-width: 900px) {
+  .bestmatch__table td {
+    justify-content: flex-start;
+    gap: var(--space-1);
+  }
+
+  .bestmatch__table .ledger__cell-label {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+  }
+
+  .bestmatch__cell-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bestmatch__table .ledger__cell-value { font-weight: var(--weight-semibold); }
+
+  .bestmatch__table .bestmatch__weight .ledger__cell-label,
+  .bestmatch__table .bestmatch__weight .ledger__cell-value {
+    color: var(--muted);
+    font-family: var(--font-narrow);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+  }
+}
+
 /* --- Facility filters ----------------------------------------------------
    Folded away by default: there are 24 of them, and most filtering is by
    rent or area. */
