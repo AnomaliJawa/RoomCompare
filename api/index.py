@@ -16,12 +16,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server  # noqa: E402
 
 # Built on first use and kept while this instance lives: it opens nothing, but
-# it hashes a decoy password, which is deliberately slow. Deliberately not
-# named `app`, which Vercel's Python runtime would take for a WSGI app.
+# it hashes a decoy password, which is deliberately slow.
 _application = None
 
 
-def application():
+# Named neither `app` nor `application`: Vercel's Python runtime serves either
+# name in preference to `handler`, as a WSGI or ASGI app, and this is neither.
+# The first deploy used `application` and every /api request failed.
+def configured_app():
     global _application
     if _application is None:
         _application = server.app_from_env()
@@ -31,7 +33,7 @@ def application():
 class handler(server.Handler):
     @property
     def app(self):
-        return application()
+        return configured_app()
 
     def client_ip(self):
         # The connection comes from Vercel's edge, not the visitor. Vercel sets
