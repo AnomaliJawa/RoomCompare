@@ -192,6 +192,13 @@ body[data-auth="pending"] .nav__actions { display: none; }
   border-bottom: var(--border-hair);
 }
 
+/* An action beside the heading is centred on it. On the heading's baseline
+   its 13px label sat level with 25px type, which dropped the button 6px
+   below the heading's middle, plain to see once it has a border. Every
+   action is centred, not only bordered ones, so heads side by side on the
+   Dashboard keep their rules at one height. */
+.section__head:has(> .btn) { align-items: center; }
+
 /* --- Grids --------------------------------------------------------------- */
 
 .grid-cards {
