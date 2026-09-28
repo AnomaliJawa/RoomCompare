@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>RoomCompare design system</title>
+    <link rel="icon" href="../favicon.ico" sizes="48x48" />
+    <link rel="icon" href="../icons/logo.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -23,22 +25,41 @@
       .scale-row { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-2) 0; border-bottom: 1px dashed var(--rule); }
       .scale-row__tag { flex: 0 0 120px; color: var(--muted); font-family: var(--font-narrow); font-size: var(--text-xs); font-weight: 600; }
       .spec { color: var(--muted); font-size: var(--text-xs); margin-top: var(--space-2); }
+      .brand { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
+      .brand__art { display: flex; align-items: center; justify-content: center; gap: var(--space-4); min-height: 140px; padding: var(--space-4); border: 1px solid var(--rule); border-radius: var(--radius-md); background: var(--surface); }
+      /* A browser's dark tab strip, shown to judge the favicon there. Not a colour of the system. */
+      .brand__art--tabs { flex-direction: column; gap: 0; padding: 0; overflow: hidden; }
+      .brand__tab { display: flex; flex: 1; align-items: center; justify-content: center; gap: var(--space-4); width: 100%; }
+      .brand__tab--dark { background: #202124; }
+      .brand__ios { border-radius: 22.37%; }
+      .brand__round { border-radius: 50%; }
+      .preview-dialogs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; gap: var(--space-5); }
     </style>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
+    <!-- The site's own nav markup (index.html), links inert. -->
     <header class="nav">
       <div class="nav__inner">
-        <a class="nav__wordmark" href="#">RoomCompare</a>
-        <nav class="nav__links" aria-label="Primary">
-          <a class="nav__link" href="#" aria-current="page">Surveys</a>
+        <a class="nav__wordmark" href="#">
+          <img class="nav__logo" src="../icons/logo.svg" alt="" width="32" height="32" />
+          <span class="nav__wordmark-text">RoomCompare</span>
+        </a>
+        <nav class="nav__links" id="p-nav-links" data-open="false" aria-label="Primary">
+          <a class="nav__link" href="#" aria-current="page">My surveys</a>
           <a class="nav__link" href="#">Community</a>
           <a class="nav__link" href="#">Compare</a>
+          <button class="nav__link nav__logout-menu" type="button">Log out</button>
         </nav>
         <div class="nav__actions">
-          <button class="btn btn--secondary btn--small nav__toggle" type="button">Menu</button>
-          <button class="btn btn--primary" type="button">Add survey</button>
+          <button class="btn btn--secondary nav__toggle" type="button" aria-controls="p-nav-links" aria-expanded="false" aria-label="Menu">
+            <svg class="nav__toggle-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 5h14M3 10h14M3 15h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button class="btn btn--quiet nav__logout" type="button">Log out</button>
+          <a class="btn btn--primary" href="#">Add survey</a>
         </div>
       </div>
     </header>
@@ -53,6 +74,54 @@
           </p>
         </div>
       </div>
+
+      <!-- Brand ------------------------------------------------------------->
+      <section class="section">
+        <div class="section__head"><h2>Brand</h2><span class="meta">icons/logo.svg, as supplied</span></div>
+        <div class="brand">
+          <figure class="stack">
+            <div class="brand__art"><img src="../icons/logo.svg" alt="RoomCompare logo" width="96" height="96" /></div>
+            <figcaption class="meta">Logo</figcaption>
+          </figure>
+          <figure class="stack">
+            <div class="brand__art">
+              <span class="nav__wordmark">
+                <img class="nav__logo" src="../icons/logo.svg" alt="" width="32" height="32" />
+                <span class="nav__wordmark-text">RoomCompare</span>
+              </span>
+            </div>
+            <figcaption class="meta">In the nav</figcaption>
+          </figure>
+          <figure class="stack">
+            <div class="brand__art brand__art--tabs">
+              <div class="brand__tab">
+                <img src="../icons/logo.svg" alt="" width="16" height="16" />
+                <img src="../icons/logo.svg" alt="" width="32" height="32" />
+              </div>
+              <div class="brand__tab brand__tab--dark">
+                <img src="../icons/logo.svg" alt="" width="16" height="16" />
+                <img src="../icons/logo.svg" alt="" width="32" height="32" />
+              </div>
+            </div>
+            <figcaption class="meta">Favicon, on light and dark tabs</figcaption>
+          </figure>
+          <figure class="stack">
+            <div class="brand__art">
+              <img class="brand__ios" src="../icons/apple-touch-icon.png" alt="" width="60" height="60" />
+              <img class="brand__round" src="../icons/icon-maskable-512.png" alt="" width="60" height="60" />
+            </div>
+            <figcaption class="meta">Home screen: iPhone, Android</figcaption>
+          </figure>
+        </div>
+        <p class="spec">
+          The logo is used exactly as supplied: two houses in #1f5d4c, the accent, on no
+          background. It is never redrawn, recoloured or given effects. In the nav it is 32px,
+          8px (space-2) before the wordmark; at 640px and below it stands alone, and the
+          wordmark stays in the link, visually hidden, so it is still read as RoomCompare.
+          The favicon is the same file. Home-screen icons put it, unchanged, on a paper square
+          at three quarters of the icon, since a phone fills a see-through icon with black.
+        </p>
+      </section>
 
       <!-- Colour ------------------------------------------------------------>
       <section class="section">
@@ -119,55 +188,38 @@
         <p class="spec">An action keeps its name through the flow: Publish produces a toast that says Published.</p>
       </section>
 
-      <!-- Fields ------------------------------------------------------------>
+      <!-- Fields ------------------------------------------------------------
+           Rendered by the site's own field components (the script below), so
+           the guidance here cannot drift from the survey form. -->
       <section class="section">
-        <div class="section__head"><h2>Fields</h2></div>
-        <div class="panel stack">
-          <div class="field">
-            <label class="field__label" for="p-name">Kos name</label>
-            <input class="field__control" id="p-name" type="text" value="Kos Melati Residence" />
-          </div>
-          <div class="field">
-            <label class="field__label" for="p-rent">Monthly rent</label>
-            <div class="field__group">
-              <span class="field__affix" aria-hidden="true">Rp</span>
-              <input
-                class="field__control numeric"
-                id="p-rent"
-                type="text"
-                inputmode="numeric"
-                value="1500000"
-                aria-describedby="p-rent-hint"
-              />
-            </div>
-            <span class="field__hint" id="p-rent-hint">
-              Type the digits. Thousands are separated as you go.
-            </span>
-          </div>
-          <div class="field" data-invalid="true">
-            <label class="field__label" for="p-length">Room length</label>
-            <input class="field__control numeric" id="p-length" type="number" value="32" aria-describedby="p-length-err" />
-            <span class="field__error" id="p-length-err">Enter a size between 0.1 and 20 metres.</span>
-          </div>
-          <fieldset class="choice-group">
-            <legend class="choice-group__legend">Room facilities</legend>
-            <div class="choice-group__options">
-              <label class="choice"><input type="checkbox" checked /> Mattress</label>
-              <label class="choice"><input type="checkbox" checked /> Wardrobe</label>
-              <label class="choice"><input type="checkbox" /> AC</label>
-              <label class="choice"><input type="checkbox" checked /> Window</label>
-            </div>
-          </fieldset>
-          <fieldset class="choice-group">
-            <legend class="choice-group__legend">Cleanliness</legend>
-            <div class="choice-group__options">
-              <label class="choice"><input type="radio" name="clean" /> 1 Poor</label>
-              <label class="choice"><input type="radio" name="clean" /> 2 Fair</label>
-              <label class="choice"><input type="radio" name="clean" checked /> 3 Good</label>
-              <label class="choice"><input type="radio" name="clean" /> 4 Very good</label>
-            </div>
-          </fieldset>
+        <div class="section__head"><h2>Fields</h2><span class="meta">each says what it needs</span></div>
+        <div class="panel stack" id="p-fields"></div>
+        <p class="spec">
+          Every survey field says what it needs before it is filled in: a helper line under
+          the control, a live count where there is a limit, and an ⓘ beside the label that
+          opens the field's How to fill panel. A 1–4 score describes the chosen level under
+          the scale. A count past its limit turns alert —
+          <span class="field__count field__count--over">1,001/1,000</span>. There are no
+          required badges: the panel's Rules line says what a field needs, and Publish says
+          what is missing.
+        </p>
+      </section>
+
+      <!-- Survey guidance --------------------------------------------------->
+      <section class="section">
+        <div class="section__head"><h2>Survey guidance</h2><span class="meta">the form, not a manual</span></div>
+        <div class="panel stack" id="p-guidance"></div>
+        <div class="preview-dialogs">
+          <div class="dialog dialog--howto" style="position: static" id="p-howto"></div>
+          <div class="dialog dialog--wide dialog--guide" style="position: static" id="p-guide"></div>
         </div>
+        <p class="spec">
+          Each section opens with one line on what it records, set off by a rule. The ⓘ opens
+          the How to fill panel — beside the ⓘ on a wide screen, a sheet on a phone — which
+          always reads in the same order: what to fill, how to find it, the scores or shots,
+          an example, the rules, a tip. The ? beside the title reopens the Survey guide, which
+          opens by itself before the first new survey.
+        </p>
       </section>
 
       <!-- Ledger ------------------------------------------------------------>
@@ -234,8 +286,22 @@
         </div>
         <p class="spec">
           One row per facility, so absence and truncation can never be confused.
-          Rows that differ take an accent rule on the criterion; identical rows stay quiet.
+          Rows that differ are marked by their label's weight, ink semibold against muted,
+          with no bar or inset rule; identical rows stay quiet.
           Missing data reads &ldquo;Not recorded&rdquo; — different from absent.
+        </p>
+      </section>
+
+      <!-- Kos picker -------------------------------------------------------->
+      <section class="section">
+        <div class="section__head"><h2>Kos picker</h2><span class="meta">Add kos, by source</span></div>
+        <div class="preview-dialogs">
+          <div class="dialog dialog--wide dialog--picker" style="position: static" id="p-picker"></div>
+        </div>
+        <p class="spec">
+          Every survey of the user's own and every community survey, each under its source's
+          name in the narrow face that labels table columns. A group with nothing in it says so.
+          The last row of a group drops its rule; the count in the foot updates as kos are picked.
         </p>
       </section>
 
@@ -310,7 +376,44 @@
     </div>
 
     <script type="module">
+      import { html, mount } from '../src/utils/dom.js';
       import { attachCurrencyInput } from '../src/components/currencyInput.js';
+      import { textField, currencyField, textareaField, checkboxGroup, likertField } from '../src/components/fields.js';
+      import { FIELD_GUIDE, SECTION_INTROS, rubricText } from '../src/content/guidance.js';
+      import { renderHowTo } from '../src/components/howToPanel.js';
+      import { renderSurveyGuide, surveyGuideButton } from '../src/components/surveyGuide.js';
+      import { candidatePickerDialog } from '../src/components/candidatePicker.js';
+      import { ownSurveys } from '../src/seed/ownSurveys.js';
+      import { communitySurveys } from '../src/seed/communitySurveys.js';
+
+      // The same guidance object the survey form hands its fields.
+      const guide = (key) => ({ key, ...FIELD_GUIDE[key] });
+
+      mount(document.querySelector('#p-fields'), html`
+        ${textField({ name: 'name', label: 'Kos name', value: 'Kos Melati Residence', id: 'p-name', guide: guide('name') })}
+        ${currencyField({ name: 'rent', label: 'Monthly rent', value: '1500000', id: 'p-rent', guide: guide('rent') })}
+        ${textField({ name: 'lengthM', label: 'Room length (m)', value: '32', numeric: true, id: 'p-length', guide: guide('lengthM'), error: 'Enter a size between 0.1 and 20 metres.' })}
+        ${checkboxGroup({ name: 'p-facilities', legend: 'Room facilities', options: ['Mattress', 'Wardrobe', 'AC', 'Window'], selected: ['Mattress', 'Wardrobe', 'Window'], guide: guide('roomFacility') })}
+        ${likertField({ name: 'p-clean', legend: 'Cleanliness', value: 3, guide: guide('cleanliness'), rubric: rubricText('cleanliness', 3) })}
+        ${textareaField({ name: 'notes', label: 'Additional notes', value: 'Quiet street. The gate locks at 10pm.', id: 'p-notes', guide: guide('notes') })}
+      `);
+      mount(document.querySelector('#p-guidance'), html`
+        <div class="page-head__title"><h1>New survey</h1>${surveyGuideButton()}</div>
+        <section class="form-section">
+          <div class="form-section__head">
+            <span class="form-section__number" aria-hidden="true">1</span>
+            <h2>Kos information</h2>
+          </div>
+          <p class="form-section__guide">${SECTION_INTROS.kos}</p>
+        </section>
+      `);
+      mount(document.querySelector('#p-howto'), renderHowTo('cleanliness'));
+      mount(document.querySelector('#p-guide'), renderSurveyGuide());
+      mount(
+        document.querySelector('#p-picker'),
+        candidatePickerDialog({ own: ownSurveys.slice(0, 2), community: communitySurveys.slice(0, 2) }, [ownSurveys[0].id]),
+      );
+
       const rent = attachCurrencyInput(document.querySelector('#p-rent'));
       // Exposed so the live behaviour can be exercised from the console.
       window.__rent = rent;
