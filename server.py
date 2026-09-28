@@ -63,6 +63,10 @@ DEFAULT_ITERATIONS = 600_000
 # A survey record is a few kilobytes; photos never travel through here.
 MAX_BODY = 1_000_000
 MAX_SURVEY_BYTES = 256_000
+# A refused request's body is still read, and thrown away, up to this size:
+# see Handler.discard_body. It must exceed MAX_BODY, or a body refused for
+# its size would never be read; past it, reading is not worth the time.
+MAX_DISCARD = 2 * MAX_BODY
 
 NAME_MAX = 60
 EMAIL_MAX = 254
@@ -556,6 +560,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     # --- API plumbing -----------------------------------------------------------
 
     def api(self, method, path):
+        self.body_read = False
         try:
             if not path.startswith("/api/"):
                 raise ApiError(HTTPStatus.METHOD_NOT_ALLOWED, "That is not something this server does.")
@@ -566,9 +571,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             payload = {"error": error.message}
             if error.errors:
                 payload["errors"] = error.errors
+            self.discard_body()
             self.send_json(error.status, payload)
         except Exception as error:  # pragma: no cover - a last resort, logged
             self.log_error("API failure on %s %s: %r", method, path, error)
+            self.discard_body()
             self.send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "The server could not complete that. Try again."})
 
     def route(self, method, path):
@@ -613,13 +620,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise ApiError(HTTPStatus.BAD_REQUEST, "That request could not be read.")
         if length > MAX_BODY:
             raise ApiError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "That is too large to save.")
+        raw = self.rfile.read(length)
+        self.body_read = True
         try:
-            body = json.loads(self.rfile.read(length) or b"{}")
+            body = json.loads(raw or b"{}")
         except (ValueError, UnicodeDecodeError):
             raise ApiError(HTTPStatus.BAD_REQUEST, "That request could not be read.")
         if not isinstance(body, dict):
             raise ApiError(HTTPStatus.BAD_REQUEST, "That request could not be read.")
         return body
+
+    def discard_body(self):
+        """Read a refused request's body before answering, and throw it away.
+
+        Closing a connection while request bytes are unread, or before they
+        arrive, ends it with a reset instead of a clean close. On Windows the
+        reset destroys whatever of the reply the client has not read yet, so
+        it sees WinError 10053 instead of the refusal it was sent. A body
+        over MAX_DISCARD, or with a length that makes no sense, is not read,
+        at the risk of that reset; the connection is closed, so that the body
+        is never taken for the next request.
+        """
+        if self.body_read:
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = -1
+        if 0 <= length <= MAX_DISCARD:
+            self.rfile.read(length)
+        else:
+            self.close_connection = True
 
     def send_json(self, status, payload=None, cookie=None):
         body = b"" if payload is None else json.dumps(payload).encode("utf-8")
