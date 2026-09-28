@@ -258,6 +258,108 @@ describe('subscribers', () => {
   });
 });
 
+describe('Best Match weights', () => {
+  const ana = { id: 'user-ana', email: 'ana@example.test', name: 'Ana' };
+  const budi = { id: 'user-budi', email: 'budi@example.test', name: 'Budi' };
+  const custom = { price: 35, facilities: 20, cleanliness: 15, location: 15, distance: 3, security: 12 };
+  const defaults = { price: 25, facilities: 20, cleanliness: 15, location: 15, distance: 13, security: 12 };
+  const key = (user) => `${STORAGE_KEY}:weights:${user.id}`;
+
+  it('are the defaults for an account that never set its own', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    expect(store.bestMatchWeights()).toEqual(defaults);
+  });
+
+  it('are kept on this device under the account, and come back at its next login', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    expect(store.setBestMatchWeights(custom)).toEqual({ ok: true, kept: true });
+    expect(store.bestMatchWeights()).toEqual(custom);
+    expect(JSON.parse(localStorage.getItem(key(ana)))).toEqual(custom);
+
+    store.forgetAccount();
+    expect(store.bestMatchWeights()).toEqual(defaults);
+    // Logging out takes them off the screen, not off the device.
+    expect(localStorage.getItem(key(ana))).not.toBeNull();
+
+    const nextVisit = await freshStore();
+    nextVisit.setUser(ana);
+    expect(nextVisit.bestMatchWeights()).toEqual(custom);
+  });
+
+  it('belong to one account: another on the same device starts from the defaults', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    store.setBestMatchWeights(custom);
+    store.forgetAccount();
+    store.setUser(budi);
+    expect(store.bestMatchWeights()).toEqual(defaults);
+  });
+
+  it('stay out of the surveys’ copy, which belongs to whoever logged in last', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    store.setBestMatchWeights(custom);
+    expect(Object.keys(stored()).sort()).toEqual(['ownerId', 'schemaVersion', 'starredIds', 'surveys', 'updatedAt']);
+  });
+
+  it('are stored as the defaults when set back to them, so nothing is left behind', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    store.setBestMatchWeights(custom);
+    expect(store.setBestMatchWeights({ ...defaults })).toEqual({ ok: true, kept: true });
+    expect(localStorage.getItem(key(ana))).toBeNull();
+    store.setBestMatchWeights(custom);
+    store.setBestMatchWeights(null);
+    expect(localStorage.getItem(key(ana))).toBeNull();
+    expect(store.bestMatchWeights()).toEqual(defaults);
+  });
+
+  it('refuse a set that does not total 100%, keeping what was there', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    store.setBestMatchWeights(custom);
+    const seen = vi.fn();
+    store.subscribe(seen);
+    expect(store.setBestMatchWeights({ ...custom, price: 40 })).toEqual({ ok: false, kept: false });
+    expect(store.bestMatchWeights()).toEqual(custom);
+    expect(seen).not.toHaveBeenCalled();
+  });
+
+  it('need someone logged in', async () => {
+    const store = await freshStore();
+    expect(store.setBestMatchWeights(custom)).toEqual({ ok: false, kept: false });
+    expect(store.bestMatchWeights()).toEqual(defaults);
+  });
+
+  it('still apply when this browser cannot keep them, and say so', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    const realSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function setItem() {
+      throw new DOMException('full', 'QuotaExceededError');
+    };
+    try {
+      expect(store.setBestMatchWeights(custom)).toEqual({ ok: true, kept: false });
+    } finally {
+      Storage.prototype.setItem = realSetItem;
+    }
+    expect(store.bestMatchWeights()).toEqual(custom);
+  });
+
+  it('ignore a saved entry that is not a valid set', async () => {
+    localStorage.setItem(key(ana), JSON.stringify({ ...custom, price: 200 }));
+    const store = await freshStore();
+    store.setUser(ana);
+    expect(store.bestMatchWeights()).toEqual(defaults);
+
+    localStorage.setItem(key(ana), '{not json');
+    store.setUser(ana);
+    expect(store.bestMatchWeights()).toEqual(defaults);
+  });
+});
+
 describe('failed writes', () => {
   it('keep the change in memory and report it', async () => {
     const store = await freshStore();
