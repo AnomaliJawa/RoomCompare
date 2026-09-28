@@ -1,6 +1,8 @@
 import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
-import { BEST_MATCH_WEIGHTS, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../constants.js';
+import { BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../constants.js';
+import { DEFAULT_WEIGHTS, isDefault } from '../utils/weights.js';
+import { bestMatchWeights } from '../store.js';
 
 /**
  * The optional weighted score.
@@ -18,6 +20,10 @@ import { BEST_MATCH_WEIGHTS, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../const
  * Two of the six criteria are relative to the kos being compared, not
  * absolute: being the cheapest of three says nothing about being cheap. The
  * panel says so rather than leaving "92" to be read as a rating.
+ *
+ * The weights are the user's to set (Edit criteria), and the PRD's figures
+ * are the defaults. The panel reads them from the store itself, so the
+ * comparison's one mount line does not change with them.
  */
 
 /** Likert 1-4 -> 0-100. 1 is the floor, so (v-1)/3 rather than v/4: a "Poor"
@@ -78,12 +84,14 @@ const MISSING_LABELS = {
 };
 
 /**
- * Score every kos in the set.
+ * Score every kos in the set, with `weights` in whole percentages.
  * A kos missing any weighted input gets no total at all: treating "not
  * recorded" as zero would rank an unfinished survey as the worst option,
- * which is a claim the data does not support.
+ * which is a claim the data does not support. A criterion weighted 0% is out
+ * of the score, so its data is not needed and its absence blocks nothing.
  */
-export function computeBestMatch(surveys) {
+export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
+  const counted = BEST_MATCH_CRITERIA.filter((criterion) => weights[criterion.key] > 0);
   const rents = surveys.map((survey) => survey.kos.rent ?? NaN);
   const distances = surveys.map((survey) => survey.kos.distanceKm ?? NaN);
 
@@ -97,15 +105,14 @@ export function computeBestMatch(surveys) {
       security: fromLikert(survey.additional.security),
     };
 
-    const missing = Object.entries(parts)
-      .filter(([, value]) => value === null)
-      .map(([key]) => MISSING_LABELS[key] ?? key);
+    const missing = counted
+      .filter((criterion) => parts[criterion.key] === null)
+      .map((criterion) => MISSING_LABELS[criterion.key] ?? criterion.key);
 
+    // Divided once, at the end: the weights are percentages.
     const total = missing.length
       ? null
-      : Math.round(
-          BEST_MATCH_WEIGHTS.reduce((sum, criterion) => sum + parts[criterion.key] * criterion.weight, 0),
-        );
+      : Math.round(counted.reduce((sum, criterion) => sum + parts[criterion.key] * weights[criterion.key], 0) / 100);
 
     return { survey, parts, missing, total };
   });
@@ -161,24 +168,34 @@ function scoreRow(item, leaders) {
   </span>`;
 }
 
-export function bestMatchPanel(surveys) {
-  const { scored, leaders } = computeBestMatch(surveys);
+/**
+ * `data-keep-open`: the view is rebuilt on every store change, and saving new
+ * weights is one, so main.js's refresh() reopens the panel rather than
+ * closing it on the scores the user just asked for. It still starts closed.
+ */
+export function bestMatchPanel(surveys, weights = bestMatchWeights()) {
+  const { scored, leaders } = computeBestMatch(surveys, weights);
   const tied = leaders.length > 1;
 
   return html`
-    <details class="bestmatch">
+    <details class="bestmatch" data-keep-open="bestmatch">
       <summary class="bestmatch__summary">
-        <span class="bestmatch__summary-title">Optional: system-weighted score</span>
+        <span class="bestmatch__summary-title">Optional: weighted score</span>
         <span class="meta">A guide, not a recommendation. The decision stays yours.</span>
       </summary>
 
       <div class="bestmatch__body">
-        <p class="bestmatch__note meta">
-          Scores are relative to these ${surveys.length} kos, not to kos in general:
-          the cheapest of three is not necessarily cheap. Weights are fixed by the
-          system and cannot be changed.
-          ${tied ? ' Two kos scored the same, so both are marked.' : ''}
-        </p>
+        <div class="bestmatch__intro">
+          <p class="bestmatch__note meta">
+            Scores are relative to these ${surveys.length} kos, not to kos in general:
+            the cheapest of three is not necessarily cheap.
+            ${isDefault(weights) ? 'The weights are the defaults.' : 'The weights are your own.'}
+            ${tied ? ' Two kos scored the same, so both are marked.' : ''}
+          </p>
+          <button class="btn btn--secondary btn--small" type="button" data-action="open-criteria" aria-haspopup="dialog">
+            Edit criteria
+          </button>
+        </div>
 
         <ul class="bestmatch__results">
           ${scored.map(
@@ -199,10 +216,12 @@ export function bestMatchPanel(surveys) {
               </tr>
             </thead>
             <tbody role="rowgroup">
-              ${BEST_MATCH_WEIGHTS.map(
-                (criterion) => html`<tr role="row">
+              ${BEST_MATCH_CRITERIA.map(
+                // A criterion at 0% stays in the table, quieter: it is out of
+                // the score, not hidden.
+                (criterion) => html`<tr role="row" class="${weights[criterion.key] === 0 ? 'bestmatch__row--off' : ''}">
                   <th class="ledger__criterion" scope="row" role="rowheader">${criterion.label}</th>
-                  <td class="numeric bestmatch__weight" role="cell">${cellLabel('Weight')}<span class="ledger__cell-value">${Math.round(criterion.weight * 100)}%</span></td>
+                  <td class="numeric bestmatch__weight" role="cell">${cellLabel('Weight')}<span class="ledger__cell-value">${weights[criterion.key]}%</span></td>
                   ${scored.map((item) => partCell(item.parts[criterion.key], item.survey.kos.name))}
                 </tr>`,
               )}
@@ -221,6 +240,11 @@ export function bestMatchPanel(surveys) {
           <dd>
             Recorded surroundings out of ${SURROUNDINGS.length}. The requirement weights
             “Location” without naming a field; this is the reading in use.
+          </dd>
+          <dt>Weights</dt>
+          <dd>
+            Set with Edit criteria, as whole percentages that total 100%. A criterion
+            at 0% is left out of the score, so it does not need to be recorded.
           </dd>
         </dl>
       </div>

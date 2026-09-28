@@ -105,3 +105,47 @@ describe('the dashboard comparison strip', () => {
     }
   });
 });
+
+describe('the Best Match criteria panel', () => {
+  beforeEach(() => localStorage.clear());
+
+  const custom = { price: 35, facilities: 20, cleanliness: 15, location: 15, distance: 3, security: 12 };
+  const text = (node) => node.textContent.replace(/\s+/g, ' ').trim();
+  const panel = (host) =>
+    [...host.querySelectorAll('section.panel')].find((section) => text(section.querySelector('h2')) === 'Best Match criteria');
+  const listed = (section) =>
+    [...section.querySelectorAll('.listing')].map((item) => [...item.querySelectorAll('span')].map(text));
+
+  it('lists the defaults for an account that has not changed them', async () => {
+    const { host } = await dashboard((store) => store.setUser({ id: 'u1', email: 'a@example.test', name: 'A' }));
+    const section = panel(host);
+    expect(listed(section)).toEqual([
+      ['Price', '25%'],
+      ['Facilities', '20%'],
+      ['Cleanliness', '15%'],
+      ['Location (surrounding amenities)', '15%'],
+      ['Distance to campus', '13%'],
+      ['Security', '12%'],
+    ]);
+    expect(text(section.querySelector('.meta'))).toContain('These are the defaults.');
+    expect(text(section)).not.toMatch(/fixed/i);
+  });
+
+  it('lists the account’s own weights, and says whose they are', async () => {
+    const { host } = await dashboard((store) => {
+      store.setUser({ id: 'u1', email: 'a@example.test', name: 'A' });
+      store.setBestMatchWeights(custom);
+    });
+    const section = panel(host);
+    expect(listed(section).map(([, weight]) => weight)).toEqual(['35%', '20%', '15%', '15%', '3%', '12%']);
+    expect(text(section.querySelector('.meta'))).toContain('These are your own.');
+  });
+
+  it('opens the criteria dialog from its heading', async () => {
+    const { host } = await dashboard();
+    const edit = panel(host).querySelector('.section__head [data-action="open-criteria"]');
+    expect(text(edit)).toBe('Edit');
+    expect(edit.getAttribute('aria-label')).toBe('Edit Best Match criteria');
+    expect(edit.getAttribute('aria-haspopup')).toBe('dialog');
+  });
+});

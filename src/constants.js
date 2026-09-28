@@ -89,16 +89,51 @@ export function kosTypeLabel(value) {
 }
 
 /**
- * Fixed weights defined by the system, per the PRD. Not user-configurable.
- * Consumed only by features/bestMatch.js.
+ * The Best Match criteria, with the PRD's weights as the defaults. Each
+ * account can set its own (utils/weights.js holds the rule).
+ *
+ * Weights are whole percentages, not fractions: they are what the user
+ * edits, and whole numbers add up exactly where 0.13 + 0.12 need not.
+ * `description` says what a criterion measures, for the dialog where the
+ * weights are set. It restates the Best Match panel's method notes.
  */
-export const BEST_MATCH_WEIGHTS = [
-  { key: 'price', label: 'Price', weight: 0.25 },
-  { key: 'facilities', label: 'Facilities', weight: 0.2 },
-  { key: 'cleanliness', label: 'Cleanliness', weight: 0.15 },
-  { key: 'location', label: 'Location (surrounding amenities)', weight: 0.15 },
-  { key: 'distance', label: 'Distance to campus', weight: 0.13 },
-  { key: 'security', label: 'Security', weight: 0.12 },
+export const BEST_MATCH_CRITERIA = [
+  {
+    key: 'price',
+    label: 'Price',
+    defaultWeight: 25,
+    description: 'Monthly rent, ranked against the other kos compared. The cheapest scores 100.',
+  },
+  {
+    key: 'facilities',
+    label: 'Facilities',
+    defaultWeight: 20,
+    description: `Recorded facilities out of ${TOTAL_FACILITY_COUNT}, across room, bathroom and shared.`,
+  },
+  {
+    key: 'cleanliness',
+    label: 'Cleanliness',
+    defaultWeight: 15,
+    description: 'The 1–4 rating, where 1 scores 0 and 4 scores 100.',
+  },
+  {
+    key: 'location',
+    label: 'Location (surrounding amenities)',
+    defaultWeight: 15,
+    description: `Recorded surroundings out of ${SURROUNDINGS.length}.`,
+  },
+  {
+    key: 'distance',
+    label: 'Distance to campus',
+    defaultWeight: 13,
+    description: 'Ranked against the other kos compared. The nearest scores 100.',
+  },
+  {
+    key: 'security',
+    label: 'Security',
+    defaultWeight: 12,
+    description: 'The 1–4 rating, where 1 scores 0 and 4 scores 100.',
+  },
 ];
 
 /** Comparison groups, in PRD order. Section 6 is added — see plan ambiguity 2. */

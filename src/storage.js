@@ -113,14 +113,49 @@ export function save({ surveys, starredIds, ownerId = null }) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     return SAVE_RESULT.OK;
   } catch (error) {
-    // Chrome reports code 22, Firefox 1014; some builds only set the name.
-    const quota =
-      error instanceof DOMException &&
-      (error.code === 22 ||
-        error.code === 1014 ||
-        error.name === 'QuotaExceededError' ||
-        error.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-    return quota ? SAVE_RESULT.QUOTA : SAVE_RESULT.FAILED;
+    return isQuotaError(error) ? SAVE_RESULT.QUOTA : SAVE_RESULT.FAILED;
+  }
+}
+
+// Chrome reports code 22, Firefox 1014; some builds only set the name.
+function isQuotaError(error) {
+  return (
+    error instanceof DOMException &&
+    (error.code === 22 ||
+      error.code === 1014 ||
+      error.name === 'QuotaExceededError' ||
+      error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+  );
+}
+
+/**
+ * Best Match weights, one entry per account on this device. They are kept
+ * apart from the surveys' copy, which belongs to whoever logged in last and
+ * is emptied at logout: weights stay filed under their account, like the
+ * queue of unsent changes, so its next login here finds them again. They do
+ * not follow the account to another device.
+ */
+const weightsKey = (userId) => `${STORAGE_KEY}:weights:${userId}`;
+
+/** The account's saved weights as stored, or null. The store checks them. */
+export function loadWeights(userId) {
+  try {
+    const raw = window.localStorage.getItem(weightsKey(userId));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Save an account's weights. `null` removes them, so the defaults apply. */
+export function saveWeights(userId, weights) {
+  if (!isAvailable()) return SAVE_RESULT.UNAVAILABLE;
+  try {
+    if (weights === null) window.localStorage.removeItem(weightsKey(userId));
+    else window.localStorage.setItem(weightsKey(userId), JSON.stringify(weights));
+    return SAVE_RESULT.OK;
+  } catch (error) {
+    return isQuotaError(error) ? SAVE_RESULT.QUOTA : SAVE_RESULT.FAILED;
   }
 }
 

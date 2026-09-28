@@ -30,6 +30,15 @@ import { candidatePickerDialog } from './components/candidatePicker.js';
 import { enableSheetDismiss } from './components/sheet.js';
 import { openHowTo, initHowTo } from './components/howToPanel.js';
 import { openSurveyGuide, initSurveyGuide } from './components/surveyGuide.js';
+import {
+  openCriteria,
+  initCriteriaDialog,
+  readWeights,
+  updateCriteriaTotal,
+  stepWeight,
+  fillWeights,
+} from './components/criteriaDialog.js';
+import { DEFAULT_WEIGHTS } from './utils/weights.js';
 import { renderCompare, mountCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
@@ -98,8 +107,13 @@ function refresh() {
   renderPickerDialog();
 
   const params = currentRoute().params;
+  // A panel the user opened stays open while the view is rebuilt around it.
+  // Best Match would otherwise shut the moment new weights are saved, hiding
+  // the scores they changed. A fresh visit to the page still starts closed.
+  const kept = qsa('details[data-keep-open][open]', root()).map((node) => node.dataset.keepOpen);
   releaseView();
   mount(root(), active.render(params));
+  for (const key of kept) qs(`details[data-keep-open="${key}"]`, root())?.setAttribute('open', '');
   viewHandle = active.mount?.(root()) ?? null;
   syncNav(active.nav);
   renderStorageNotice();
@@ -468,6 +482,25 @@ function wireActions() {
   onAction('open-survey-guide', ({ target }) => openSurveyGuide(target));
   onAction('close-survey-guide', () => qs('#app-survey-guide')?.close());
 
+  // Best Match weights, from Edit criteria in the panel or on the Dashboard.
+  // The draft stays in the dialog's inputs; only Save touches the store.
+  onAction('open-criteria', () => openCriteria(store.bestMatchWeights()));
+  onAction('close-criteria', () => qs('#app-criteria')?.close());
+  onAction('criteria-step', ({ target, dataset }) => stepWeight(target.form, dataset.key, Number(dataset.step)));
+  onAction('criteria-input', ({ target }) => updateCriteriaTotal(target.form), 'input');
+  onAction('criteria-reset', ({ target }) => fillWeights(target.form, DEFAULT_WEIGHTS));
+  onAction(
+    'criteria-save',
+    ({ target }) => {
+      if (!updateCriteriaTotal(target).ok) return;
+      const { ok, kept } = store.setBestMatchWeights(readWeights(target));
+      if (!ok) return;
+      qs('#app-criteria')?.close();
+      toast(kept ? 'Best Match weights saved' : 'Weights applied, but this browser could not keep them');
+    },
+    'submit',
+  );
+
   onAction('clear-community-filters', () => store.clearCommunityFilters());
 
   onAction('submit-survey', async ({ target, event }) => {
@@ -689,8 +722,10 @@ async function start() {
   enableSheetDismiss(qs('#app-picker'), '.picker-dialog__head');
   enableSheetDismiss(qs('#app-howto'), '.howto__head');
   enableSheetDismiss(qs('#app-survey-guide'), '.guide-dialog__head');
+  enableSheetDismiss(qs('#app-criteria'), '.criteria-dialog__head');
   initHowTo();
   initSurveyGuide();
+  initCriteriaDialog();
 
   // iOS Safari has applied :active only where a touch listener exists on the
   // element or an ancestor. Without this no-op, the pressed states in

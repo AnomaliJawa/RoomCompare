@@ -1,6 +1,7 @@
 import { ownSurveys } from './seed/ownSurveys.js';
 import { communitySurveys } from './seed/communitySurveys.js';
 import { MAX_COMPARE, MIN_COMPARE } from './constants.js';
+import { checkWeights, effectiveWeights, isDefault } from './utils/weights.js';
 import * as storage from './storage.js';
 import * as db from './db.js';
 
@@ -47,6 +48,12 @@ const state = {
   surveys: seeded ? structuredClone(ownSurveys) : boot.data.surveys,
   communitySurveys: structuredClone(communitySurveys),
   starredIds: seeded ? ['com-kartika'] : boot.data.starredIds,
+  /**
+   * The logged-in account's Best Match weights as saved on this device, or
+   * null for the defaults. Read them through bestMatchWeights(), which never
+   * hands back an invalid set.
+   */
+  bestMatchWeights: null,
   compareSelection: [],
   /**
    * Whether the comparison has been opened. Selection and comparison are
@@ -150,6 +157,9 @@ export function clearStorageNotice() {
 
 export function setUser(user) {
   state.user = user;
+  // Each account's weights wait on this device for its next login here. The
+  // next person on a shared phone gets their own, or the defaults.
+  state.bestMatchWeights = user ? storage.loadWeights(user.id) : null;
   notify();
 }
 
@@ -189,6 +199,7 @@ export function adoptSurveys(surveys, ownerId) {
  */
 export function forgetAccount() {
   state.user = null;
+  state.bestMatchWeights = null;
   state.surveys = [];
   state.ownerId = null;
   state.compareSelection = [];
@@ -249,6 +260,11 @@ export function selectedForCompare() {
     .filter(Boolean);
 }
 
+/** The weights Best Match scores with: the account's own, or the defaults. */
+export function bestMatchWeights() {
+  return effectiveWeights(state.bestMatchWeights);
+}
+
 /* --- Writes ------------------------------------------------------------- */
 
 export function addSurvey(survey) {
@@ -305,6 +321,25 @@ export function toggleStar(id) {
     ? state.starredIds.filter((item) => item !== id)
     : [...state.starredIds, id];
   commit();
+}
+
+/**
+ * Set the logged-in account's Best Match weights; null goes back to the
+ * defaults. A set equal to the defaults is saved as null too, so an account
+ * that never really changed them follows the defaults if those change.
+ *
+ * Returns `ok` (false for an invalid set, or with nobody logged in; nothing
+ * changes then) and `kept`, whether this browser stored them. Weights it
+ * could not keep still apply until the page is closed.
+ */
+export function setBestMatchWeights(weights) {
+  if (!state.user) return { ok: false, kept: false };
+  if (weights !== null && !checkWeights(weights).ok) return { ok: false, kept: false };
+  const next = weights === null || isDefault(weights) ? null : effectiveWeights(weights);
+  state.bestMatchWeights = next;
+  const result = storage.saveWeights(state.user.id, next);
+  notify();
+  return { ok: true, kept: result === storage.SAVE_RESULT.OK };
 }
 
 /** Returns false when the selection is already full, so the caller can explain why. */

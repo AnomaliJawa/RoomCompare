@@ -1611,7 +1611,21 @@ a.listing__title::after {
   padding-top: var(--space-4);
 }
 
-.bestmatch__note { max-width: var(--measure); }
+.bestmatch__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+
+.bestmatch__note { flex: 1 1 280px; max-width: var(--measure); }
+
+/* A criterion at 0% is out of the score: listed, but quieter. The labels
+   are named too: on narrow screens the kos names carry their own ink. */
+.bestmatch__table .bestmatch__row--off th,
+.bestmatch__table .bestmatch__row--off td,
+.bestmatch__table .bestmatch__row--off .ledger__cell-label { color: var(--muted); }
 
 .bestmatch__results {
   display: flex;
@@ -1973,11 +1987,95 @@ a.listing__title::after {
 
 .guide-dialog__list li + li { margin-top: var(--space-1); }
 
+/* Best Match criteria: six rows of a name and a percentage, as wide as the
+   kos picker so each description fits in two lines beside its stepper.
+   Declared before the narrow-screen rule below, so phones still get the
+   full-width sheet. */
+.dialog--criteria { width: min(560px, calc(100vw - var(--space-6))); }
+
+/* The name and its percentage share a line, as in the Dashboard's list, with
+   what the criterion measures underneath. */
+.criteria-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) 0;
+}
+
+.criteria-row:first-child { padding-top: 0; }
+.criteria-row:last-child { padding-bottom: 0; }
+.criteria-row + .criteria-row { border-top: var(--border-hair); }
+
+.criteria-row__label {
+  grid-area: 1 / 1;
+  font-weight: var(--weight-semibold);
+}
+
+.criteria-row__hint {
+  grid-area: 2 / 1;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.stepper {
+  display: flex;
+  grid-area: 1 / 2 / 3;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Square, at the height of the field beside it. */
+.stepper__step {
+  width: 40px;
+  padding: 0;
+  font-size: var(--text-md);
+}
+
+/* The height of the buttons beside it: a field's padding and line height
+   would otherwise make it 3px taller than they are. On a touch screen both
+   reach --target-min through the rules at the end of this file. */
+.stepper__input {
+  width: 64px;
+  height: 40px;
+  padding-block: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* − and + are right beside it; the browser's own arrows would be a second
+   pair, too small to tap. */
+.stepper__input::-webkit-outer-spin-button,
+.stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stepper__input[aria-invalid="true"] { border-color: var(--alert); }
+
+.stepper__unit { color: var(--muted); }
+
+.criteria-dialog__total {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.criteria-dialog__total--off { color: var(--alert); }
+
+.criteria-dialog__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 /* The kos picker shares the filter dialog's shape: fixed head and foot, a
    body that scrolls between them. */
 .filter-dialog,
 .picker-dialog,
-.guide-dialog {
+.guide-dialog,
+.criteria-dialog {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -1985,7 +2083,8 @@ a.listing__title::after {
 
 .filter-dialog__head,
 .picker-dialog__head,
-.guide-dialog__head {
+.guide-dialog__head,
+.criteria-dialog__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1997,7 +2096,8 @@ a.listing__title::after {
 /* The body scrolls, so the actions stay reachable with 24 facilities open. */
 .filter-dialog__body,
 .picker-dialog__body,
-.guide-dialog__body {
+.guide-dialog__body,
+.criteria-dialog__body {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -2015,7 +2115,8 @@ a.listing__title::after {
 
 .filter-dialog__foot,
 .picker-dialog__foot,
-.guide-dialog__foot {
+.guide-dialog__foot,
+.criteria-dialog__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2029,7 +2130,8 @@ a.listing__title::after {
    start scrolling, or bouncing, the page underneath. */
 .filter-dialog__body,
 .picker-dialog__body,
-.guide-dialog__body { overscroll-behavior: contain; }
+.guide-dialog__body,
+.criteria-dialog__body { overscroll-behavior: contain; }
 
 /* --- How to fill panel ----------------------------------------------------
    One dialog for every field's ⓘ. On a wide screen it sits beside the ⓘ
@@ -2148,6 +2250,7 @@ a.listing__title::after {
   .filter-dialog__head,
   .picker-dialog__head,
   .guide-dialog__head,
+  .criteria-dialog__head,
   .howto__head { touch-action: none; }
 
   /* The sheet's own close button clears the home indicator. */
@@ -2163,6 +2266,23 @@ a.listing__title::after {
   .filter-dialog__foot .btn,
   .picker-dialog__foot .btn,
   .guide-dialog__foot .btn { width: 100%; }
+
+  /* The stepper keeps to the name's line; what the criterion measures
+     takes the full width under both, rather than a narrow column. */
+  .stepper { grid-area: 1 / 2; }
+  .criteria-row__hint { grid-area: 2 / 1 / 3 / 3; }
+
+  /* The total is read before the buttons are pressed, so it leads here
+     rather than falling under them, and Save sits above Reset. */
+  .criteria-dialog__foot {
+    flex-direction: column;
+    align-items: stretch;
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  }
+
+  .criteria-dialog__actions { flex-direction: column-reverse; align-items: stretch; }
+
+  .criteria-dialog__actions .btn { width: 100%; }
 }
 
 /* A sheet rises from the edge it is anchored to. `backwards`, not `both`:
@@ -2398,6 +2518,9 @@ a.listing__title::after {
 
   /* The slots match the buttons beside them, as they do at 40px. */
   .compare-chip { height: var(--target-min); }
+
+  /* − and + stay square as they grow to the field's height. */
+  .stepper__step { width: var(--target-min); }
 
   .btn--small,
   .compare-chip__remove,

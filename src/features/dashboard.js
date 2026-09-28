@@ -1,7 +1,8 @@
 import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
-import { getState } from '../store.js';
-import { BEST_MATCH_WEIGHTS, STATUS } from '../constants.js';
+import { getState, bestMatchWeights } from '../store.js';
+import { BEST_MATCH_CRITERIA, STATUS } from '../constants.js';
+import { isDefault } from '../utils/weights.js';
 import { emptyState } from '../components/emptyState.js';
 
 /**
@@ -112,6 +113,7 @@ export function renderDashboard() {
     .slice(0, 3);
 
   const drafts = surveys.filter((s) => s.status === STATUS.DRAFT).length;
+  const weights = bestMatchWeights();
 
   return html`
     <div class="page-head">
@@ -156,17 +158,25 @@ export function renderDashboard() {
       <section class="panel">
         <div class="section__head">
           <h2>Best Match criteria</h2>
+          <button
+            class="btn btn--secondary btn--small"
+            type="button"
+            data-action="open-criteria"
+            aria-haspopup="dialog"
+            aria-label="Edit Best Match criteria"
+          >Edit</button>
         </div>
         <p class="meta">
-          Fixed weights, used only in the optional score under a comparison.
+          How much each criterion counts in the optional score under a comparison.
           The comparison itself is never scored.
+          ${isDefault(weights) ? 'These are the defaults.' : 'These are your own.'}
         </p>
         <ul class="stack" style="margin-top: var(--space-4)">
           ${raw(
-            BEST_MATCH_WEIGHTS.map(
+            BEST_MATCH_CRITERIA.map(
               (c) => html`<li class="listing">
                 <span>${c.label}</span>
-                <span class="numeric">${Math.round(c.weight * 100)}%</span>
+                <span class="numeric">${weights[c.key]}%</span>
               </li>`,
             ).join(''),
           )}
