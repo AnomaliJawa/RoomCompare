@@ -20,6 +20,7 @@ import http.server
 import importlib.util
 import json
 import os
+import socket
 import sqlite3
 import subprocess
 import sys
@@ -74,6 +75,21 @@ class Client:
         email = email or f"{uuid.uuid4().hex[:10]}@example.com"
         status, body, headers = self.call("POST", "/api/register", {"name": name, "email": email, "password": password})
         return status, body, headers, email
+
+
+def send_raw(address, request):
+    """Send a request exactly as written, which urllib will not: it writes
+    Content-Length itself. Returns the status and the JSON reply."""
+    with socket.create_connection(address, timeout=10) as connection:
+        connection.sendall(request)
+        # Half-closed, so a server that reads to the end of the stream gets
+        # there and answers, instead of waiting for more.
+        connection.shutdown(socket.SHUT_WR)
+        reply = b""
+        while chunk := connection.recv(65536):
+            reply += chunk
+    head, _, body = reply.partition(b"\r\n\r\n")
+    return int(head.split(b" ", 2)[1]), json.loads(body)
 
 
 class ServerTestCase(unittest.TestCase):
@@ -285,6 +301,18 @@ class Surveys(ServerTestCase):
         self.assertEqual(browser.call("PUT", "/api/surveys/svy-big", raw=too_big, headers={"Content-Type": "application/json"})[0], 413)
         not_json = browser.call("PUT", "/api/surveys/svy-a", raw=b"id=svy-a", headers={"Content-Type": "application/x-www-form-urlencoded"})
         self.assertEqual(not_json[0], 415)
+
+    def test_a_negative_length_is_refused_without_reading_the_body(self):
+        # A negative length is under MAX_BODY, and rfile.read(-1) reads to the
+        # end of the stream, however long: this login would be read and
+        # answered 401. Below -1, read() raises instead, which was a 500.
+        login = json.dumps({"email": "nobody@example.com", "password": "wrong password"}).encode("utf-8")
+        for length in ("-1", "-2"):
+            with self.subTest(length=length):
+                head = f"POST /api/login HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: {length}\r\n\r\n"
+                status, body = send_raw(self.httpd.server_address, head.encode("ascii") + login)
+                self.assertEqual(status, 400)
+                self.assertEqual(body["error"], "That request could not be read.")
 
     def test_writes_from_another_site_are_refused(self):
         browser = self.client()
