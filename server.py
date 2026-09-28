@@ -617,6 +617,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
+            length = -1
+        # A negative length is no more readable than one that is not a number,
+        # and would get past MAX_BODY: rfile.read(-1) reads until the client
+        # stops sending, however much that is.
+        if length < 0:
             raise ApiError(HTTPStatus.BAD_REQUEST, "That request could not be read.")
         if length > MAX_BODY:
             raise ApiError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "That is too large to save.")
