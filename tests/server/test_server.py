@@ -15,6 +15,7 @@ with Redis, as it runs in production, talking to an in-memory stand-in for
 Upstash over its REST API.
 """
 
+import http.client
 import http.cookiejar
 import http.server
 import importlib.util
@@ -26,8 +27,10 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 from pathlib import Path
@@ -70,6 +73,29 @@ class Client:
             payload = error.read()
             content_type = error.headers.get("Content-Type", "")
             return error.code, (json.loads(payload) if payload and "json" in content_type else payload), error.headers
+
+    def call_with_late_body(self, method, path, raw, headers=None):
+        """call(), but the body follows the headers 50 ms later.
+
+        By then a server that answers without reading the body has closed
+        the connection, so the body arrives at a closed one. The reply is
+        read 50 ms after that, once any reset sent back has arrived.
+        """
+        request = urllib.request.Request(self.base + path, headers=headers or {})
+        self.jar.add_cookie_header(request)
+        url = urllib.parse.urlsplit(self.base)
+        head = [f"{method} {path} HTTP/1.1", f"Host: {url.netloc}", f"Content-Length: {len(raw)}"]
+        head += [f"{name}: {value}" for name, value in request.header_items()]
+        with socket.create_connection((url.hostname, url.port)) as sock:
+            sock.sendall(("\r\n".join(head) + "\r\n\r\n").encode("latin-1"))
+            time.sleep(0.05)
+            sock.sendall(raw)
+            time.sleep(0.05)
+            with http.client.HTTPResponse(sock) as response:
+                response.begin()
+                payload = response.read()
+        content_type = response.headers.get("Content-Type", "")
+        return response.status, (json.loads(payload) if payload and "json" in content_type else payload), response.headers
 
     def register(self, email=None, password="correct horse", name="Rahma"):
         email = email or f"{uuid.uuid4().hex[:10]}@example.com"
@@ -323,6 +349,31 @@ class Surveys(ServerTestCase):
         self.assertEqual(status, 403)
         same_site = self.client().call("POST", "/api/login", {"email": email, "password": "right password"}, headers={"Origin": self.base})
         self.assertEqual(same_site[0], 200)
+
+    def test_a_refusal_arrives_even_when_the_body_comes_late(self):
+        # Each of these is refused before its body is read. Had the server
+        # answered and closed without reading it, the body would reach a
+        # closed connection, and the reset sent back destroys the reply on
+        # Windows (WinError 10053). With the body sent at once, as call()
+        # sends it, the reply was lost only now and then:
+        # test_size_and_format_limits and
+        # test_writes_from_another_site_are_refused failed about one run in
+        # three until Handler.discard_body.
+        browser = self.client()
+        browser.register()
+        record = json.dumps({"survey": survey("svy-a")}).encode("utf-8")
+        too_big = json.dumps({"survey": survey("svy-a") | {"notes": "x" * 1_100_000}}).encode("utf-8")
+        as_json = {"Content-Type": "application/json"}
+        cases = [
+            (browser, record, as_json | {"Origin": "http://evil.example"}, 403, "Requests from other sites are not accepted."),
+            (self.client(), record, as_json, 401, "Log in to continue."),
+            (browser, b"id=svy-a", {"Content-Type": "application/x-www-form-urlencoded"}, 415, "Send the request as JSON."),
+            (browser, too_big, as_json, 413, "That is too large to save."),
+        ]
+        for client, raw, headers, status, message in cases:
+            with self.subTest(status=status):
+                reply = client.call_with_late_body("PUT", "/api/surveys/svy-a", raw, headers)
+                self.assertEqual(reply[:2], (status, {"error": message}))
 
 
 class StaticFiles(ServerTestCase):
