@@ -310,8 +310,12 @@ function wireActions() {
       toast(`Remove one kos before adding another. You can compare up to ${MAX_COMPARE}.`);
       return;
     }
-    const selected = store.getState().compareSelection.includes(dataset.id);
-    toast(selected ? `${survey.kos.name} added to comparison` : `${survey.kos.name} removed from comparison`);
+    // Adding needs no toast: the button pressed already says so (Selected in
+    // the picker, In comparison on a card or a survey's page), and the
+    // picker's count updates with it.
+    if (!store.getState().compareSelection.includes(dataset.id)) {
+      toast(`${survey.kos.name} removed from comparison`);
+    }
   });
 
   onAction('remove-compare', ({ dataset }) => {
