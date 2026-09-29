@@ -2525,12 +2525,14 @@ a.listing__title::after {
   .btn--small,
   .compare-chip__remove,
   .field__info,
-  .page-head__help { position: relative; }
+  .page-head__help,
+  .auth__alternate a { position: relative; }
 
   .btn--small::after,
   .compare-chip__remove::after,
   .field__info::after,
-  .page-head__help::after {
+  .page-head__help::after,
+  .auth__alternate a::after {
     content: "";
     position: absolute;
     top: 50%;
