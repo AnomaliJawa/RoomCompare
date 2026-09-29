@@ -32,6 +32,18 @@ function definition(label, input) {
 }
 
 /**
+ * The contact number as a tel: link, so it can be dialled from the phone the
+ * survey is read on. The href keeps only digits and a leading +; the label
+ * stays exactly as typed. A value with no diallable digits still shows as
+ * plain text rather than a dead link, and an empty one reads "Not recorded".
+ */
+function contactValue(phone) {
+  if (!phone) return null;
+  const href = phone.replace(/[^+0-9]/g, '');
+  return href ? html`<a href="tel:${href}">${phone}</a>` : html`${phone}`;
+}
+
+/**
  * Facilities are shown as the full checklist with present and absent marked,
  * not as a list of what happens to be there. "No AC" is information.
  */
@@ -180,6 +192,7 @@ export function renderSurveyDetail({ id }) {
           ${raw(definition('Campus', survey.kos.campusLocation?.label))}
           ${raw(definition('Distance to campus', formatDistance(survey.kos.distanceKm)))}
           ${raw(definition('Monthly rent', numberToCurrency(survey.kos.rent)))}
+          ${raw(definition('Owner or security phone', contactValue(survey.kos.contactPhone)))}
         </dl>`,
       ),
     )}

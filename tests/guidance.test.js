@@ -6,7 +6,7 @@ import { MAX_VIDEOS } from '../src/media.js';
 import { MAX_SOURCE_BYTES, MAX_VIDEO_BYTES } from '../src/utils/image.js';
 
 const FIELDS = [
-  'name', 'rent', 'type', 'kosLocation', 'kosLocationName', 'campusLocationName', 'campusLocation', 'distance',
+  'name', 'rent', 'type', 'contactPhone', 'kosLocation', 'kosLocationName', 'campusLocationName', 'campusLocation', 'distance',
   'lengthM', 'widthM', 'roomFacility', 'cleanliness', 'internet', 'roomPhotos',
   'bathroomFacility', 'bathroomPhotos',
   'sharedFacility', 'sharedPhotos',
@@ -23,7 +23,7 @@ const empty = {
 const MB = 1024 * 1024;
 
 describe('the guidance copy', () => {
-  it('covers all 22 fields of the form, each with a short helper line', () => {
+  it('covers all 23 fields of the form, each with a short helper line', () => {
     expect(Object.keys(FIELD_GUIDE)).toEqual(FIELDS);
     for (const [key, guide] of Object.entries(FIELD_GUIDE)) {
       expect(guide.label, key).toBeTruthy();
