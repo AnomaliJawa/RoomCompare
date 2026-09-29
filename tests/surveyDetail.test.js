@@ -83,3 +83,30 @@ describe('photos and videos on the survey page', () => {
     expect(panel.querySelector('.section__head .meta').textContent).toBe('1 photo');
   });
 });
+
+describe('the owner or security phone on the survey page', () => {
+  const kosInfo = (host) =>
+    [...host.querySelectorAll('section.section')].find((s) => s.querySelector('h2').textContent.trim() === 'Kos information');
+  const phoneRow = (host) =>
+    [...kosInfo(host).querySelectorAll('.defn')].find(
+      (row) => row.querySelector('.defn__label').textContent.trim() === 'Owner or security phone',
+    );
+
+  it('shows the number as a link that dials it', async () => {
+    const { store, renderSurveyDetail } = await load();
+    const withPhone = survey();
+    withPhone.kos.contactPhone = '0812-3456-7890';
+    store.addSurvey(withPhone);
+    const link = phoneRow(render(renderSurveyDetail({ id: 'svy-media' }))).querySelector('a');
+    expect(link.getAttribute('href')).toBe('tel:081234567890');
+    expect(link.textContent.trim()).toBe('0812-3456-7890');
+  });
+
+  it('reads "Not recorded" when there is no number', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const row = phoneRow(render(renderSurveyDetail({ id: 'svy-media' })));
+    expect(row.querySelector('a')).toBeNull();
+    expect(row.querySelector('.unrecorded').textContent.trim()).toBe('Not recorded');
+  });
+});

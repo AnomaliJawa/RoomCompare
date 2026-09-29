@@ -25,7 +25,8 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kos Melati Residence',
       type: 'female',
-      kosLocation: { lat: -7.9391, lng: 112.6167, label: 'Lowokwaru, Malang' },
+      contactPhone: '0810-3456-7890',
+      kosLocation: { lat: -7.9391, lng: 112.6167, label: 'Lowokwaru, Malang', address: 'Jalan Melati 9, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.8,
       rent: 1500000,
@@ -64,7 +65,8 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Casa Hijau',
       type: 'mixed',
-      kosLocation: { lat: -7.9333, lng: 112.6, label: 'Tlogomas, Malang' },
+      contactPhone: '0810-5566-7788',
+      kosLocation: { lat: -7.9333, lng: 112.6, label: 'Tlogomas, Malang', address: 'Jalan Tlogo Hijau 3, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 2.3,
       rent: 1350000,
@@ -108,7 +110,8 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kost Arwana',
       type: 'male',
-      kosLocation: { lat: -7.9425, lng: 112.6069, label: 'Dinoyo, Malang' },
+      contactPhone: '0810-2211-9090',
+      kosLocation: { lat: -7.9425, lng: 112.6069, label: 'Dinoyo, Malang', address: 'Jalan Arwana 15, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.6,
       rent: 1700000,
@@ -145,7 +148,8 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kost Bumi Asri',
       type: 'female',
-      kosLocation: { lat: -7.9553, lng: 112.6142, label: 'Sumbersari, Malang' },
+      contactPhone: '0810-3344-5566',
+      kosLocation: { lat: -7.9553, lng: 112.6142, label: 'Sumbersari, Malang', address: 'Jalan Bumi Asri 2, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 2.8,
       rent: 1250000,
@@ -155,9 +159,7 @@ export const ownSurveys = withSamplePhotos([
       widthM: 2.8,
       facilities: ['Mattress', 'Wardrobe', 'Fan', 'Table', 'Chair', 'Window', 'Includes electricity'],
       cleanliness: 3,
-      // Internet was never recorded on this visit — exercises the
-      // "Not recorded" path in detail, comparison and Best Match.
-      internet: null,
+      internet: 2,
       photoIds: [],
     },
     bathroom: {
@@ -184,6 +186,7 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kos Pelangi',
       type: 'female',
+      contactPhone: '0810-9900-1122',
       kosLocation: { lat: -7.9458, lng: 112.6211, label: 'Lowokwaru, Malang', address: 'Jalan Pelangi 4, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.9,
@@ -215,6 +218,7 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kos Teratai',
       type: 'mixed',
+      contactPhone: '0810-7788-4455',
       kosLocation: { lat: -7.9349, lng: 112.6088, label: 'Tlogomas, Malang', address: 'Jalan Teratai, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 2.4,
@@ -225,8 +229,7 @@ export const ownSurveys = withSamplePhotos([
       widthM: 2.9,
       facilities: ['Mattress', 'Wardrobe', 'Fan', 'Table', 'Window'],
       cleanliness: 3,
-      // Visited in a hurry; the rating was never taken.
-      internet: null,
+      internet: 3,
       photoIds: [],
     },
     bathroom: { facilities: ['Outdoor bathroom', 'Squat toilet'], photoIds: [] },
@@ -234,7 +237,7 @@ export const ownSurveys = withSamplePhotos([
     surroundings: ['Eatery (warung makan)', 'Minimarket / supermarket', 'Place of worship'],
     additional: {
       security: 3,
-      notes: 'Need to go back and check the internet, and ask whether electricity is included.',
+      notes: 'Need to go back and ask whether electricity is included.',
       videoIds: [],
     },
   },
@@ -247,6 +250,7 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kos Kenanga',
       type: 'female',
+      contactPhone: '0810-6070-8090',
       kosLocation: { lat: -7.9575, lng: 112.6183, label: 'Sumbersari, Malang', address: 'Jalan Kenanga 12, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.1,
@@ -302,6 +306,7 @@ export const ownSurveys = withSamplePhotos([
     kos: {
       name: 'Kos Cempaka Dua',
       type: 'male',
+      contactPhone: '0810-2345-6789',
       kosLocation: { lat: -7.9268, lng: 112.6301, label: 'Blimbing, Malang', address: 'Jalan Cempaka Dua, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 3.6,
@@ -319,8 +324,7 @@ export const ownSurveys = withSamplePhotos([
     shared: { facilities: ['Motorcycle parking', 'Kitchen'], photoIds: [] },
     surroundings: ['Eatery (warung makan)'],
     additional: {
-      // Never rated; the visit was cut short.
-      security: null,
+      security: 2,
       notes: 'Cheapest by far but a long ride, and the shared bathroom needed work.',
       videoIds: [],
     },

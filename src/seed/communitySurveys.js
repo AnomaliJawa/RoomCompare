@@ -29,7 +29,8 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Kartika',
       type: 'female',
-      kosLocation: { lat: -7.9448, lng: 112.6135, label: 'Ketawanggede, Malang' },
+      contactPhone: '0810-6677-2233',
+      kosLocation: { lat: -7.9448, lng: 112.6135, label: 'Ketawanggede, Malang', address: 'Jalan Kartika 5, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 0.9,
       rent: 1650000,
@@ -64,7 +65,8 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Pondok Biru',
       type: 'male',
-      kosLocation: { lat: -7.9302, lng: 112.6221, label: 'Blimbing, Malang' },
+      contactPhone: '0810-4411-3322',
+      kosLocation: { lat: -7.9302, lng: 112.6221, label: 'Blimbing, Malang', address: 'Jalan Pondok Biru 11, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 3.4,
       rent: 950000,
@@ -96,7 +98,8 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Griya Asri',
       type: 'mixed',
-      kosLocation: { lat: -7.9487, lng: 112.6077, label: 'Dinoyo, Malang' },
+      contactPhone: '0810-9988-7766',
+      kosLocation: { lat: -7.9487, lng: 112.6077, label: 'Dinoyo, Malang', address: 'Jalan Griya Asri 8, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.4,
       rent: 1450000,
@@ -137,7 +140,8 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Wisma Cempaka',
       type: 'female',
-      kosLocation: { lat: -7.9601, lng: 112.6203, label: 'Sukun, Malang' },
+      contactPhone: '0810-5544-6677',
+      kosLocation: { lat: -7.9601, lng: 112.6203, label: 'Sukun, Malang', address: 'Jalan Wisma Cempaka 6, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 4.1,
       rent: 1100000,
@@ -169,6 +173,7 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Mawar Putih',
       type: 'female',
+      contactPhone: '0810-1234-5678',
       kosLocation: { lat: -7.9412, lng: 112.6198, label: 'Lowokwaru, Malang', address: 'Jalan Bunga Mawar, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.7,
@@ -197,6 +202,7 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Tirta',
       type: 'male',
+      contactPhone: '0810-3322-1100',
       kosLocation: { lat: -7.9366, lng: 112.6024, label: 'Tlogomas, Malang', address: 'Jalan Tirto Utomo, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 2.6,
@@ -225,6 +231,7 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Anggrek',
       type: 'female',
+      contactPhone: '0810-9090-4545',
       kosLocation: { lat: -7.9538, lng: 112.6091, label: 'Dinoyo, Malang', address: 'Jalan Anggrek, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 1.2,
@@ -253,6 +260,7 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Bagas',
       type: 'mixed',
+      contactPhone: '0810-7788-9900',
       kosLocation: { lat: -7.9285, lng: 112.6157, label: 'Blimbing, Malang', address: 'Jalan Bagas Raya, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 3.1,
@@ -281,6 +289,7 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Harmoni',
       type: 'female',
+      contactPhone: '0810-2468-1357',
       kosLocation: { lat: -7.9471, lng: 112.6242, label: 'Sumbersari, Malang', address: 'Jalan Harmoni, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 2.0,
@@ -309,6 +318,7 @@ export const communitySurveys = withSamplePhotos([
     kos: {
       name: 'Kos Cendana',
       type: 'male',
+      contactPhone: '0810-1122-3344',
       kosLocation: { lat: -7.9603, lng: 112.6118, label: 'Sukun, Malang', address: 'Jalan Cendana, Malang' },
       campusLocation: CAMPUS,
       distanceKm: 3.8,

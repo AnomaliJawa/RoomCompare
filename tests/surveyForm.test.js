@@ -54,7 +54,7 @@ beforeEach(() => {
 });
 
 describe('guidance on the survey form', () => {
-  it('introduces every section, and puts a helper line under each of the 22 fields', async () => {
+  it('introduces every section, and puts a helper line under each of the 23 fields', async () => {
     const { renderSurveyForm, SECTION_INTROS, FIELD_GUIDE } = await load();
     const page = show(renderSurveyForm());
 
@@ -129,6 +129,33 @@ describe('guidance on the survey form', () => {
     const distance = show(renderSurveyForm()).querySelector('#f-distanceKm');
     expect(distance.value).toBe('');
     expect(distance.placeholder).toBe('Fills in once both pins are set');
+  });
+});
+
+describe('the owner or security phone', () => {
+  it('is a phone field in the Kos information section', async () => {
+    const { renderSurveyForm } = await load();
+    const page = show(renderSurveyForm());
+    const input = page.querySelector('#f-contactPhone');
+    expect(input.getAttribute('type')).toBe('tel');
+    expect(input.getAttribute('inputmode')).toBe('tel');
+    expect(input.closest('[data-section]').dataset.section).toBe('1');
+    expect(text(page.querySelector('label[for="f-contactPhone"]'))).toBe('Owner or security phone');
+  });
+
+  it('reads the number as typed, and null when left blank', async () => {
+    const { renderSurveyForm, readSurveyForm } = await load();
+    const form = show(renderSurveyForm()).querySelector('#survey-form');
+    expect(readSurveyForm(form).kos.contactPhone).toBeNull();
+    type(form.querySelector('#f-contactPhone'), '  0812-3456-7890 ');
+    expect(readSurveyForm(form).kos.contactPhone).toBe('0812-3456-7890');
+  });
+
+  it('reopens a saved survey with its number shown', async () => {
+    const { store, renderSurveyForm } = await load();
+    store.addSurvey({ ...saved, kos: { ...saved.kos, contactPhone: '0899-1122-3344' } });
+    const page = show(renderSurveyForm({ id: 'svy-scored' }));
+    expect(page.querySelector('#f-contactPhone').value).toBe('0899-1122-3344');
   });
 });
 

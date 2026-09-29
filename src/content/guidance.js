@@ -95,6 +95,16 @@ export const FIELD_GUIDE = {
       rules: 'Required to publish. Choose one.',
     },
   },
+  contactPhone: {
+    label: 'Owner or security phone',
+    helper: 'A number to reach the owner or on-site security.',
+    panel: {
+      what: 'A phone number to reach the kos owner, or the security or caretaker on site.',
+      find: 'Ask the owner or a tenant, or check the signboard or listing.',
+      example: 'A mobile or WhatsApp number, e.g. 0812-3456-7890.',
+      rules: 'Optional.',
+    },
+  },
   kosLocation: {
     label: 'Pin the kos',
     helper: 'Search the address, then drop the pin on the kos entrance.',

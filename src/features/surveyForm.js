@@ -149,6 +149,16 @@ export function renderSurveyForm({ id } = {}) {
             ${currencyField({ name: 'rent', label: 'Monthly rent', value: kos.rent ?? '', guide: guide('rent') })}
           </div>
           ${radioGroup({ name: 'type', legend: 'Kos type', value: kos.type, options: KOS_TYPES, guide: guide('type') })}
+          ${textField({
+            name: 'contactPhone',
+            label: 'Owner or security phone',
+            value: kos.contactPhone,
+            type: 'tel',
+            inputmode: 'tel',
+            plain: true,
+            placeholder: 'e.g. 0812-3456-7890',
+            guide: guide('contactPhone'),
+          })}
           <div class="form-grid">
             ${textField({
               name: 'kosLocation',
@@ -462,6 +472,10 @@ export function readSurveyForm(form) {
     kos: {
       name: text('name'),
       type: text('type') || null,
+      // Contact for the owner or on-site security. Kept as typed — numbers
+      // are written with spaces, dashes or a +62, and normalising them could
+      // drop a form the user recognises.
+      contactPhone: text('contactPhone') || null,
       kosLocation: kosPoint,
       campusLocation: campusPoint,
       // Recomputed from the two pins rather than read back from the display
