@@ -25,6 +25,12 @@
   --alert:    #8c2f2a;
   --alert-bg: #faf0ef;
 
+  /* A starred kos, and nothing else (the user's choice, 2026-09-30). Solid,
+     with no outline, also theirs: 1.8:1 on surface, below the 3:1 asked of
+     a graphic that shows a state. Filled against outlined still tells the
+     two apart, and aria-pressed says it to a screen reader. */
+  --star: #f5b400;
+
   /* --- Typography ---------------------------------------------------------
      Two faces from one superfamily. The width contrast is functional:
      Archivo Narrow in table headers buys real horizontal room for a

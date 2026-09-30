@@ -1,6 +1,8 @@
 import { html, raw, photoPlaceholder } from '../utils/dom.js';
 import { numberToCurrency, formatDistance } from '../utils/format.js';
-import { STATUS_LABELS, kosTypeLabel } from '../constants.js';
+import { STATUS, STATUS_LABELS, kosTypeLabel } from '../constants.js';
+import { starButton } from './starButton.js';
+import { editLink, deleteButton } from './surveyActions.js';
 
 /**
  * One card for both survey lists.
@@ -30,6 +32,32 @@ function thumb(survey) {
   />`;
 }
 
+/**
+ * A survey's status as an icon (the user's request, 2026-09-30): a dashed
+ * circle for a draft, still being filled in, and a ticked one once it is
+ * published. The word stays as its name for a screen reader and as its
+ * tooltip.
+ */
+const statusIcon = (paths) =>
+  '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" ' +
+  `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+
+const STATUS_ICONS = {
+  [STATUS.DRAFT]: statusIcon('<circle cx="10" cy="10" r="7.25" pathLength="20" stroke-dasharray="1 1.5"/>'),
+  [STATUS.PUBLISHED]: statusIcon('<circle cx="10" cy="10" r="7.25"/><path d="m6.9 10.2 2.2 2.2 4-4.3"/>'),
+};
+
+function statusBadge(survey) {
+  const label = STATUS_LABELS[survey.status];
+  return html`<span
+    class="status"
+    data-status="${survey.status}"
+    role="img"
+    aria-label="${label}"
+    title="${label}"
+  >${raw(STATUS_ICONS[survey.status] ?? '')}</span>`;
+}
+
 function fact(label, value) {
   return html`
     <div class="card__fact">
@@ -44,12 +72,12 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
   const href = isCommunity ? `#/community/${survey.id}` : `#/surveys/${survey.id}`;
 
   const meta = isCommunity
-    ? html`<span class="meta">${survey.kos.kosLocation?.label} · ${survey.ownerName}</span>`
+    ? html`<span class="meta">${survey.kos.kosLocation?.label} · Shared by ${survey.ownerName}</span>`
     : html`<span class="meta">${survey.kos.kosLocation?.label}</span>`;
 
   const badge = isCommunity
     ? html`<span class="meta">${kosTypeLabel(survey.kos.type)}</span>`
-    : html`<span class="status" data-status="${survey.status}">${STATUS_LABELS[survey.status]}</span>`;
+    : statusBadge(survey);
 
   const actions = isCommunity
     ? html`
@@ -60,23 +88,12 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
           data-action="toggle-compare"
           data-id="${survey.id}"
         >${inCompare ? 'In comparison' : 'Add to compare'}</button>
-        <button
-          class="btn btn--quiet btn--small star"
-          type="button"
-          data-action="toggle-star"
-          data-id="${survey.id}"
-          aria-pressed="${starred ? 'true' : 'false'}"
-        >${starred ? 'Starred' : 'Star'}</button>
+        ${starButton(survey, { starred, small: true })}
       `
     : html`
         <a class="btn btn--secondary btn--small" href="${href}">View</a>
-        <a class="btn btn--secondary btn--small" href="#/surveys/${survey.id}/edit">Edit</a>
-        <button
-          class="btn btn--danger btn--small"
-          type="button"
-          data-action="ask-delete"
-          data-id="${survey.id}"
-        >Delete</button>
+        ${editLink(survey, { small: true })}
+        ${deleteButton(survey, { small: true })}
       `;
 
   return html`
