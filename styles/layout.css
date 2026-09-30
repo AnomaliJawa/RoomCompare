@@ -146,9 +146,12 @@ body[data-auth="pending"] .nav__actions { display: none; }
    Title and its actions. No eyebrow label above it: the title says what
    the page is, and a label above would only repeat it. */
 
+/* Buttons beside a title centre on the title and its lede together (the
+   user's choice, 2026-09-30). A head with no buttons has one item, which
+   centring does not move. */
 .page-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: var(--space-5);
@@ -340,4 +343,6 @@ body[data-auth="pending"] .nav__actions { display: none; }
   }
 
   .page-head__actions > * { flex: 1; }
+  /* An icon button keeps its square; stretched, its icon would float. */
+  .page-head__actions > .btn--icon { flex: none; }
 }

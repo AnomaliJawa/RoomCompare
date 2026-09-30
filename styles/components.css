@@ -112,6 +112,86 @@
   font-size: var(--text-xs);
 }
 
+/* An icon in place of a label: square, as wide as its size is tall. The
+   touch rules grow a full-size button's height, and its width with it. */
+.btn--icon {
+  min-width: 40px;
+  padding: 0;
+}
+
+.btn--icon.btn--small { min-width: 32px; }
+
+/* The star that keeps a community survey. Pressed, it turns solid yellow,
+   drawn from aria-pressed so the look and what a screen reader announces
+   cannot disagree. The colour is its own, so hover and pressed change only
+   the button behind it.
+   No outline when starred (the user's choice): the stroke takes the fill's
+   colour rather than going, so the star keeps its size and round points. */
+.star__icon { display: block; }
+
+.star[aria-pressed="true"] .star__icon path {
+  fill: var(--star);
+  stroke: var(--star);
+}
+
+/* --- Breadcrumbs ----------------------------------------------------------
+   Above a page's title: the list it was opened from, then the page. The
+   page's own name is muted and gives way first, cut short with an ellipsis
+   before the trail above it would wrap. */
+
+.breadcrumbs { margin-bottom: var(--space-3); }
+
+.breadcrumbs__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-xs);
+}
+
+.breadcrumbs__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.breadcrumbs__item:not(:last-child) { flex-shrink: 0; }
+
+/* A chevron drawn from two borders, with no text for a screen reader to
+   read out between the names. */
+.breadcrumbs__item + .breadcrumbs__item::before {
+  content: "";
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-top: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+.breadcrumbs a {
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.breadcrumbs a:active {
+  color: var(--accent-press);
+  text-decoration: underline;
+}
+
+@media (hover: hover) {
+  .breadcrumbs a:hover { text-decoration: underline; }
+}
+
+.breadcrumbs__current {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* --- Fields --------------------------------------------------------------- */
 
 .field {
@@ -366,23 +446,16 @@
 }
 
 /* --- Status --------------------------------------------------------------
-   A word plus a rule weight, not a coloured pill. */
+   An icon, not a coloured pill (the user's request, 2026-09-30): a dashed
+   circle for a draft, a ticked one once published. The word is its name
+   and its tooltip. */
 
 .status {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
   color: var(--muted);
-  font-family: var(--font-narrow);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
 }
 
-.status::before {
-  content: "";
-  width: 14px;
-  border-top: 2px solid currentColor;
-}
+.status svg { display: block; }
 
 .status[data-status="published"] { color: var(--accent); }
 
@@ -791,8 +864,10 @@
 
 .survey-card { position: relative; }
 
-/* Buttons must stay above the title's click target. */
-.survey-card__actions { position: relative; z-index: 1; }
+/* Buttons must stay above the title's click target. So must the status
+   icon: under it, the tooltip that says Draft or Published never shows. */
+.survey-card__actions,
+.survey-card .status { position: relative; z-index: 1; }
 
 @media (hover: hover) {
   .survey-card__link:hover { text-decoration: underline; }
@@ -822,6 +897,10 @@
   margin-top: auto;
   padding-top: var(--space-4);
 }
+
+/* Icon buttons (the star; Edit and Delete) sit apart, together at the end of
+   the row: the first one after the labelled buttons takes the slack. */
+.survey-card__actions > :not(.btn--icon) + .btn--icon { margin-left: auto; }
 
 .card__fact-label {
   display: block;
@@ -1125,6 +1204,33 @@ a.listing__title::after {
   font-size: var(--text-xs);
 }
 
+/* The survey page marks each section's heading with an icon, bare (the
+   user's choice): no tile behind it. */
+.section__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* The words keep the heading's baseline, which the photo count beside
+   "Photos and videos" lines up with. The icon stays out of it, centred on
+   the first line, so a heading that wraps keeps it beside its first words. */
+.section__icon {
+  align-self: flex-start;
+  flex-shrink: 0;
+  margin-top: calc((1lh - 24px) / 2);
+  color: var(--accent);
+}
+
+.section__icon svg { display: block; }
+
+/* The icon leaves a phone less room beside a heading. Rather than squeeze
+   the photo count onto two lines, it moves under the heading. */
+.section__head:has(> .section__title) {
+  flex-wrap: wrap;
+  row-gap: var(--space-1);
+}
+
 .form-section__guide {
   margin: var(--space-3) 0 var(--space-5);
   padding-left: var(--space-3);
@@ -1161,7 +1267,10 @@ a.listing__title::after {
 @media (max-width: 640px) {
   .form-actions { flex-direction: column-reverse; }
   .form-actions .btn { width: 100%; }
-  .survey-card__actions .btn { flex: 1; }
+  /* Card buttons keep their width here too, as on a wide screen (the user's
+     choice, 2026-09-30). Own cards once stretched View, Edit and Delete
+     across the row; with Edit and Delete as icons, View would have stretched
+     alone. */
 }
 
 /* --- Media uploader ------------------------------------------------------
@@ -2512,6 +2621,9 @@ a.listing__title::after {
   .field__control,
   .choice { min-height: var(--target-min); }
 
+  /* Stays square as it grows. */
+  .btn--icon:not(.btn--small) { min-width: var(--target-min); }
+
   /* The wrapper draws the border, so the control inside is 2px shorter and
      the pair lands on the same 44px as a plain field. */
   .field__group .field__control { min-height: calc(var(--target-min) - 2px); }
@@ -2526,13 +2638,15 @@ a.listing__title::after {
   .compare-chip__remove,
   .field__info,
   .page-head__help,
-  .auth__alternate a { position: relative; }
+  .auth__alternate a,
+  .breadcrumbs a { position: relative; }
 
   .btn--small::after,
   .compare-chip__remove::after,
   .field__info::after,
   .page-head__help::after,
-  .auth__alternate a::after {
+  .auth__alternate a::after,
+  .breadcrumbs a::after {
     content: "";
     position: absolute;
     top: 50%;

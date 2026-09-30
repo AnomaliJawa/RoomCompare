@@ -84,6 +84,78 @@ describe('photos and videos on the survey page', () => {
   });
 });
 
+describe('the breadcrumbs on the survey page', () => {
+  const crumbs = (host) => host.querySelector('nav.breadcrumbs');
+  const firstLink = (nav) => {
+    const link = nav.querySelector('a');
+    return [link.textContent.trim(), link.getAttribute('href')];
+  };
+
+  it('lead back to My surveys from your own survey, in place of a Back button', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const host = render(renderSurveyDetail({ id: 'svy-media' }));
+    const nav = crumbs(host);
+    expect(nav.getAttribute('aria-label')).toBe('Breadcrumb');
+    expect(firstLink(nav)).toEqual(['My surveys', '#/surveys']);
+    expect(nav.querySelector('[aria-current="page"]').textContent.trim()).toBe('Kos Media');
+    expect([...host.querySelectorAll('a, button')].some((el) => el.textContent.trim() === 'Back')).toBe(false);
+  });
+
+  it('lead back to Community from a community survey', async () => {
+    const { store, renderSurveyDetail } = await load();
+    const { id, kos } = store.getState().communitySurveys[0];
+    const nav = crumbs(render(renderSurveyDetail({ id })));
+    expect(firstLink(nav)).toEqual(['Community', '#/community']);
+    expect(nav.querySelector('[aria-current="page"]').textContent.trim()).toBe(kos.name);
+  });
+});
+
+describe('the facility checklists on the survey page', () => {
+  it('mark what is there ✓ and what is not ✗, saying which to a screen reader', async () => {
+    const { store, renderSurveyDetail } = await load();
+    const withBathroom = survey();
+    withBathroom.bathroom.facilities = ['Indoor bathroom'];
+    store.addSurvey(withBathroom);
+    const bathroom = [...render(renderSurveyDetail({ id: 'svy-media' })).querySelectorAll('section.section')].find(
+      (s) => s.querySelector('h2').textContent.trim() === 'Bathroom',
+    );
+    const rows = [...bathroom.querySelectorAll('.checklist__item')].map((row) => [
+      row.querySelector('.checklist__mark').textContent,
+      row.querySelector('.visually-hidden').textContent,
+    ]);
+    expect(rows).toContainEqual(['✓', 'present']);
+    expect(rows).toContainEqual(['✗', 'not available']);
+    expect(rows.some(([mark]) => mark === '—')).toBe(false);
+  });
+});
+
+describe('the section headings on the survey page', () => {
+  it('each carry their own icon, which screen readers skip', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const heads = [...render(renderSurveyDetail({ id: 'svy-media' })).querySelectorAll('section.section h2')];
+
+    expect(heads.map((h) => h.textContent.trim())).toEqual([
+      'Kos information', 'Room', 'Bathroom', 'Shared facilities', 'Surroundings', 'Additional information', 'Photos and videos',
+    ]);
+    for (const h of heads) {
+      const icon = h.querySelector('.section__icon');
+      expect(icon.getAttribute('aria-hidden')).toBe('true');
+      expect(icon.querySelector('svg')).not.toBeNull();
+    }
+    expect(new Set(heads.map((h) => h.querySelector('svg').innerHTML)).size).toBe(heads.length);
+  });
+
+  it('keeps the id the photos panel is labelled by', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const host = render(renderSurveyDetail({ id: 'svy-media' }));
+    expect(host.querySelector('#media-title').textContent.trim()).toBe('Photos and videos');
+    expect(panelOf(host)).not.toBeNull();
+  });
+});
+
 describe('the owner or security phone on the survey page', () => {
   const kosInfo = (host) =>
     [...host.querySelectorAll('section.section')].find((s) => s.querySelector('h2').textContent.trim() === 'Kos information');
@@ -108,5 +180,33 @@ describe('the owner or security phone on the survey page', () => {
     const row = phoneRow(render(renderSurveyDetail({ id: 'svy-media' })));
     expect(row.querySelector('a')).toBeNull();
     expect(row.querySelector('.unrecorded').textContent.trim()).toBe('Not recorded');
+  });
+});
+
+describe('the star on a community survey page', () => {
+  it('is an icon that follows the starred state', async () => {
+    const { store, renderSurveyDetail } = await load();
+    const { id, kos } = store.getState().communitySurveys[0];
+    const star = () => render(renderSurveyDetail({ id })).querySelector('[data-action="toggle-star"]');
+
+    const before = star();
+    expect(before.textContent.trim()).toBe('');
+    expect(before.getAttribute('aria-label')).toBe(`Star ${kos.name}`);
+    expect(before.getAttribute('aria-pressed')).toBe(String(store.isStarred(id)));
+
+    store.toggleStar(id);
+    expect(star().getAttribute('aria-pressed')).toBe(String(store.isStarred(id)));
+    expect(star().getAttribute('aria-pressed')).not.toBe(before.getAttribute('aria-pressed'));
+  });
+
+  it('is not on your own survey, which has Edit and Delete as named icons', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const actions = render(renderSurveyDetail({ id: 'svy-media' })).querySelector('.page-head__actions');
+    expect(actions.querySelector('[data-action="toggle-star"]')).toBeNull();
+    const edit = actions.querySelector('a[href="#/surveys/svy-media/edit"]');
+    const remove = actions.querySelector('[data-action="ask-delete"]');
+    expect([edit.getAttribute('aria-label'), edit.textContent.trim()]).toEqual(['Edit Kos Media', '']);
+    expect([remove.getAttribute('aria-label'), remove.textContent.trim()]).toEqual(['Delete Kos Media', '']);
   });
 });
