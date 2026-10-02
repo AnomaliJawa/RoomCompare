@@ -49,7 +49,13 @@ describe('the comparison, one section per category', () => {
     for (const item of [...ROOM_FACILITIES, ...BATHROOM_FACILITIES, ...SHARED_FACILITIES, ...SURROUNDINGS]) {
       expect(labels).toContain(item);
     }
-    expect(labels).toHaveLength(43);
+    expect(labels).toHaveLength(42);
+  });
+
+  it('leaves out draft or published, which describes the record rather than the kos', () => {
+    const labels = [...host.querySelectorAll('tbody th[scope="row"]')].map((th) => th.textContent.trim());
+    expect(labels).not.toContain('Status');
+    expect(host.textContent).not.toMatch(/\b(Draft|Published)\b/);
   });
 
   it('gives every table the same column set, so the columns line up across sections', () => {
