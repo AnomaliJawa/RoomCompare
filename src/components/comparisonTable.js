@@ -5,7 +5,6 @@ import {
   BATHROOM_FACILITIES,
   SHARED_FACILITIES,
   SURROUNDINGS,
-  STATUS_LABELS,
   likertLabel,
   kosTypeLabel,
 } from '../constants.js';
@@ -58,6 +57,9 @@ export function buildGroups(surveys) {
   const rents = surveys.map((s) => s.kos.rent ?? NaN);
   const distances = surveys.map((s) => s.kos.distanceKm ?? NaN);
 
+  // No Status row (removed at the user's request, 2026-10-03): draft or
+  // published describes the record, not the kos, so it never helps choose
+  // between them. The survey page and the card still show it.
   return [
     {
       label: 'Kos information',
@@ -72,7 +74,6 @@ export function buildGroups(surveys) {
           surveys.map((s) => (s.kos.distanceKm == null ? MISSING : formatDistance(s.kos.distanceKm))),
           { best: lowestIndex(distances) },
         ),
-        textRow('Status', surveys.map((s) => STATUS_LABELS[s.status] ?? MISSING)),
       ],
     },
     {
