@@ -1,21 +1,8 @@
 import { html, raw } from '../utils/dom.js';
 import { LIKERT } from '../constants.js';
 
-/**
- * Form controls.
- *
- * Every field carries a real <label> tied to its control, and an error is
- * wired with aria-describedby rather than left as red text floating nearby.
- * Checkbox and radio groups are <fieldset>/<legend>, so a screen reader
- * announces what the group is for before reading twelve options.
- *
- * A survey field can also carry guidance (content/guidance.js, passed as
- * `guide`): a helper line that is always shown, a character limit counted
- * as the user types, and an ⓘ that opens its How to fill panel. Fields
- * without a guide render as they always have.
- */
+/** Every control has a real <label>, errors are tied by aria-describedby, groups are fieldsets. */
 
-// An "i" in a circle, drawn in the button's own colour.
 const INFO_ICON =
   '<svg class="field__info-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
   '<circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5" />' +
@@ -23,11 +10,7 @@ const INFO_ICON =
   '<circle cx="10" cy="6.25" r="1" fill="currentColor" />' +
   '</svg>';
 
-/**
- * The ⓘ beside a label, which opens the field's How to fill panel. It sits
- * next to the label rather than inside it: a <label> may not hold another
- * control, and its name would join the field's.
- */
+/** Beside the label, not inside it: a <label> may not hold another control. */
 export function infoButton(guide) {
   if (!guide?.key || !guide.panel) return '';
   return html`<button
@@ -77,17 +60,12 @@ function support(id, { hint, error, guide, value = '' }) {
   return '';
 }
 
-/** A field's label, in a head row with its ⓘ when the field carries guidance. */
 function fieldLabel(id, label, guide) {
   const tag = html`<label class="field__label" for="${id}">${label}</label>`;
   return guide ? html`<div class="field__head">${tag}${infoButton(guide)}</div>` : tag;
 }
 
-/**
- * A group's legend. With guidance, the name sits in its own span, which the
- * fieldset is labelled by, so the ⓘ beside it stays out of the group's
- * accessible name.
- */
+/** The name sits in its own span, so the ⓘ stays out of the group's accessible name. */
 function groupLegend(name, legend, guide) {
   if (!guide) return html`<legend class="choice-group__legend">${legend}</legend>`;
   return html`<legend class="choice-group__legend">
@@ -116,12 +94,9 @@ export function textField({
   action = '',
   numeric = false,
   id = `f-${name}`,
-  // Error key, when it differs from the form name. The kos location has both
-  // a name field and a map pin; only one of them can own "kosLocation".
+  // The kos location has a name field and a map pin; only one can own "kosLocation".
   field = name,
-  // Survey fields keep autocomplete off: a browser suggestion for "Kos name"
-  // is always wrong. Account fields name their purpose, so password managers
-  // fill them and phones offer the right keyboard.
+  // Autocomplete off for survey fields; account fields name their purpose for password managers.
   autocomplete = 'off',
   inputmode = '',
   plain = false,
@@ -149,7 +124,6 @@ export function textField({
   `;
 }
 
-/** Rupiah amounts, grouped as the user types. The value is read from dataset. */
 export function currencyField({ name, label, value = '', hint = '', error = '', action = '', id = `f-${name}`, guide = null }) {
   const described = describedBy(id, { hint, error, guide });
   return html`
@@ -217,7 +191,6 @@ export function selectField({ name, label, value = '', options, action = '', id 
   `;
 }
 
-/** A real fieldset, rendered from an enum so the labels cannot drift. */
 export function checkboxGroup({ name, legend, options, selected = [], guide = null }) {
   const chosen = new Set(selected);
   return html`
@@ -236,11 +209,7 @@ export function checkboxGroup({ name, legend, options, selected = [], guide = nu
   `;
 }
 
-/**
- * `rubric` adds a line under the options that describes the chosen level. It
- * is always present, and empty until a level is chosen, so a screen reader
- * announces each new description as the choice changes.
- */
+/** Always present and empty until chosen, so a screen reader announces each new description. */
 export function radioGroup({ name, legend, options, value = null, guide = null, rubric = null }) {
   return html`
     <fieldset class="choice-group" data-field="${name}" ${groupAttributes(name, guide, { rubric: rubric !== null })}>
@@ -261,11 +230,6 @@ export function radioGroup({ name, legend, options, value = null, guide = null, 
   `;
 }
 
-/**
- * The 1-4 scale, as radios rather than a dropdown: all four points and their
- * meanings are visible at once, which is what a rating scale is for.
- * `rubric` is the description of the saved level, or '' before one is chosen.
- */
 export function likertField({ name, legend, value = null, guide = null, rubric = null }) {
   return radioGroup({
     name,

@@ -1,23 +1,7 @@
 import { html, raw } from '../utils/dom.js';
 import { MAX_COMPARE, MIN_COMPARE } from '../constants.js';
 
-/**
- * The selection, and the way into the comparison.
- *
- * The requirement describes a bar holding the chosen kos with a Compare
- * action that becomes available at two, so the comparison is something the
- * user asks for rather than something that appears mid-selection. Once it is
- * open, adding and removing update it in place — nobody wants to press
- * Compare again after swapping one kos out.
- *
- * Add kos lives here too, beside the selection it changes. It opens the
- * picker in a dialog (see main.js); Compare stays last, as the primary action.
- *
- * Every slot, filled or empty, is one equal card: the name alone, no rent
- * (the comparison's first rows carry it), on a single line, so a long name
- * cannot make its card bigger than the others. The full name stays in the
- * title, the table header and the picker.
- */
+/** Equal slots with names only, so a long name cannot grow its card; Compare opens at two. */
 
 function chip(survey) {
   return html`

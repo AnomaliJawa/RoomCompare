@@ -1,27 +1,4 @@
-/**
- * Creates — or resets — a demo account holding the eight sample surveys.
- *
- * Every account starts empty, so a demo or a usability session needs a known
- * starting point to begin from. The server must be running:
- *
- *     python server.py 5173
- *     node tools-seed-demo.mjs [base-url]        (default http://localhost:5173)
- *
- * It goes through the app's own API, so the account and its surveys obey the
- * same rules as anyone else's. The password is random unless
- * ROOMCOMPARE_DEMO_PASSWORD is set when the account is created, and it is
- * written to data/demo-account.txt — gitignored like the database beside it —
- * rather than printed.
- *
- * Run it again to reset the account: it logs in with that file and leaves
- * exactly the samples, deleting surveys added since and restoring any that
- * were deleted.
- *
- * The samples' photos are the images that ship with the app (seed-photos/),
- * referenced by id, so they show on every device without being uploaded.
- *
- * Not app code.
- */
+/** Creates or resets the demo account: node tools-seed-demo.mjs [base-url]. Password goes to data/demo-account.txt. */
 
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';

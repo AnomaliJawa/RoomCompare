@@ -5,22 +5,10 @@ import {
   normalizeRentInput,
 } from '../utils/format.js';
 
-/**
- * Live Indonesian thousand separators on a text input: 1500000 -> 1.500.000.
- *
- * The field must be type="text". type="number" cannot hold a grouped value —
- * the spec requires a valid floating-point number, so browsers discard the
- * periods, and a period would mean a decimal point in any case.
- * inputmode="numeric" keeps the numeric keypad on phones.
- *
- * The canonical value is the digit string on input.dataset.value; the visible
- * value is presentation only. Read it with getValue(), never by parsing
- * input.value at the call site.
- */
+/** type=text, not number: number inputs discard the grouping periods. Read it with getValue(). */
 
 const isDigit = (ch) => ch >= '0' && ch <= '9';
 
-/** How many digits sit left of this caret position. */
 function digitsBeforeCaret(text, caret) {
   let count = 0;
   for (let i = 0; i < caret && i < text.length; i += 1) {
@@ -29,7 +17,6 @@ function digitsBeforeCaret(text, caret) {
   return count;
 }
 
-/** The caret position that sits just after the nth digit of text. */
 function caretAfterNthDigit(text, n) {
   if (n <= 0) {
     let i = 0;
@@ -71,8 +58,7 @@ export function attachCurrencyInput(input, options = {}) {
     if (formatted !== before) {
       input.value = formatted;
       if (preserveCaret) {
-        // Anchor on the digit count, not the raw index: separators shift
-        // every character to the right of the edit.
+        // Anchor on the digit count: separators shift every character right of the edit.
         const pos = caretAfterNthDigit(formatted, Math.min(wanted, digits.length));
         input.setSelectionRange(pos, pos);
       }
@@ -84,11 +70,7 @@ export function attachCurrencyInput(input, options = {}) {
     render(true);
   }
 
-  // Backspace onto a separator would otherwise delete the separator, which we
-  // immediately re-derive — the caret appears stuck. Delete the digit the user
-  // meant instead. The edit is applied here rather than by nudging the caret
-  // and deferring to the browser, because changing the selection during
-  // keydown suppresses the default deletion.
+  // Backspace onto a separator deletes the digit instead, here: a keydown caret move cancels the default.
   function onKeydown(event) {
     if (event.key !== 'Backspace' && event.key !== 'Delete') return;
     const { selectionStart: start, selectionEnd: end, value } = input;
@@ -101,8 +83,6 @@ export function attachCurrencyInput(input, options = {}) {
     while (index >= 0 && index < value.length && value[index] === GROUP_SEPARATOR) {
       index += step;
     }
-    // Nothing left to delete, or the adjacent character is already a digit —
-    // in which case the browser's own handling is correct.
     if (index < 0 || index >= value.length) return;
     if (index === (back ? start - 1 : start)) return;
 
@@ -119,7 +99,6 @@ export function attachCurrencyInput(input, options = {}) {
     publish(digits);
   }
 
-  // Normalise without fighting the caret when focus leaves.
   function onBlur() {
     render(false);
   }
@@ -128,16 +107,13 @@ export function attachCurrencyInput(input, options = {}) {
   input.addEventListener('keydown', onKeydown);
   input.addEventListener('blur', onBlur);
 
-  // Format whatever the field was seeded with.
   render(false);
 
   return {
-    /** The recorded value: a number, or null when the field is empty. */
     getValue() {
       const digits = input.dataset.value ?? '';
       return digits === '' ? null : Number(digits);
     },
-    /** Set from stored data. Accepts a number or a digit string. */
     setValue(next) {
       const digits = normalizeRentInput(next, maxDigits);
       input.value = groupDigits(digits);

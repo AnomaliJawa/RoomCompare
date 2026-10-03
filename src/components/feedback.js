@@ -1,25 +1,11 @@
 import { html, raw, mount, qs } from '../utils/dom.js';
 
-/**
- * Toasts and the confirmation dialog.
- *
- * The prototype gave no feedback at all after saving, deleting or starring —
- * an action simply happened and the screen changed. An action keeps its name
- * through the flow, so Publish produces "Published".
- */
-
 export const TOAST_DURATION = 7000;
 
 let toastTimer = null;
 let expireToast = null;
 
-/*
- * A toast that times out can vanish while someone is still reading it or
- * reaching for Undo, and Apple's guidelines ask for as few timed elements as
- * possible. So it holds while the pointer rests on it or focus is inside it
- * — a VoiceOver or keyboard user landing on Undo — and gets a fresh full
- * duration once both have left.
- */
+// A toast holds while hovered or focused (Undo), then gets a fresh full duration.
 let hovered = false;
 let focused = false;
 let watching = false;
@@ -77,8 +63,7 @@ export function toast(message, { action = null, onExpire = null } = {}) {
   );
 
   holdWhileAttended(region);
-  // Replacing the toast removes a focused Undo without every browser
-  // firing focusout, which would leave the next toast held for good.
+  // Replacing a toast removes a focused Undo without focusout in every browser.
   focused = region.contains(document.activeElement);
   expireToast = onExpire;
   scheduleExpiry(region);
@@ -92,10 +77,6 @@ export function dismissToast() {
   if (region) region.innerHTML = '';
 }
 
-/**
- * Confirm before something irreversible. Resolves true only on confirm.
- * <dialog> brings the focus trap and Escape handling with it.
- */
 export function confirmDialog({ title, body, confirmLabel = 'Delete', cancelLabel = 'Keep', tone = 'danger' }) {
   const node = qs('#app-dialog');
   if (!node) return Promise.resolve(false);

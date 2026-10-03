@@ -1,7 +1,4 @@
-/* ==========================================================================
-   RoomCompare — Reset, element defaults, typography
-   Element selectors and single-class utilities only. No layout lives here.
-   ========================================================================== */
+/* Reset, element defaults and typography: element selectors and single-class utilities only. */
 
 *,
 *::before,
@@ -24,9 +21,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* --- Headings ------------------------------------------------------------
-   Sentence case throughout. No ALL-CAPS tracked eyebrow labels: the
-   hierarchy is carried by size and weight, not by decorative chrome. */
+/* --- Headings --- */
 
 h1, h2, h3, h4 {
   margin: 0;
@@ -45,12 +40,7 @@ p {
   max-width: var(--measure);
 }
 
-/* --- Numerals ------------------------------------------------------------
-   The one typographic statement the design makes. Tabular figures give
-   every digit the same advance width, so values of equal length line up
-   digit-for-digit down a column and magnitude reads at a glance.
-   Values are left-aligned: they start where the eye already is, on the
-   same edge as every label and text value in the interface. */
+/* --- Numerals: tabular figures, so equal-length values line up digit for digit --- */
 
 .numeric,
 td.numeric,
@@ -62,8 +52,7 @@ input[inputmode="numeric"] {
 
 .numeric { text-align: left; }
 
-/* --- Narrow face ---------------------------------------------------------
-   Table column headers, group labels, dense meta. */
+/* --- Narrow face --- */
 
 .narrow {
   font-family: var(--font-narrow);
@@ -71,21 +60,20 @@ input[inputmode="numeric"] {
   font-size: var(--text-xs);
 }
 
-/* --- Muted / secondary text --------------------------------------------- */
+/* --- Muted / secondary text --- */
 
 .meta {
   color: var(--muted);
   font-size: var(--text-xs);
 }
 
-/* "Not recorded" — distinct from absent. A blank cell reads as "absent";
-   this reads as "unknown", and those are different facts. */
+/* "Not recorded" reads as unknown, distinct from a blank, which reads as absent. */
 .unrecorded {
   color: var(--muted);
   font-style: italic;
 }
 
-/* --- Links --------------------------------------------------------------- */
+/* --- Links --- */
 
 a {
   color: var(--accent);
@@ -93,15 +81,12 @@ a {
   text-underline-offset: 2px;
 }
 
-/* Hover only where there is a pointer that hovers. A touch screen applies
-   :hover on tap and keeps it until the next tap elsewhere, so the style
-   would linger as false feedback. Every :hover in the stylesheets follows
-   this rule. */
+/* Hover only where a pointer hovers: touch screens keep :hover after a tap. Every :hover follows this. */
 @media (hover: hover) {
   a:hover { color: var(--accent-press); }
 }
 
-/* --- Form elements ------------------------------------------------------- */
+/* --- Form elements --- */
 
 button,
 input,
@@ -127,9 +112,7 @@ textarea {
   resize: vertical;
 }
 
-/* --- Focus ---------------------------------------------------------------
-   Visible on every interactive element. `outline: none` appears nowhere
-   in this codebase. */
+/* --- Focus: visible on every interactive element; never outline: none --- */
 
 :focus-visible {
   outline: var(--focus-width) solid var(--focus-color);
@@ -137,7 +120,7 @@ textarea {
   border-radius: var(--radius-sm);
 }
 
-/* --- Media --------------------------------------------------------------- */
+/* --- Media --- */
 
 img,
 video {
@@ -146,7 +129,7 @@ video {
   height: auto;
 }
 
-/* --- Lists --------------------------------------------------------------- */
+/* --- Lists --- */
 
 ul, ol {
   margin: 0;
@@ -154,23 +137,21 @@ ul, ol {
   list-style: none;
 }
 
-/* --- Tables --------------------------------------------------------------
-   The origin of the visual system. Hairline grid, no rounded corners,
-   numerals aligned. */
+/* --- Tables --- */
 
 table {
   width: 100%;
   border-collapse: collapse;
 }
 
-/* --- Selection ----------------------------------------------------------- */
+/* --- Selection --- */
 
 ::selection {
   background: var(--accent-tint);
   color: var(--ink);
 }
 
-/* --- Screen-reader-only -------------------------------------------------- */
+/* --- Screen-reader-only --- */
 
 .visually-hidden {
   position: absolute;
@@ -183,7 +164,7 @@ table {
   white-space: nowrap;
 }
 
-/* --- Reduced motion ------------------------------------------------------ */
+/* --- Reduced motion --- */
 
 @media (prefers-reduced-motion: reduce) {
   *,

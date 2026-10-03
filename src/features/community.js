@@ -5,12 +5,6 @@ import { noFilterResults } from '../components/emptyState.js';
 import { filterBar } from '../components/filterPanel.js';
 import { mountThumbs } from '../components/thumbs.js';
 
-/**
- * Shared survey results from other users.
- *
- * Facility filters are deliberately AND: picking Wifi and Kitchen means both,
- * which is what someone narrowing a shortlist expects.
- */
 export function filterCommunity(surveys, filters, starredIds) {
   const location = filters.location.trim().toLowerCase();
   const min = filters.minRent === '' ? null : Number(filters.minRent);
@@ -24,8 +18,7 @@ export function filterCommunity(surveys, filters, starredIds) {
     if (min !== null && Number.isFinite(min) && survey.kos.rent < min) return false;
     if (max !== null && Number.isFinite(max) && survey.kos.rent > max) return false;
 
-    // Every requirement must hold: picking Wifi and a Kitchen means both, which
-    // is what someone narrowing a shortlist expects.
+    // Every requirement must hold: Wifi and Kitchen means both.
     return required.every((key) => {
       const [section, ...rest] = key.split(':');
       const name = rest.join(':');
@@ -71,7 +64,6 @@ export function renderCommunity() {
   `;
 }
 
-/** Fill in card thumbnails once their blobs load. */
 export function mountCommunity(root) {
   let handle = null;
   mountThumbs(root).then((result) => {

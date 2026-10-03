@@ -1,11 +1,4 @@
-"""
-An in-memory stand-in for Upstash Redis, for the server tests.
-
-FakeRedis runs the handful of commands RedisBackend and RedisThrottle send.
-serve() puts it behind Upstash's REST API, a /pipeline endpoint taking a JSON
-list of commands, so the tests exercise the real UpstashTransport over HTTP:
-its path, its bearer token and its reading of results and errors.
-"""
+"""An in-memory Upstash Redis behind its REST API, so the tests exercise the real UpstashTransport."""
 
 import http.server
 import json

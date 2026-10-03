@@ -5,14 +5,6 @@ import { BEST_MATCH_CRITERIA, STATUS } from '../constants.js';
 import { isDefault } from '../utils/weights.js';
 import { emptyState } from '../components/emptyState.js';
 
-/**
- * The dashboard opens with the most characteristic thing in this product's
- * world: the user's own kos, already side by side, in the same ledger type as
- * the full comparison. It shows the core feature rather than describing it.
- *
- * With nothing recorded, the hero becomes the invitation instead.
- */
-
 function emptyHero() {
   return emptyState({
     title: 'No kos recorded yet',
@@ -23,17 +15,7 @@ function emptyHero() {
   });
 }
 
-/**
- * The strip is the full comparison in miniature, and takes its shape: one
- * card per criterion under a tinted heading, the kos names once above them,
- * and every table on one column set so values line up from card to card.
- *
- * Nothing scrolls inside it. The criterion column that used to sit beside
- * the values is now the heading of each card, which leaves the kos columns
- * the whole width; on a phone, where even that is too narrow, the columns
- * stack (see components.css). Explicit ARIA roles keep the tables tables
- * when the narrow layout turns them into blocks.
- */
+/** Explicit ARIA roles keep the tables tables when the narrow layout turns them into blocks. */
 function heroStrip(surveys) {
   const cheapest = Math.min(...surveys.map((s) => s.kos.rent ?? Infinity));
   const nearest = Math.min(...surveys.map((s) => s.kos.distanceKm ?? Infinity));

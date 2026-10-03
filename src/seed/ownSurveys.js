@@ -1,20 +1,7 @@
 import { STATUS, DISTANCE_BASIS } from '../constants.js';
 import { withSamplePhotos } from './samplePhotos.js';
 
-/**
- * First-run sample data, in the shape defined by the data model: one group per
- * survey-form section, so a single object serves recording, detail and
- * comparison without reshaping.
- *
- * Photos come from the sample set that ships with the app, added by
- * withSamplePhotos (see samplePhotos.js).
- *
- * `distanceKm` is the walking route between the two pins, measured whenever
- * either changes and then persisted with how it was measured
- * (`distanceBasis`), so comparison does not recompute it on every render. The
- * samples' were measured on 2026-10-03 with the routing service the form uses
- * (utils/route.js); the community samples' too.
- */
+/** First-run sample data; distances are walking routes measured with utils/route.js. */
 
 const CAMPUS = { lat: -7.9526, lng: 112.6148, label: 'Universitas Brawijaya' };
 

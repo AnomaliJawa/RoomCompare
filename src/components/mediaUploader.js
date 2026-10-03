@@ -5,22 +5,7 @@ import { urlFor, releaseUrl } from '../db.js';
 import { MAX_PHOTOS_PER_SECTION } from '../constants.js';
 import { infoButton } from './fields.js';
 
-/**
- * Photo and video picker.
- *
- * Files are stored the moment they are chosen rather than held until submit:
- * a survey is recorded standing in someone else's room on a phone, and an
- * interrupted session should not lose the photos already taken. The survey id
- * is therefore assigned when the form opens, not when it is saved, and any
- * media left behind by an abandoned form is swept after the next login.
- *
- * The chosen ids travel in a hidden input so the existing form read picks
- * them up with everything else.
- *
- * Files never leave the device they were added on; only the survey record
- * travels to the account. A survey opened on another device therefore lists
- * ids this device has no file for, and they are kept, not dropped.
- */
+/** Files are stored when chosen, so an interrupted survey keeps them; only records leave the device. */
 
 const ACCEPT = {
   photo: 'image/*',
@@ -31,12 +16,6 @@ function limitFor(kind) {
   return kind === 'video' ? MAX_VIDEOS : MAX_PHOTOS_PER_SECTION;
 }
 
-/* --- Markup -------------------------------------------------------------- */
-
-/**
- * `guide` (content/guidance.js) adds the field's ⓘ, and its helper replaces
- * the default limit line under the drop zone's prompt.
- */
 export function uploaderField({ section, kind = 'photo', label, name, mediaIds = [], guide = null }) {
   const max = limitFor(kind);
   const noun = kind === 'video' ? 'videos' : 'photos';
@@ -82,8 +61,6 @@ export function uploaderField({ section, kind = 'photo', label, name, mediaIds =
   `;
 }
 
-/* --- Behaviour ----------------------------------------------------------- */
-
 function thumbnail(record, kind) {
   const remove = html`<button
     class="uploader__remove"
@@ -108,11 +85,7 @@ function thumbnail(record, kind) {
   </li>`;
 }
 
-/**
- * A file the survey lists but this device does not hold: added on another
- * device, or cleared from this browser's storage. It says so in place of a
- * broken image, and can still be removed.
- */
+/** A file this device does not hold says so instead of showing a broken image. */
 function elsewhere(id, kind) {
   const remove = html`<button
     class="uploader__remove"
@@ -165,18 +138,12 @@ function mountOne(node, { surveyId, onChange }) {
   async function paint() {
     const records = await loadMedia(ids);
     const held = new Map(records.map((record) => [record.id, record]));
-    // An id with no file here stays in the list. Dropping it would take the
-    // photo away from the device that does hold it, the next time this
-    // survey is saved from here.
+    // An id with no file here stays listed: dropping it would lose the photo where it is held.
     mount(grid, html`${ids.map((id) => (held.has(id) ? thumbnail(held.get(id), kind) : elsewhere(id, kind)))}`);
     syncCount();
   }
 
-  /**
-   * Repaint after the user adds or removes a file. Only that counts as a
-   * change: the first paint lands after the form has reset its dirty flag,
-   * and reporting it would make every untouched form ask before Cancel.
-   */
+  /** Only the user's add or remove counts as a change; the first paint must not dirty the form. */
   async function repaint() {
     await paint();
     onChange?.();
@@ -263,10 +230,7 @@ function mountOne(node, { surveyId, onChange }) {
     if (!button) return;
     const id = button.dataset.remove;
 
-    // Dropped from the list, not from the database. Deleting here would
-    // destroy the file before the form is saved, so cancelling an edit could
-    // not put it back — and the survey would still be pointing at it.
-    // Anything left unreferenced after a save is pruned then.
+    // Dropped from the list only: files go after save, so Cancel can still restore them.
     ids = ids.filter((item) => item !== id);
     releaseUrl(id);
     await repaint();
@@ -283,7 +247,6 @@ function mountOne(node, { surveyId, onChange }) {
   };
 }
 
-/** Wire every uploader inside a form. Returns a handle per section. */
 export function mountUploaders(root, { surveyId, onChange } = {}) {
   const handles = qsa('[data-uploader]', root).map((node) => mountOne(node, { surveyId, onChange }));
   return {

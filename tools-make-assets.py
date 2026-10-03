@@ -1,11 +1,4 @@
-"""
-Generate the seed photographs, the app icons and the favicon.
-
-The photographs are illustrations, not photography: drawn room scenes at a
-plausible size and compression so the galleries, thumbnails, lightbox and
-comparison photo counts have real files to work with. Nothing here runs in
-the app — it produces files that are committed and fetched on first run.
-"""
+"""Draws the seed photos, the app icons and the favicon. Not app code: its output is committed."""
 
 import math
 import os
@@ -23,7 +16,6 @@ def lerp(a, b, t):
 
 
 def wash(img, top, bottom, box=None):
-    """Vertical gradient, which reads as light falling through a space."""
     x0, y0, x1, y1 = box or (0, 0, img.width, img.height)
     d = ImageDraw.Draw(img)
     span = max(1, y1 - y0)
@@ -32,7 +24,6 @@ def wash(img, top, bottom, box=None):
 
 
 def grain(img, amount=7):
-    """A little noise so the result does not read as flat vector art."""
     px = img.load()
     rnd = random.Random(20260920)
     for y in range(0, img.height, 2):
@@ -68,7 +59,6 @@ PALETTES = [
 
 
 def room_scene(seed):
-    """A bedroom: window light, a bed, a wardrobe, a desk."""
     rnd = random.Random(seed)
     pal = PALETTES[seed % len(PALETTES)]
     img = Image.new('RGB', (W, H), pal['wall'][0])
@@ -191,8 +181,7 @@ SCENES = {'room': room_scene, 'bathroom': bathroom_scene, 'shared': shared_scene
 def make_photos():
     os.makedirs(OUT_PHOTOS, exist_ok=True)
     made = []
-    # Three room photos, two bathroom, two shared: enough for a gallery and a
-    # lightbox to have something to page through.
+    # Three room photos, two bathroom, two shared: enough for a gallery to page through.
     plan = [('room', 3), ('bathroom', 2), ('shared', 2)]
     for variant in range(4):
         for section, count in plan:
@@ -206,11 +195,7 @@ def make_photos():
     return made
 
 
-# --- Logo ------------------------------------------------------------------
-# The user's logo (icons/logo.svg), which the favicon and the home-screen
-# icons below all show as it is. Pillow cannot read SVG, so its two houses
-# are copied here in the logo's own 200-unit square and drawn sixteen times
-# larger, then reduced, which smooths their edges much as a browser does.
+# --- Logo: the user's icons/logo.svg, drawn 16x larger then reduced, as Pillow cannot read SVG ---
 PAPER = (247, 248, 246)
 ACCENT = (31, 93, 76)
 
@@ -220,9 +205,7 @@ SS = 16
 
 
 def logo_coverage(size, left, top, width):
-    """The houses as coverage, 0 to 255, on a canvas SS times `size`, with the
-    logo's square at `left`, `top` and `width` pixels of the final image. The
-    gap is cut out of the filled house, as the logo's mask cuts it."""
+    """The houses as 0-255 coverage at SS times size; the gap is cut out as the logo's mask cuts it."""
     unit = width * SS / 200
 
     def at(x, y):
@@ -246,12 +229,7 @@ def logo_coverage(size, left, top, width):
     return coverage
 
 
-# --- Home-screen icons -----------------------------------------------------
-# The logo as it is, on a square of the pages' own off-white: a phone fills a
-# see-through icon with black, so an icon needs a background where a favicon
-# does not. The user chose off-white over white, and over the logo reversed
-# out of green. The logo's square spans three quarters of the icon, which
-# keeps the houses inside the circle Android's round crop leaves.
+# --- Home-screen icons: the logo on off-white (the user's choice), at 3/4 for Android's round crop ---
 LOGO_ON_ICON = 0.75
 
 ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="RoomCompare">
@@ -271,9 +249,7 @@ ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role
 
 
 def draw_home_icon(size, *, rounded):
-    """The logo on its off-white square. `rounded` cuts iOS-like corners for
-    places that show an icon as it is; iOS and Android round or crop a full
-    square themselves, and iOS would fill cut corners with black."""
+    """`rounded` cuts corners where an icon shows as it is; phones round or crop full squares themselves."""
     canvas = size * SS
     inset = size * (1 - LOGO_ON_ICON) / 2
     houses = logo_coverage(size, inset, inset, size * LOGO_ON_ICON)
@@ -306,24 +282,17 @@ def make_icons():
     return made
 
 
-# --- Favicon ---------------------------------------------------------------
-# The logo itself, exactly as the user supplied it: green houses on no
-# background. index.html gives browsers icons/logo.svg; this draws the .ico
-# for those that still ask for one. The user chose it over a version on the
-# green tile, knowing its green shows less on a dark tab strip.
+# --- Favicon: the logo exactly as supplied, on no background (the user's choice) ---
 
 
 def draw_favicon(size):
-    """icons/logo.svg as pixels, its whole square at `size`, on no background:
-    the tab shows through the gap."""
     img = Image.new('RGBA', (size * SS, size * SS), ACCENT + (0,))
     img.putalpha(logo_coverage(size, 0, 0, size))
     return img.resize((size, size), Image.LANCZOS)
 
 
 def make_favicon():
-    # A real .ico for browsers that still ask for one at the site root, each
-    # size drawn at that size rather than shrunk from the largest.
+    # A real .ico, each size drawn at that size rather than shrunk from the largest.
     frames = [draw_favicon(size) for size in (16, 32, 48)]
     frames[-1].save('favicon.ico', 'ICO', sizes=[(16, 16), (32, 32), (48, 48)], append_images=frames[:-1])
     return ['favicon.ico']

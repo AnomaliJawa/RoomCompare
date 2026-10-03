@@ -1,10 +1,6 @@
-/* ==========================================================================
-   RoomCompare — Layout: navigation, content column, page structure
-   Top navigation over a centred column. Dropping the prototype's 280px
-   sidebar returns that width to the comparison table, which is the point.
-   ========================================================================== */
+/* Layout: top navigation, the content column and page structure. */
 
-/* --- Skip link ----------------------------------------------------------- */
+/* --- Skip link --- */
 
 .skip-link {
   position: absolute;
@@ -23,7 +19,7 @@
 
 .skip-link:focus { top: var(--space-2); }
 
-/* --- Top navigation ------------------------------------------------------ */
+/* --- Top navigation --- */
 
 .nav {
   position: sticky;
@@ -43,8 +39,6 @@
   padding: 0 var(--gutter);
 }
 
-/* The logo, then the name beside it, centred on one line. The name keeps
-   the wordmark's type; the logo takes its size from the markup. */
 .nav__wordmark {
   display: inline-flex;
   align-items: center;
@@ -69,7 +63,6 @@
   height: 100%;
 }
 
-/* Current page takes a 2px accent underline, not a filled pill. */
 .nav__link {
   display: inline-flex;
   align-items: center;
@@ -92,8 +85,7 @@
   font-weight: var(--weight-semibold);
 }
 
-/* Equal columns rather than flex, so both actions take the width of the
-   wider label instead of shrinking to their own text. */
+/* Equal columns, so both actions take the wider label's width. */
 .nav__actions {
   display: grid;
   grid-auto-flow: column;
@@ -105,23 +97,16 @@
 
 .nav .nav__toggle { display: none; }
 
-/* Logged out — and while the session is still being checked — every
-   destination but logging in needs an account, so the nav is the wordmark
-   alone. Specific enough to beat an open phone menu. */
+/* Logged out, every destination but log in needs an account, so the nav is the wordmark alone. */
 body[data-auth="out"] .nav__links,
 body[data-auth="out"] .nav__actions,
 body[data-auth="pending"] .nav__links,
 body[data-auth="pending"] .nav__actions { display: none; }
 
-/* Log out lives beside Add survey on a wide screen. On a narrow one the
-   row has room for only Add survey and the menu toggle, so it moves to the
-   foot of the menu. */
+/* On narrow screens Log out moves to the foot of the menu. */
 .nav .nav__logout-menu { display: none; }
 
-/* On a touch screen the wordmark is a 44px target like everything else in
-   the bar, wide as well as tall, since a phone shows the logo alone. The
-   two actions sit 12px apart — Apple's spacing between bezelled controls —
-   so a thumb aimed at Menu does not land on Add survey. */
+/* Touch: a 44px wordmark target, and 12px between the actions so a thumb hits the right one. */
 @media (pointer: coarse) {
   .nav__wordmark {
     min-width: var(--target-min);
@@ -131,7 +116,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
   .nav__actions { gap: var(--space-3); }
 }
 
-/* --- Content column ------------------------------------------------------ */
+/* --- Content column --- */
 
 .column {
   max-width: var(--column-max);
@@ -139,16 +124,12 @@ body[data-auth="pending"] .nav__actions { display: none; }
   padding: var(--space-6) var(--gutter) var(--space-7);
 }
 
-/* #/compare opts in — the comparison table earns the extra width. */
+/* #/compare opts in to the wider column. */
 .column--wide { max-width: var(--column-max-wide); }
 
-/* --- Page header ---------------------------------------------------------
-   Title and its actions. No eyebrow label above it: the title says what
-   the page is, and a label above would only repeat it. */
+/* --- Page header --- */
 
-/* Buttons beside a title centre on the title and its lede together (the
-   user's choice, 2026-09-30). A head with no buttons has one item, which
-   centring does not move. */
+/* Buttons centre on the title and lede together (the user's choice). */
 .page-head {
   display: flex;
   align-items: center;
@@ -159,7 +140,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
 
 .page-head__text { min-width: 0; }
 
-/* A title with a control that belongs to it, like the survey form's ?. */
+/* A title with its own control, like the survey form's ?. */
 .page-head__title {
   display: flex;
   align-items: center;
@@ -181,7 +162,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
   .page-head__actions { gap: var(--space-3); }
 }
 
-/* --- Sections ------------------------------------------------------------ */
+/* --- Sections --- */
 
 .section + .section { margin-top: var(--space-6); }
 
@@ -195,14 +176,10 @@ body[data-auth="pending"] .nav__actions { display: none; }
   border-bottom: var(--border-hair);
 }
 
-/* An action beside the heading is centred on it. On the heading's baseline
-   its 13px label sat level with 25px type, which dropped the button 6px
-   below the heading's middle, plain to see once it has a border. Every
-   action is centred, not only bordered ones, so heads side by side on the
-   Dashboard keep their rules at one height. */
+/* Actions centre on the heading: on its baseline a small label dropped 6px below its middle. */
 .section__head:has(> .btn) { align-items: center; }
 
-/* --- Grids --------------------------------------------------------------- */
+/* --- Grids --- */
 
 .grid-cards {
   display: grid;
@@ -216,10 +193,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
   gap: var(--space-5);
 }
 
-/* The dashboard's panels sit 24px under the hero, or under the empty state
-   that replaces it: the same step as under the page head and between the
-   panels. Neither is a .section, so `.section + .section` never applied and
-   the two touched. */
+/* 24px under the hero or empty state: neither is a .section, so .section + .section never applied. */
 .hero + .grid-split,
 .empty + .grid-split { margin-top: var(--space-5); }
 
@@ -236,7 +210,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
   flex-wrap: wrap;
 }
 
-/* --- Breakpoints --------------------------------------------------------- */
+/* --- Breakpoints --- */
 
 /* Nav collapses; two-column layouts stack. */
 @media (max-width: 900px) {
@@ -270,12 +244,10 @@ body[data-auth="pending"] .nav__actions { display: none; }
     border-left-color: var(--accent);
   }
 
-  /* The toggle is an icon, so each action takes its own width rather than
-     an equal share of the row. */
+  /* The toggle is an icon, so each action takes its own width. */
   .nav__actions { grid-auto-columns: auto; }
 
-  /* A square as tall as the button beside it: 40px is .btn's min-height.
-     aria-label keeps its name, Menu. */
+  /* A square as tall as the button beside it (40px); aria-label keeps its name, Menu. */
   .nav .nav__toggle {
     display: inline-flex;
     order: 3;
@@ -283,8 +255,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
     padding: var(--space-2);
   }
 
-  /* While the menu is open the toggle holds its pressed look, so the icon
-     that opened the menu reads as the one that closes it. */
+  /* While open, the toggle keeps its pressed look: it is also what closes the menu. */
   .nav .nav__toggle[aria-expanded="true"] {
     background: var(--accent-tint);
     border-color: var(--accent);
@@ -302,23 +273,19 @@ body[data-auth="pending"] .nav__actions { display: none; }
   .nav .nav__toggle { min-width: var(--target-min); }
 }
 
-/* Phones keep one row: the logo, Add survey and the menu icon. The buttons
-   never shrink. */
+/* Phones keep one row: the logo, Add survey and the menu icon; the buttons never shrink. */
 @media (max-width: 500px) {
   .nav__inner { gap: var(--space-3); }
 
   .nav__actions .btn--primary { padding-inline: var(--space-3); }
 }
 
-/* Below 360px the row is 288px wide at most, and the gap before the buttons
-   closes to 8px. The 12px between the two buttons stays, so a thumb aimed
-   at one does not land on the other. */
+/* Below 360px the gap before the buttons closes to 8px; the 12px between them stays. */
 @media (max-width: 359px) {
   .nav__inner { gap: var(--space-2); }
 }
 
-/* A phone shows the logo alone. The name stays in the link, hidden as
-   .visually-hidden hides it, so the link is still read as RoomCompare. */
+/* Phones show the logo alone; the visually hidden name keeps the link's name. */
 @media (max-width: 640px) {
   .nav__wordmark-text {
     position: absolute;

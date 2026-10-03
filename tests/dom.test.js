@@ -24,8 +24,7 @@ describe('the html tag', () => {
   });
 
   it('composes nested templates instead of escaping them', () => {
-    // Returning a plain string here meant every nested call rendered its own
-    // markup as visible text.
+    // A plain string here once rendered every nested call's markup as visible text.
     const badge = html`<span class="status">Published</span>`;
     expect(String(html`<div>${badge}</div>`)).toBe('<div><span class="status">Published</span></div>');
   });
@@ -77,8 +76,7 @@ describe('getCheckedValues', () => {
     other.innerHTML = '<input type="checkbox" name="facility" value="Elsewhere" checked>';
     document.body.append(form, other);
 
-    // The prototype queried the whole document, which would collide once two
-    // forms existed.
+    // Scoped, so two forms on a page cannot see each other's boxes.
     expect(getCheckedValues('facility', form)).toEqual(['AC', 'Window']);
     expect(getCheckedValues('facility', other)).toEqual(['Elsewhere']);
 

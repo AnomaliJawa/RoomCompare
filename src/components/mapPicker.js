@@ -5,28 +5,13 @@ import { geocodeAddress, shortLabel, GEOCODE_STATUS } from '../utils/geocode.js'
 import { walkingDistance, knownWalkingKm, ROUTE_STATUS } from '../utils/route.js';
 import { DISTANCE_BASIS } from '../constants.js';
 
-/**
- * Pin a place on a map.
- *
- * Leaflet and its OpenStreetMap tiles are loaded on demand rather than in the
- * page head, so a blocked or unreachable CDN degrades to typing coordinates
- * instead of leaving the form unusable. Recording a survey must never depend
- * on a third party being reachable.
- *
- * Geolocation is offered but never required: a denied prompt is an ordinary
- * outcome, not an error, and tapping the map still works.
- *
- * An address can be typed and looked up, which is how most people know where
- * a kos is. The lookup only ever moves the pin — the map itself, and every
- * other way of setting the pin, are unchanged.
- */
+/** Leaflet loads on demand, so a blocked CDN degrades to typed coordinates; geolocation is optional. */
 
 const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
 const LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
 const LOAD_TIMEOUT_MS = 6000;
 const SETTLE_MS = 500;
 
-/** Resolves true after a short pause, or false if the signal is aborted first. */
 function settle(signal) {
   return new Promise((resolve) => {
     const timer = setTimeout(() => resolve(!signal.aborted), SETTLE_MS);
@@ -73,8 +58,6 @@ function loadLeaflet() {
 
   return leafletPromise;
 }
-
-/* --- Markup -------------------------------------------------------------- */
 
 export function mapPickerField({
   name,
@@ -147,8 +130,6 @@ export function mapPickerField({
   `;
 }
 
-/* --- Behaviour ----------------------------------------------------------- */
-
 function mountOne(node, L, onChange) {
   const canvas = qs('[data-canvas]', node);
   const readout = qs('[data-readout]', node);
@@ -167,7 +148,6 @@ function mountOne(node, L, onChange) {
     onChange?.();
   }
 
-  /* --- Fallback: no map, type the numbers ------------------------------- */
   if (!L) {
     canvas.hidden = true;
     manual.hidden = false;
@@ -188,8 +168,6 @@ function mountOne(node, L, onChange) {
       }, readout);
     });
 
-    // Looking up an address does not need a map, only the coordinates it
-    // returns, so the box works here too.
     wireAddressSearch(node, (point) => {
       latInput.value = point.lat;
       lngInput.value = point.lng;
@@ -199,7 +177,6 @@ function mountOne(node, L, onChange) {
     return { destroy() {} };
   }
 
-  /* --- Map -------------------------------------------------------------- */
   qs('[data-loading]', canvas)?.remove();
 
   const start = isValidPoint(current()) ? current() : DEFAULT_CENTER;
@@ -255,8 +232,6 @@ function mountOne(node, L, onChange) {
     publish(point, { moveMap: false });
     place(point);
     map.setView([point.lat, point.lng], 17);
-    // Offer a display name when the user has not written one, so the address
-    // they already typed does double duty.
     const labelField = document.querySelector(`#f-${node.dataset.mappicker}`);
     if (labelField && !labelField.value.trim()) {
       labelField.value = shortLabel(result.displayName);
@@ -274,10 +249,6 @@ function mountOne(node, L, onChange) {
   };
 }
 
-/**
- * Wire the address box. `onFound` receives the resolved point so the caller
- * can place it however it places any other pin.
- */
 function wireAddressSearch(node, onFound) {
   const input = qs('[data-address]', node);
   const button = qs('[data-find]', node);
@@ -327,7 +298,7 @@ function wireAddressSearch(node, onFound) {
   });
 }
 
-/** Geolocation is a convenience. Refusal is expected and is not an error. */
+/** Geolocation is a convenience; refusal is expected, not an error. */
 function requestPosition(onPoint, readout) {
   if (!navigator.geolocation) {
     readout.textContent = 'This browser cannot report your location. Tap the map instead.';
@@ -343,24 +314,13 @@ function requestPosition(onPoint, readout) {
   );
 }
 
-/**
- * Mount every picker in a form and keep the derived distance in step.
- * Returns a handle so the maps can be torn down when the view changes.
- *
- * The distance is the walking route between the two pins (utils/route.js).
- * `onDistance` hears `{ km, basis, status }`: first `status: 'routing'` with
- * no km while a route is fetched, then the walking distance, or — when there
- * is no route to be had — the straight line, with the route's status saying
- * why. Only the latest pins count: moving a pin abandons the route still
- * being fetched for the old ones.
- */
+/** onDistance hears { km, basis, status }: 'routing' first, then the walk or the straight line. */
 export async function mountMapPickers(root, { onDistance } = {}) {
   const nodes = qsa('[data-mappicker]', root);
   if (!nodes.length) return { destroy() {} };
 
   const L = await loadLeaflet();
   if (!L) {
-    // Say so once, rather than leaving three empty boxes unexplained.
     nodes.forEach((node) => {
       const readout = qs('[data-readout]', node);
       if (readout) readout.textContent = 'Map unavailable. Enter coordinates below.';
@@ -389,8 +349,7 @@ export async function mountMapPickers(root, { onDistance } = {}) {
     routing = controller;
     if (knownWalkingKm(kos, campus) === undefined) {
       onDistance?.({ km: null, basis: null, status: 'routing' }, { initial });
-      // Typed coordinates change with every keystroke: wait for a pause, so
-      // only the finished pin is routed rather than each digit on the way.
+      // Typed coordinates change with every keystroke: wait for a pause before routing.
       if (!initial && !(await settle(controller.signal))) return;
     }
     const result = await walkingDistance(kos, campus, { signal: controller.signal });
@@ -404,9 +363,7 @@ export async function mountMapPickers(root, { onDistance } = {}) {
   };
 
   const handles = nodes.map((node) => mountOne(node, L, () => recalculate()));
-  // Fills the readout for pins already saved. Flagged, because this runs
-  // after the map loads — well after the form reset its dirty flag — and is
-  // not the user's change.
+  // Flagged initial: it runs after the form reset its dirty flag and is not the user's change.
   recalculate({ initial: true });
 
   return {

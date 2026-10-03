@@ -1,20 +1,7 @@
 import { STATUS, DISTANCE_BASIS } from '../constants.js';
 import { withSamplePhotos } from './samplePhotos.js';
 
-/**
- * Shared survey results from other RoomCompare users.
- *
- * Read-only reference data, held as a static module rather than written to
- * storage: it cannot be corrupted and it does not consume the user's quota.
- * Accounts keep each user's own surveys and share nothing, so authorship
- * is simulated.
- *
- * Photos come from the sample set that ships with the app. The rotation
- * starts two sets on from the user's own samples, so the two lists differ.
- *
- * The prototype's Community tab listed the user's OWN published surveys,
- * which is not what the requirement describes. These are separate records.
- */
+/** Static community data: never persisted, so it cannot be corrupted or use the quota. */
 
 const CAMPUS = { lat: -7.9526, lng: 112.6148, label: 'Universitas Brawijaya' };
 

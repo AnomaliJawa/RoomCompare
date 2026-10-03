@@ -4,9 +4,7 @@ import { galleryField, mountGalleries } from '../src/components/photoGallery.js'
 import { loadMedia } from '../src/media.js';
 import { MAX_PHOTOS_PER_SECTION } from '../src/constants.js';
 
-// jsdom has no IndexedDB, so no file is on "this device" — exactly the case of
-// a survey synced from the phone that took its photos. Only the record
-// travels to the account; the files stay behind.
+// jsdom has no IndexedDB, so no file is on this device, as for a survey synced from another phone.
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -112,8 +110,7 @@ describe('photos added on another device', () => {
 
 describe('opening the form', () => {
   it('is not a change: Cancel on an untouched form does not ask', async () => {
-    // The first paint lands after the form resets its dirty flag, so it must
-    // not report itself as the user's doing.
+    // The first paint lands after the form resets its dirty flag, so it must not count as the user's.
     const { onChange } = await roomUploader([]);
     expect(onChange).not.toHaveBeenCalled();
   });

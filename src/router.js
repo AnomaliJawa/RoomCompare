@@ -1,17 +1,10 @@
-/**
- * Hash router.
- *
- * Hash rather than the History API so the app works from any static host with
- * no rewrite rules. The prototype had no URLs at all: refreshing always
- * returned to the dashboard and the back button left the app entirely.
- */
+/** Hash routing, so the app works from any static host without rewrite rules. */
 
 const routes = [];
 let notFound = null;
 let onNavigate = null;
 let current = { path: '', name: '', params: {} };
 
-/** `#/surveys/:id/edit` -> segment matcher. */
 function compile(pattern) {
   const segments = pattern.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
   return (path) => {
@@ -42,7 +35,6 @@ export function currentRoute() {
   return current;
 }
 
-/** The path portion of the hash, always leading-slashed. */
 export function currentPath() {
   const hash = window.location.hash.replace(/^#/, '');
   return hash === '' ? '/dashboard' : hash;

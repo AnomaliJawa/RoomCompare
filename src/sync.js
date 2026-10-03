@@ -2,24 +2,7 @@ import * as api from './api.js';
 import * as store from './store.js';
 import * as storage from './storage.js';
 
-/**
- * Keeps the account's copy on the server in step with this device's.
- *
- * This device's copy is still the one the app works on: localStorage, written
- * synchronously, exactly as before accounts existed. A survey is filled in
- * standing in someone else's room, often on a weak signal, so recording must
- * never wait on the network. Every change is kept here first and sent to the
- * account after.
- *
- * Changes are found by comparing the store with what the server was last
- * told, rather than by hooking each store action: a write from any feature is
- * caught the same way, including ones added later. What has not reached the
- * server yet waits in a queue in localStorage, filed under the account, so a
- * closed tab or a dropped connection loses nothing. The queue is sent again
- * on the next change, when the browser comes back online, and at the next
- * login — before the account is read back, so the server's copy that is about
- * to replace this device's already has it.
- */
+/** Recording never waits on the network: changes queue in localStorage and are sent after. */
 
 const QUEUE_PREFIX = 'roomcompare:v1:pending:';
 const RETRY_MS = 15_000;
@@ -58,10 +41,6 @@ function saveQueue() {
   }
 }
 
-/**
- * Queue whatever differs between the store and what the server was told.
- * Returns whether anything was queued.
- */
 function capture() {
   if (!account) return false;
   let queued = false;
@@ -87,14 +66,12 @@ function capture() {
   return queued;
 }
 
-// Most store notifications are not survey changes — a search keystroke, a
-// compare selection — and must not cost a network request. Offline, the
-// retry timer and the browser's `online` event do the retrying.
+// Most store notifications are not survey changes and must not cost a request.
 function onStoreChange() {
   if (capture()) flush();
 }
 
-/** Send the queue, oldest first. One flush at a time; callers share it. */
+/** One flush at a time; callers share it. */
 export function flush() {
   if (!running) running = send().finally(() => { running = null; });
   return running;
@@ -107,14 +84,12 @@ async function send() {
     try {
       if (change.op === 'put') await api.putSurvey(change.survey);
       else await api.deleteSurvey(id);
-      // Only clear what was sent. A newer change to the same survey, made
-      // while this request was in flight, is a different entry and still goes.
+      // Only clear what was sent: a newer change made in flight still goes.
       if (pending.get(id) === change) pending.delete(id);
       saveQueue();
     } catch (error) {
       if (error.status === 401) {
-        // The session ended. The queue stays filed under the account for its
-        // next login.
+        // The queue stays filed under the account for its next login.
         const ended = sessionEnded;
         stop();
         ended();
@@ -125,8 +100,7 @@ async function send() {
         retryTimer = setTimeout(flush, RETRY_MS);
         return;
       }
-      // Refused for a reason retrying cannot fix. Holding it would block every
-      // change behind it, so it is dropped — and said, since it is not saved.
+      // Refused for a reason retrying cannot fix: dropped and said, so it cannot block the queue.
       if (pending.get(id) === change) pending.delete(id);
       saveQueue();
       const name = change.survey?.kos?.name || 'A survey';
@@ -138,15 +112,6 @@ async function send() {
 
 const onOnline = () => flush();
 
-/**
- * Begin syncing for an account: send what this device still holds for it,
- * read the account back, and make that the working copy.
- *
- * `claimSurveys(count)` asks whether surveys recorded here before accounts
- * existed should join the account; it resolves true or false. `onSessionEnded`
- * runs if the server stops accepting the session. Resolves true once the
- * account's surveys are on screen.
- */
 export async function start(user, { claimSurveys = async () => false, onSessionEnded = () => {} } = {}) {
   stop();
   account = user;
@@ -168,8 +133,7 @@ export async function start(user, { claimSurveys = async () => false, onSessionE
       return false;
     }
     if (error.offline && store.getState().ownerId === user.id) {
-      // The account cannot be read right now, but this device's copy is
-      // already its own: keep working from it and send changes later.
+      // Offline, but this copy is already the account's: keep working and send later.
       told = new Map(store.getState().surveys.map((survey) => [survey.id, JSON.stringify(survey)]));
       for (const [id, change] of pending) {
         if (change.op === 'put') told.delete(id);
@@ -183,8 +147,7 @@ export async function start(user, { claimSurveys = async () => false, onSessionE
   }
   if (!account) return false;
 
-  // Changes that could not be sent just now are still this device's latest:
-  // lay them over what the server returned.
+  // Unsent changes are still this device's latest: lay them over the server's copy.
   let surveys = remote.filter((survey) => pending.get(survey.id)?.op !== 'delete');
   for (const [id, change] of pending) {
     if (change.op !== 'put') continue;
@@ -199,7 +162,7 @@ export async function start(user, { claimSurveys = async () => false, onSessionE
   }
   if (!account) return false;
 
-  // What the server holds; anything else in `surveys` is queued by capture().
+  // What the server holds; anything else in surveys is queued by capture().
   told = new Map(remote.map((survey) => [survey.id, JSON.stringify(survey)]));
   store.adoptSurveys(surveys, user.id);
   unsubscribe = store.subscribe(onStoreChange);
@@ -209,7 +172,6 @@ export async function start(user, { claimSurveys = async () => false, onSessionE
   return true;
 }
 
-/** Stop syncing. The queue stays in localStorage for the account's next login. */
 export function stop() {
   unsubscribe?.();
   unsubscribe = null;
@@ -221,7 +183,6 @@ export function stop() {
   sessionEnded = () => {};
 }
 
-/** Changes made on this device that the account does not have yet. */
 export function pendingCount() {
   return pending.size;
 }

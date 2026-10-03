@@ -27,7 +27,7 @@ describe('the guidance copy', () => {
     expect(Object.keys(FIELD_GUIDE)).toEqual(FIELDS);
     for (const [key, guide] of Object.entries(FIELD_GUIDE)) {
       expect(guide.label, key).toBeTruthy();
-      // Removed at the user's request (2026-10-03); its panel says it all.
+      // Removed at the user's request; its panel says it all.
       if (key === 'distance') {
         expect(guide.helper).toBeUndefined();
         continue;
@@ -43,9 +43,7 @@ describe('the guidance copy', () => {
     Object.values(SECTION_INTROS).forEach((intro) => expect(intro).toBeTruthy());
   });
 
-  // Each panel's rules say what saving and publishing need, as validation
-  // enforces it. If a rule changes in validate.js without the copy, this
-  // fails rather than the panel misleading.
+  // If a rule changes in validate.js without the copy, this fails rather than the panel misleading.
   it('says in the panel rules exactly what saving and publishing require', () => {
     const rulesStartWith = (prefix) =>
       Object.entries(FIELD_GUIDE)

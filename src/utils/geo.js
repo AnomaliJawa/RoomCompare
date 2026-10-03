@@ -1,22 +1,8 @@
-/**
- * Coordinates and distance.
- *
- * Distance to campus is one of the criteria every respondent weighed, and the
- * requirement asks for it to be calculated from the two pinned points rather
- * than typed. Haversine over a spherical earth is accurate to a few metres at
- * city scale, which is far beyond what "1.8 km to campus" needs.
- */
-
 const EARTH_RADIUS_KM = 6371;
 
-/** Malang, where the sample surveys are. Used as an initial map view only. */
 export const DEFAULT_CENTER = { lat: -7.9526, lng: 112.6148 };
 
-/**
- * Number(null) and Number('') are both 0, so an unpinned coordinate would
- * otherwise read as a valid zero and measure distance to the prime meridian.
- * Absence is rejected before the range check.
- */
+/** Number(null) and Number('') are 0, so absence is rejected before the range check. */
 function toNumber(value) {
   if (value === null || value === undefined) return NaN;
   if (typeof value === 'string' && value.trim() === '') return NaN;
@@ -39,11 +25,7 @@ export function isValidPoint(point) {
 
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
 
-/**
- * Great-circle distance in kilometres, or null when either point is missing.
- * Null rather than 0: an unknown distance and a zero distance are different
- * facts, and 0 would read as "next door".
- */
+/** Null, not 0: an unknown distance must not read as "next door". */
 export function haversineKm(a, b) {
   if (!isValidPoint(a) || !isValidPoint(b)) return null;
 
@@ -59,13 +41,12 @@ export function haversineKm(a, b) {
   return EARTH_RADIUS_KM * 2 * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/** Rounded to one decimal, which is the precision the interface displays. */
 export function distanceBetween(a, b) {
   const km = haversineKm(a, b);
   return km === null ? null : Math.round(km * 10) / 10;
 }
 
-/** Six decimals is roughly 0.1 m — more than enough to find a building. */
+/** Six decimals is about 0.1 m. */
 export function formatCoordinate(point) {
   if (!isValidPoint(point)) return 'Not pinned';
   return `${Number(point.lat).toFixed(6)}, ${Number(point.lng).toFixed(6)}`;

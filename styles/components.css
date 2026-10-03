@@ -1,12 +1,6 @@
-/* ==========================================================================
-   RoomCompare — Components
-   Foundation set (Phase 1): buttons, fields, cards, the ledger table,
-   dialog, toast, status. Feature components extend this in later phases.
-   ========================================================================== */
+/* Components: buttons, fields, cards, the ledger, dialogs, toasts and each feature's parts. */
 
-/* --- Buttons -------------------------------------------------------------
-   Radius 4px: inputs and buttons share a role, so they share a radius.
-   No shadows, no gradients. */
+/* --- Buttons --- */
 
 .btn {
   display: inline-flex;
@@ -25,8 +19,7 @@
   transition: background-color var(--duration-fast) var(--ease),
               border-color var(--duration-fast) var(--ease),
               color var(--duration-fast) var(--ease);
-  /* Every style below draws its own pressed state, so the browser's grey
-     tap flash would only sit on top of it. */
+  /* Every style draws its own pressed state, so the grey tap flash would only sit on top. */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -53,14 +46,7 @@
   color: var(--alert);
 }
 
-/* Pressed and hovered look the same: both say "this is what you are about
-   to act on". Pressed answers a finger the moment it lands; hover exists
-   only where a pointer can hover (see base.css), because a touch screen
-   would keep it after the tap.
-
-   Colour is restated in every state: base.css `a:hover` beats
-   `.btn--primary` on a link button, and would paint the text the same
-   shade as this background. `:not(:disabled)` lifts each rule above it. */
+/* Colour restated in every state: base.css a:hover beats .btn--primary on a link button. */
 .btn--primary:active:not(:disabled) {
   background: var(--accent-press);
   color: var(--surface);
@@ -112,8 +98,7 @@
   font-size: var(--text-xs);
 }
 
-/* An icon in place of a label: square, as wide as its size is tall. The
-   touch rules grow a full-size button's height, and its width with it. */
+/* Square icon button; the touch rules grow a full-size one's height, and its width with it. */
 .btn--icon {
   min-width: 40px;
   padding: 0;
@@ -121,12 +106,7 @@
 
 .btn--icon.btn--small { min-width: 32px; }
 
-/* The star that keeps a community survey. Pressed, it turns solid yellow,
-   drawn from aria-pressed so the look and what a screen reader announces
-   cannot disagree. The colour is its own, so hover and pressed change only
-   the button behind it.
-   No outline when starred (the user's choice): the stroke takes the fill's
-   colour rather than going, so the star keeps its size and round points. */
+/* Starred: solid yellow from aria-pressed, the stroke matching the fill (no outline, the user's choice). */
 .star__icon { display: block; }
 
 .star[aria-pressed="true"] .star__icon path {
@@ -134,10 +114,7 @@
   stroke: var(--star);
 }
 
-/* --- Breadcrumbs ----------------------------------------------------------
-   Above a page's title: the list it was opened from, then the page. The
-   page's own name is muted and gives way first, cut short with an ellipsis
-   before the trail above it would wrap. */
+/* --- Breadcrumbs --- */
 
 .breadcrumbs { margin-bottom: var(--space-3); }
 
@@ -158,8 +135,7 @@
 
 .breadcrumbs__item:not(:last-child) { flex-shrink: 0; }
 
-/* A chevron drawn from two borders, with no text for a screen reader to
-   read out between the names. */
+/* A chevron drawn from two borders, so nothing is read out between the names. */
 .breadcrumbs__item + .breadcrumbs__item::before {
   content: "";
   flex-shrink: 0;
@@ -192,7 +168,7 @@
   white-space: nowrap;
 }
 
-/* --- Fields --------------------------------------------------------------- */
+/* --- Fields --- */
 
 .field {
   display: flex;
@@ -230,18 +206,13 @@
 /* Why a distance is only a straight line, when it is one. Empty otherwise. */
 [data-distance-status]:empty { display: none; }
 
-/* The walking route's credit: OpenStreetMap's attribution, which its licence
-   asks for wherever its data is used. It sits under the distance it explains,
-   as quiet as the helper above it. */
+/* The route's OpenStreetMap credit, which its licence asks for. */
 .field__credit {
   color: var(--muted);
   font-size: var(--text-xs);
 }
 
-/* --- Field guidance (the survey form) ------------------------------------
-   Every survey field says what it needs before it is filled in: a helper
-   line under the control, a live count where there is a character limit,
-   and an ⓘ beside the label for the details. */
+/* --- Field guidance (the survey form) --- */
 
 .field__head {
   display: flex;
@@ -264,9 +235,7 @@
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* The ⓘ that opens a field's How to fill panel, and the ? beside the survey
-   form's title that opens the Survey guide. Quiet icons beside what they
-   explain; on a touch screen each takes a 44px hit area (touch rules). */
+/* The ⓘ and the guide's ?: quiet icons; on touch screens each takes a 44px hit area. */
 .field__info,
 .page-head__help {
   display: inline-grid;
@@ -302,11 +271,9 @@
 
 .choice-group__legend .field__info { margin-left: var(--space-1); }
 
-/* Under a group's options, the helper keeps the step the legend has above. */
 .choice-group__hint { margin-top: var(--space-3); }
 
-/* What the chosen score means. Empty until a score is chosen, but kept in
-   the page rather than hidden, so a screen reader announces each change. */
+/* Kept in the page while empty, so a screen reader announces each change. */
 .rubric {
   margin-top: var(--space-2);
   padding-left: var(--space-3);
@@ -322,8 +289,7 @@
   border: 0;
 }
 
-/* An input carrying a currency or unit affix. The wrapper takes the border so
-   prefix and field read as one control. */
+/* The wrapper takes the border, so prefix and field read as one control. */
 .field__group {
   display: flex;
   align-items: stretch;
@@ -336,9 +302,7 @@
   .field__group:hover { border-color: var(--muted); }
 }
 
-/* Prefix and input are one control, so the focus ring belongs to the wrapper.
-   The indicator is not removed, it moves outward — the only place an input
-   drops its own outline, and only because something larger replaces it. */
+/* The focus ring moves to the wrapper: the only place an input drops its own outline. */
 .field__group:focus-within {
   border-color: var(--accent);
   outline: var(--focus-width) solid var(--focus-color);
@@ -371,7 +335,6 @@
 
 .field[data-invalid="true"] .field__group { border-color: var(--alert); }
 
-/* Errors name the fix; they do not apologize. */
 .field__error {
   color: var(--alert);
   font-size: var(--text-xs);
@@ -380,7 +343,6 @@
 
 .field[data-invalid="true"] .field__control { border-color: var(--alert); }
 
-/* Checkbox and radio groups are real fieldsets. */
 .choice-group {
   margin: 0;
   padding: 0;
@@ -429,8 +391,7 @@
 
 .choice input { accent-color: var(--accent); }
 
-/* --- Cards ---------------------------------------------------------------
-   Separation by a 1px rule on --surface. No shadow. */
+/* --- Cards --- */
 
 .card {
   background: var(--surface);
@@ -456,10 +417,7 @@
   padding: var(--space-5);
 }
 
-/* --- Status --------------------------------------------------------------
-   An icon, not a coloured pill (the user's request, 2026-09-30): a dashed
-   circle for a draft, a ticked one once published. The word is its name
-   and its tooltip. */
+/* --- Status: an icon, its word as its name and tooltip --- */
 
 .status {
   display: inline-flex;
@@ -470,7 +428,7 @@
 
 .status[data-status="published"] { color: var(--accent); }
 
-/* --- Key facts ----------------------------------------------------------- */
+/* --- Key facts --- */
 
 .facts {
   display: flex;
@@ -478,9 +436,7 @@
   gap: var(--space-5);
 }
 
-/* The key facts summarise the page, so they sit with its header; the first
-   section starts after a gap rather than touching them (it was 0px — only
-   `.section + .section` was spaced). */
+/* The first section starts a gap after the key facts: only .section + .section was spaced. */
 .facts + .section { margin-top: var(--space-5); }
 
 .facts__label {
@@ -499,9 +455,7 @@
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* --- Ledger (the comparison table) ---------------------------------------
-   The origin of the design system. Hairline grid, square cells, tabular
-   figures, sticky criteria column and header. Nothing is truncated. */
+/* --- Ledger (the comparison table) --- */
 
 .ledger-wrap {
   overflow-x: auto;
@@ -538,9 +492,7 @@
   font-weight: var(--weight-semibold);
 }
 
-/* The criterion column is the table's spine — chrome, not data. Tinting it
-   to --paper sets it apart from the white value cells, and keeps it legible
-   while the kos columns scroll underneath it. */
+/* The criterion column is chrome: tinted --paper and kept legible while the columns scroll under it. */
 .ledger__criterion {
   position: sticky;
   left: 0;
@@ -552,16 +504,13 @@
   font-weight: var(--weight-regular);
 }
 
-/* Beats `.ledger thead th`, which would otherwise repaint the corner white. */
+/* Beats .ledger thead th, which would otherwise repaint the corner white. */
 .ledger thead .ledger__criterion {
   z-index: 3;
   background: var(--paper);
 }
 
-/* A group boundary means more than a row boundary, so it is banded rather
-   than merely ruled. It carries the same paper tone as the spine, so header
-   and spine join into one continuous frame around the values, and it steps
-   up to body size because a section name outranks a criterion name. */
+/* A group boundary is banded in the spine's tone, a step up from a row rule. */
 .ledger__group th {
   padding-block: var(--space-3);
   border-top: var(--border-group);
@@ -573,10 +522,7 @@
   font-weight: var(--weight-bold);
 }
 
-/* Rows whose values differ are marked, not judged: the label steps up from
-   muted to ink semibold, and identical rows stay quiet. The weight change
-   carries the cue on its own — there is deliberately no bar or inset rule
-   on the cell's edge. */
+/* Differing rows: the label steps up to ink semibold; deliberately no bar or inset rule. */
 .ledger tr[data-differs="true"] .ledger__criterion {
   color: var(--ink);
   font-weight: var(--weight-semibold);
@@ -592,13 +538,9 @@
 .ledger__check { color: var(--accent); font-weight: var(--weight-semibold); }
 .ledger__absent { color: var(--muted); }
 
-/* The best value stated quietly. A fact, not a badge. */
 .ledger__best { color: var(--accent); font-weight: var(--weight-semibold); }
 
-/* The one orchestrated moment: columns resolving as the comparison opens.
-   Each column carries its index, so they arrive left to right rather than
-   all at once — it reads as the comparison being assembled. The flag sits on
-   the wrapper around every section, so all of them resolve together. */
+/* The columns arrive left to right as the comparison opens. */
 @media (prefers-reduced-motion: no-preference) {
   [data-revealing="true"] .ledger thead th[style*="--column"],
   [data-revealing="true"] .ledger td[style*="--column"] {
@@ -612,11 +554,7 @@
   to   { opacity: 1; transform: none; }
 }
 
-/* --- Sectioned ledger -----------------------------------------------------
-   The comparison as one card per category, so Room and Surroundings read as
-   separate things rather than bands inside one long grid. Every table shares
-   one column set (fixed layout plus the same colgroup), so values sit on the
-   same vertical lines from the first section to the last. */
+/* --- Sectioned ledger: one card per category, on one shared column set --- */
 
 .ledger-sections {
   display: flex;
@@ -625,8 +563,7 @@
   overflow-x: auto;
 }
 
-/* `clip` rounds the corners without becoming a scroll container, which
-   would stop the sticky criteria column; `hidden` is the fallback. */
+/* clip rounds the corners without becoming a scroll container, which would stop the sticky column. */
 .ledger-section {
   min-width: 640px;
   background: var(--surface);
@@ -643,15 +580,9 @@
 /* The card's border closes each section; a last-row rule would double it. */
 .ledger--sectioned tbody tr:last-child > * { border-bottom: none; }
 
-/* The kos names, shown once above the first section. Its card is the
-   frame, so the heavy group rule under the names would only double it. */
+/* The names card is its own frame, so the heavy group rule would double it. */
 .ledger-section--columns .ledger thead th { border-bottom: none; }
 
-/* A category outranks a criterion, and a criterion outranks a value: the
-   section name steps up to --text-md in bold, on --accent-tint so the band
-   reads as a different kind of thing from the paper criteria column, above
-   the 2px group rule the ledger uses for a boundary that means more than a
-   row. */
 .ledger-section__title {
   padding: var(--space-3) var(--space-4);
   background: var(--accent-tint);
@@ -662,9 +593,7 @@
   line-height: var(--leading-snug);
 }
 
-/* Notes are prose, not figures. They keep the writer's own line breaks, as
-   on the survey page, and wrap wherever they must — a pasted link with no
-   spaces would otherwise run out of its column. */
+/* Notes keep their line breaks and wrap anywhere: a pasted link would otherwise overflow. */
 .ledger__prose .ledger__cell-value {
   display: block;
   line-height: var(--leading-body);
@@ -672,8 +601,7 @@
   overflow-wrap: anywhere;
 }
 
-/* --- Empty state ---------------------------------------------------------
-   An invitation to act, not a shrug. */
+/* --- Empty state --- */
 
 .empty {
   padding: var(--space-6) var(--space-5);
@@ -694,8 +622,7 @@
   color: var(--muted);
 }
 
-/* --- Dialog --------------------------------------------------------------
-   One of only two places a shadow appears. */
+/* --- Dialog (one of the two places with a shadow) --- */
 
 .dialog {
   width: min(440px, calc(100vw - var(--space-6)));
@@ -704,16 +631,12 @@
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-dialog);
-  /* A <dialog> takes the browser's own text colour, not the page's, so its
-     title rendered black beside ink everywhere else. */
+  /* A <dialog> takes the browser's text colour, not the page's. */
   color: var(--ink);
 }
 
 .dialog::backdrop { background: rgba(22, 36, 31, 0.4); }
 
-/* A dialog arrives rather than appearing: a short rise and fade says it
-   sits above the page, and where it came from. Phones get a sheet instead
-   (see the narrow-screen rules below). */
 @media (prefers-reduced-motion: no-preference) {
   .dialog[open],
   .lightbox-dialog[open] {
@@ -752,8 +675,7 @@
   gap: var(--space-2);
 }
 
-/* --- Toast ---------------------------------------------------------------
-   The prototype gives no feedback at all after save, delete or star. */
+/* --- Toast --- */
 
 .toast-region {
   position: fixed;
@@ -784,7 +706,7 @@
   .toast .btn--quiet:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); color: var(--paper); }
 }
 
-/* --- Banner --------------------------------------------------------------- */
+/* --- Banner --- */
 
 .banner {
   padding: var(--space-3) var(--space-4);
@@ -815,7 +737,7 @@
   color: var(--alert);
 }
 
-/* --- Skeleton ------------------------------------------------------------- */
+/* --- Skeleton --- */
 
 .skeleton {
   background: var(--rule);
@@ -831,10 +753,7 @@
   50% { opacity: 0.5; }
 }
 
-/* --- Survey card ---------------------------------------------------------
-   One card serves both lists; the community variant swaps its actions.
-   Cards in a row share a height and pin their actions to the bottom, so the
-   action rows line up however long a kos name runs. */
+/* --- Survey card: cards in a row share a height, actions pinned to the bottom --- */
 
 .survey-card {
   height: 100%;
@@ -864,8 +783,7 @@
   text-decoration: none;
 }
 
-/* The whole card is clickable via the title, without nesting interactive
-   elements inside a link. */
+/* The whole card clicks through the title, without nesting controls inside a link. */
 .survey-card__link::after {
   content: "";
   position: absolute;
@@ -875,8 +793,7 @@
 
 .survey-card { position: relative; }
 
-/* Buttons must stay above the title's click target. So must the status
-   icon: under it, the tooltip that says Draft or Published never shows. */
+/* Buttons and the status icon sit above the title's click target, or the tooltip never shows. */
 .survey-card__actions,
 .survey-card .status { position: relative; z-index: 1; }
 
@@ -884,7 +801,6 @@
   .survey-card__link:hover { text-decoration: underline; }
 }
 
-/* Location and status share a line, so a two-line name never squeezes them. */
 .survey-card__meta {
   display: flex;
   align-items: center;
@@ -909,8 +825,7 @@
   padding-top: var(--space-4);
 }
 
-/* Icon buttons (the star; Edit and Delete) sit apart, together at the end of
-   the row: the first one after the labelled buttons takes the slack. */
+/* Icon buttons sit together at the end of the row: the first one takes the slack. */
 .survey-card__actions > :not(.btn--icon) + .btn--icon { margin-left: auto; }
 
 .card__fact-label {
@@ -928,7 +843,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* Stand-in tile for a survey with no photos. Never a broken image. */
 .thumb {
   width: 100%;
   height: 120px;
@@ -946,8 +860,7 @@
   border: 1px solid var(--rule);
 }
 
-/* --- Dashboard hero ------------------------------------------------------
-   Opens on the user's own kos already side by side, in the ledger's type. */
+/* --- Dashboard hero --- */
 
 .hero {
   display: grid;
@@ -960,29 +873,19 @@
   border-radius: var(--radius-md);
 }
 
-/* Grid children default to min-width:auto, so a wide child would widen the
-   whole page. Both tracks opt out. */
+/* Grid children default to min-width: auto, so a wide child would widen the page. */
 .hero > * { min-width: 0; }
 
 .hero__text { display: flex; flex-direction: column; gap: var(--space-4); }
 .hero__text h2 { font-size: var(--text-xl); letter-spacing: var(--tracking-tight); }
 
-/* The way into the full comparison, above the table it continues. */
 .hero__actions {
   display: flex;
   justify-content: flex-end;
   margin-bottom: var(--space-4);
 }
 
-/* --- Dashboard strip -------------------------------------------------------
-   The comparison in miniature, sectioned like the full one: the kos names
-   once, then one card per criterion. Every table has the same colgroup and
-   a fixed layout, so values sit on the same vertical lines in every card.
-
-   It never scrolls inside itself. It used to scroll sideways on a phone,
-   hiding the third kos behind a scrollbar: a criterion column plus three
-   kos columns does not fit 293px. The criterion now heads its card, which
-   gives the kos columns the whole width, and below 500px they stack. */
+/* --- Dashboard strip: never scrolls; below 500px its columns stack --- */
 
 .strip-sections {
   display: flex;
@@ -990,7 +893,7 @@
   gap: var(--space-3);
 }
 
-/* `clip` rounds the corners without becoming a scroll container. */
+/* clip rounds the corners without becoming a scroll container. */
 .strip-section {
   background: var(--surface);
   border: var(--border-hair);
@@ -1020,9 +923,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* A criterion outranks a value, so its name heads the card: bold, on
-   --accent-tint, above the 2px group rule — the full comparison's section
-   band, at the strip's body size. */
 .strip-section__title {
   padding: var(--space-2) var(--space-3);
   background: var(--accent-tint);
@@ -1035,14 +935,10 @@
 
 .strip__best { color: var(--accent); font-weight: var(--weight-semibold); }
 
-/* The kos name repeated inside each value, for the stacked layout only; the
-   column headers carry it everywhere else. */
+/* The kos name inside each value, for the stacked layout only. */
 .strip__kos { display: none; }
 
-/* Below 500px, three columns would split "Rp 1.850.000" across lines. Each
-   card lists its kos instead, the value at the row's end — the full
-   comparison's phone layout. The names card goes, since every row now
-   carries its kos. */
+/* Below 500px three columns would split "Rp 1.850.000"; each card lists its kos instead. */
 @media (max-width: 500px) {
   .strip-section--names { display: none; }
 
@@ -1072,7 +968,7 @@
   .strip__value { flex-shrink: 0; }
 }
 
-/* --- Listing rows --------------------------------------------------------- */
+/* --- Listing rows --- */
 
 .listing {
   display: flex;
@@ -1096,9 +992,7 @@
   .listing__title:hover { text-decoration: underline; }
 }
 
-/* A row whose only control is its title opens from anywhere on the row, as
-   a survey card does: the name alone was a 17px-tall target. Scoped to
-   links, because the picker's rows carry a button of their own. */
+/* A title-only row opens from anywhere on it: the name alone was a 17px target. */
 .listing { position: relative; }
 
 a.listing__title::after {
@@ -1107,7 +1001,7 @@ a.listing__title::after {
   inset: 0;
 }
 
-/* --- Definition lists (detail view) --------------------------------------- */
+/* --- Definition lists (detail view) --- */
 
 .defn-list {
   display: grid;
@@ -1129,9 +1023,7 @@ a.listing__title::after {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* --- Checklist -----------------------------------------------------------
-   The full list with present and absent both marked: "no AC" is information,
-   so it is shown rather than omitted. */
+/* --- Checklist: present and absent both marked --- */
 
 .checklist {
   display: grid;
@@ -1161,14 +1053,14 @@ a.listing__title::after {
   white-space: pre-wrap;
 }
 
-/* --- Search row ----------------------------------------------------------- */
+/* --- Search row --- */
 
 .search-row {
   max-width: 420px;
   margin-bottom: var(--space-5);
 }
 
-/* --- Community filters ---------------------------------------------------- */
+/* --- Community filters --- */
 
 .filter-grid {
   display: grid;
@@ -1179,9 +1071,7 @@ a.listing__title::after {
 
 .filter-grid__star { min-height: 40px; }
 
-/* --- Survey form ---------------------------------------------------------
-   Sections are numbered because this form is genuinely a sequence, and the
-   requirement numbers it that way. The only numbered markers in the product. */
+/* --- Survey form: the only numbered markers in the product --- */
 
 .survey-form {
   display: flex;
@@ -1215,17 +1105,14 @@ a.listing__title::after {
   font-size: var(--text-xs);
 }
 
-/* The survey page marks each section's heading with an icon, bare (the
-   user's choice): no tile behind it. */
+/* Section heading icons are bare (the user's choice): no tile behind them. */
 .section__title {
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
 }
 
-/* The words keep the heading's baseline, which the photo count beside
-   "Photos and videos" lines up with. The icon stays out of it, centred on
-   the first line, so a heading that wraps keeps it beside its first words. */
+/* The words keep the heading's baseline for the photo count; the icon centres on the first line. */
 .section__icon {
   align-self: flex-start;
   flex-shrink: 0;
@@ -1235,8 +1122,7 @@ a.listing__title::after {
 
 .section__icon svg { display: block; }
 
-/* The icon leaves a phone less room beside a heading. Rather than squeeze
-   the photo count onto two lines, it moves under the heading. */
+/* On a phone the photo count moves under the heading rather than wrapping. */
 .section__head:has(> .section__title) {
   flex-wrap: wrap;
   row-gap: var(--space-1);
@@ -1269,7 +1155,7 @@ a.listing__title::after {
   padding-bottom: var(--space-5);
 }
 
-/* --- Narrow screens ------------------------------------------------------- */
+/* --- Narrow screens --- */
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; }
@@ -1278,15 +1164,10 @@ a.listing__title::after {
 @media (max-width: 640px) {
   .form-actions { flex-direction: column-reverse; }
   .form-actions .btn { width: 100%; }
-  /* Card buttons keep their width here too, as on a wide screen (the user's
-     choice, 2026-09-30). Own cards once stretched View, Edit and Delete
-     across the row; with Edit and Delete as icons, View would have stretched
-     alone. */
+  /* Card buttons keep their own width here too (the user's choice). */
 }
 
-/* --- Media uploader ------------------------------------------------------
-   Files are stored as soon as they are chosen, so the grid below the picker
-   shows what is already saved rather than a queue waiting on submit. */
+/* --- Media uploader --- */
 
 .uploader {
   display: flex;
@@ -1348,7 +1229,6 @@ a.listing__title::after {
   font-size: var(--text-xs);
 }
 
-/* Dragging over any part of the field, not just the button. */
 .uploader[data-dragging="true"] .uploader__drop {
   border-color: var(--accent);
   border-style: solid;
@@ -1371,8 +1251,7 @@ a.listing__title::after {
   background: var(--paper);
 }
 
-/* A photo this device does not hold keeps a photo's footprint, so the grid
-   does not jump, and says where it is instead of showing a broken image. */
+/* A photo not on this device keeps a photo's footprint, so the grid does not jump. */
 .uploader__thumb,
 .uploader__elsewhere {
   width: 100%;
@@ -1437,9 +1316,7 @@ a.listing__title::after {
   gap: var(--space-1);
 }
 
-/* --- Map picker ----------------------------------------------------------
-   Loaded on demand, so a blocked CDN degrades to coordinate inputs rather
-   than leaving the form unusable. */
+/* --- Map picker --- */
 
 .map-pair {
   display: grid;
@@ -1460,11 +1337,7 @@ a.listing__title::after {
   gap: var(--space-3);
 }
 
-/* Leaflet numbers its own layers from 200 (tiles) to 1000 (zoom buttons).
-   Without a stacking context of its own, the map competed with the page on
-   those numbers, and scrolled over the sticky nav (z-index 50). `isolate`
-   keeps Leaflet's order inside the map and stacks the map as one ordinary
-   part of the page: markers, popups and controls work as before. */
+/* isolate keeps Leaflet's z-indexes (200-1000) inside the map, off the sticky nav. */
 .mappicker__canvas {
   isolation: isolate;
   height: 240px;
@@ -1501,9 +1374,7 @@ a.listing__title::after {
   .form-actions__note { margin-right: 0; text-align: center; }
 }
 
-/* --- Address lookup ------------------------------------------------------
-   Sits above the canvas. The map's own size, chrome and behaviour are
-   untouched; this only moves the pin. */
+/* --- Address lookup --- */
 
 .mappicker__search {
   display: flex;
@@ -1521,8 +1392,7 @@ a.listing__title::after {
   .mappicker__search .btn { width: 100%; }
 }
 
-/* --- Gallery -------------------------------------------------------------
-   Blobs arrive asynchronously, so tiles hold their place while loading. */
+/* --- Gallery: tiles hold their place while blobs load --- */
 
 .gallery { display: flex; flex-direction: column; gap: var(--space-3); }
 
@@ -1569,11 +1439,7 @@ a.listing__title::after {
 
 .gallery__status:empty { display: none; }
 
-/* --- Photos and videos (detail view) ---------------------------------------
-   One panel holds every gallery, a group for each part of the kos. A group's
-   title is a label, as in the definition lists above it; the panel's h2 is
-   the heading. The class outranks the base h3 size; the leading is restated
-   because the base sets headings tight. */
+/* --- Photos and videos (detail view) --- */
 
 .media-groups {
   display: flex;
@@ -1595,8 +1461,7 @@ a.listing__title::after {
   line-height: var(--leading-body);
 }
 
-/* --- Lightbox ------------------------------------------------------------
-   The second of the two places a shadow is used: this floats above the page. */
+/* --- Lightbox (the second place with a shadow) --- */
 
 .lightbox-dialog {
   width: min(880px, calc(100vw - var(--space-6)));
@@ -1639,9 +1504,7 @@ a.listing__title::after {
 .lightbox__nav { display: flex; gap: var(--space-2); }
 .lightbox__nav .btn { flex: 1; }
 
-/* --- Validation ----------------------------------------------------------
-   Errors are written into the live form, so these styles apply to nodes that
-   already exist rather than to a re-render. */
+/* --- Validation: errors are written into the live form --- */
 
 .error-summary { margin-bottom: var(--space-4); }
 .error-summary[hidden] { display: none; }
@@ -1661,7 +1524,6 @@ a.listing__title::after {
 
 .form-section__errors[hidden] { display: none; }
 
-/* A whole group can be wrong, not just a single input. */
 .choice-group[data-invalid="true"] .choice-group__legend { color: var(--alert); }
 
 .choice-group[data-invalid="true"] .choice {
@@ -1675,12 +1537,9 @@ a.listing__title::after {
 
 .field__count--over { color: var(--alert); font-weight: var(--weight-medium); }
 
-/* A confirmation that is a question, not a destructive act. */
 .dialog__actions .btn--primary { background: var(--accent); color: var(--surface); }
 
-/* --- Best Match ----------------------------------------------------------
-   Deliberately quiet, and closed until asked for. The comparison above is
-   the product; this is a guide sitting underneath it. */
+/* --- Best Match: quiet, and closed until asked for --- */
 
 .bestmatch {
   margin-top: var(--space-5);
@@ -1741,8 +1600,7 @@ a.listing__title::after {
 
 .bestmatch__note { flex: 1 1 280px; max-width: var(--measure); }
 
-/* A criterion at 0% is out of the score: listed, but quieter. The labels
-   are named too: on narrow screens the kos names carry their own ink. */
+/* A criterion at 0% is out of the score: listed, but quieter. */
 .bestmatch__table .bestmatch__row--off th,
 .bestmatch__table .bestmatch__row--off td,
 .bestmatch__table .bestmatch__row--off .ledger__cell-label { color: var(--muted); }
@@ -1766,7 +1624,6 @@ a.listing__title::after {
 
 .bestmatch__kos { font-weight: var(--weight-medium); }
 
-/* A number, not a badge: no gradient chip, no trophy. */
 .bestmatch__score {
   display: inline-flex;
   align-items: baseline;
@@ -1808,14 +1665,7 @@ a.listing__title::after {
   .bestmatch__method dd { margin-bottom: var(--space-2); }
 }
 
-/* --- Comparison on narrow screens ----------------------------------------
-   Below 900px a criteria column plus three kos columns cannot be read, so
-   each group becomes a card and each row stacks its values. Same rows, same
-   grouping, same order — only the axis changes.
-
-   Explicit ARIA roles on the table survive this display change, so the
-   structure is still a table to assistive technology, and the header row is
-   hidden visually rather than removed so column associations remain. */
+/* --- Comparison on narrow screens: each group a card, each row stacked; ARIA roles keep it a table --- */
 
 .ledger__cell-label { display: none; }
 
@@ -1913,19 +1763,10 @@ a.listing__title::after {
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  /* The weight breakdown reads the same way. */
   .bestmatch__table tbody tr:not(.ledger__group) { padding: var(--space-3) var(--space-4); }
 }
 
-/* --- Best Match breakdown on narrow screens --------------------------------
-   Stacked, each criterion lists one figure per kos, and bare figures under
-   "Facilities" did not say which kos each one was. Each reads
-   `Kos Pelangi: 58`: the name first and in ink, since it is what the eye
-   scans for, then the score in semibold, one space after the colon whatever
-   the name's length. A long name ends in an ellipsis rather than wrapping,
-   so every score stays on its kos's line. The weight belongs to the
-   criterion, not to a kos, so it keeps the quiet label style. Placed after
-   the narrow ledger rules above so it wins on source order. */
+/* --- Best Match breakdown on narrow screens (after the ledger rules, to win on order) --- */
 
 @media (max-width: 900px) {
   .bestmatch__table td {
@@ -1960,9 +1801,7 @@ a.listing__title::after {
   }
 }
 
-/* --- Facility filters ----------------------------------------------------
-   Folded away by default: there are 24 of them, and most filtering is by
-   rent or area. */
+/* --- Facility filters: folded away by default --- */
 
 .filter-facilities {
   margin-top: var(--space-4);
@@ -2009,10 +1848,7 @@ a.listing__title::after {
   border-top: var(--border-hair);
 }
 
-/* --- Filter bar ----------------------------------------------------------
-   All that remains on the page: what is being shown, and the way in. The
-   controls themselves are in a dialog, so the surveys are not pushed down
-   the page by the means of finding them. */
+/* --- Filter bar --- */
 
 .filter-bar {
   display: flex;
@@ -2020,7 +1856,6 @@ a.listing__title::after {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  /* Deliberate separation from the results below. */
   margin-bottom: var(--space-7);
 }
 
@@ -2045,11 +1880,9 @@ a.listing__title::after {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* --- Filter dialog -------------------------------------------------------- */
+/* --- Filter dialog --- */
 
-/* Scoped to [open]: a bare `display` here would beat the browser's own
-   `dialog:not([open]) { display: none }` and leave the closed dialog on
-   screen over the page. */
+/* Scoped to [open]: a bare display would beat dialog:not([open]) { display: none }. */
 .dialog--wide {
   width: min(720px, calc(100vw - var(--space-6)));
   max-height: calc(100vh - var(--space-7));
@@ -2061,13 +1894,9 @@ a.listing__title::after {
   flex-direction: column;
 }
 
-/* A list of kos needs less room than the filters. Declared before the
-   narrow-screen rule below, so phones still get the full-screen sheet. */
+/* Declared before the narrow-screen rule, so phones still get the full-screen sheet. */
 .dialog--picker { width: min(560px, calc(100vw - var(--space-6))); }
 
-/* The picker lists each source under its own name. The name takes the
-   narrow face that labels table columns, so it reads as structure rather
-   than as one more kos. */
 .picker-group {
   display: flex;
   flex-direction: column;
@@ -2089,7 +1918,6 @@ a.listing__title::after {
   gap: var(--space-3);
 }
 
-/* The Survey guide is three short lists. */
 .dialog--guide { width: min(480px, calc(100vw - var(--space-6))); }
 
 .guide-dialog__heading {
@@ -2107,14 +1935,9 @@ a.listing__title::after {
 
 .guide-dialog__list li + li { margin-top: var(--space-1); }
 
-/* Best Match criteria: six rows of a name and a percentage, as wide as the
-   kos picker so each description fits in two lines beside its stepper.
-   Declared before the narrow-screen rule below, so phones still get the
-   full-width sheet. */
+/* Declared before the narrow-screen rule, so phones still get the full-width sheet. */
 .dialog--criteria { width: min(560px, calc(100vw - var(--space-6))); }
 
-/* The name and its percentage share a line, as in the Dashboard's list, with
-   what the criterion measures underneath. */
 .criteria-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -2145,16 +1968,13 @@ a.listing__title::after {
   gap: var(--space-2);
 }
 
-/* Square, at the height of the field beside it. */
 .stepper__step {
   width: 40px;
   padding: 0;
   font-size: var(--text-md);
 }
 
-/* The height of the buttons beside it: a field's padding and line height
-   would otherwise make it 3px taller than they are. On a touch screen both
-   reach --target-min through the rules at the end of this file. */
+/* Matches the buttons' height: a field's padding would make it 3px taller. */
 .stepper__input {
   width: 64px;
   height: 40px;
@@ -2165,8 +1985,7 @@ a.listing__title::after {
   -moz-appearance: textfield;
 }
 
-/* − and + are right beside it; the browser's own arrows would be a second
-   pair, too small to tap. */
+/* The browser's own arrows would be a second pair, too small to tap. */
 .stepper__input::-webkit-outer-spin-button,
 .stepper__input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -2190,8 +2009,6 @@ a.listing__title::after {
   gap: var(--space-3);
 }
 
-/* The kos picker shares the filter dialog's shape: fixed head and foot, a
-   body that scrolls between them. */
 .filter-dialog,
 .picker-dialog,
 .guide-dialog,
@@ -2246,18 +2063,13 @@ a.listing__title::after {
   background: var(--paper);
 }
 
-/* The body scrolls on its own: reaching the end of 24 facilities must not
-   start scrolling, or bouncing, the page underneath. */
+/* The end of the list must not scroll or bounce the page underneath. */
 .filter-dialog__body,
 .picker-dialog__body,
 .guide-dialog__body,
 .criteria-dialog__body { overscroll-behavior: contain; }
 
-/* --- How to fill panel ----------------------------------------------------
-   One dialog for every field's ⓘ. On a wide screen it sits beside the ⓘ
-   (howToPanel.js places it) with no dimmed backdrop: it explains one field
-   rather than taking over the page. On a phone it is a sheet like the
-   others (the narrow-screen rules below). */
+/* --- How to fill panel: beside the ⓘ on wide screens, a sheet on phones --- */
 .dialog--howto {
   width: min(360px, calc(100vw - var(--space-6)));
   max-height: min(70vh, 560px);
@@ -2339,13 +2151,7 @@ a.listing__title::after {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* On a phone the wide dialogs become sheets, as on iPhone:
-   - anchored to the bottom edge, where the thumb already is
-   - rounded top corners
-   - a strip of the page left showing above: the sheet is a task inside
-     that page, not a new place
-   Short content leaves more of the page showing. The foot keeps clear of
-   the home indicator where the browser reports one. */
+/* On a phone the wide dialogs become bottom sheets, with a strip of the page left showing. */
 @media (max-width: 640px) {
   .dialog--wide,
   .dialog--howto {
@@ -2359,11 +2165,8 @@ a.listing__title::after {
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 
-  /* The head is where a sheet is dragged down to dismiss (sheet.js), so the
-     browser must not claim that drag as a scroll. */
-  /* A panel is a few short paragraphs: the sheet fits them and leaves the
-     field it explains in view above. `auto`, with the dialog pinned to both
-     edges, would stretch it to the full height. */
+  /* The head is where a sheet is dragged to dismiss, so the browser must not claim it as a scroll. */
+  /* Sized to its few paragraphs: auto, pinned to both edges, would stretch it full height. */
   .dialog--howto,
   .dialog--guide { height: fit-content; }
 
@@ -2387,13 +2190,10 @@ a.listing__title::after {
   .picker-dialog__foot .btn,
   .guide-dialog__foot .btn { width: 100%; }
 
-  /* The stepper keeps to the name's line; what the criterion measures
-     takes the full width under both, rather than a narrow column. */
   .stepper { grid-area: 1 / 2; }
   .criteria-row__hint { grid-area: 2 / 1 / 3 / 3; }
 
-  /* The total is read before the buttons are pressed, so it leads here
-     rather than falling under them, and Save sits above Reset. */
+  /* The total leads, read before the buttons; Save sits above Reset. */
   .criteria-dialog__foot {
     flex-direction: column;
     align-items: stretch;
@@ -2405,9 +2205,7 @@ a.listing__title::after {
   .criteria-dialog__actions .btn { width: 100%; }
 }
 
-/* A sheet rises from the edge it is anchored to. `backwards`, not `both`:
-   a finished animation that kept filling would override the inline
-   transform sheet.js sets while the sheet follows a finger. */
+/* backwards, not both: a kept fill would override sheet.js's inline transform. */
 @media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
   .dialog--wide[open],
   .dialog--howto[open] {
@@ -2420,12 +2218,7 @@ a.listing__title::after {
   to   { transform: none; }
 }
 
-/* --- Compare bar ---------------------------------------------------------
-   The selection, held above the work. The slots take a row of their own
-   across the bar, with the count and actions beneath: beside the buttons
-   each card had about 140px for a name, too little for "Kos Melati
-   Residence". Empty slots show how many more kos can be added without the
-   user having to remember the limit. */
+/* --- Compare bar: the slots take their own row, the count and actions beneath --- */
 
 .compare-bar {
   display: flex;
@@ -2439,8 +2232,7 @@ a.listing__title::after {
   border-radius: var(--radius-md);
 }
 
-/* One equal column per slot. The count comes from MAX_COMPARE through
-   --slots, so the limit is still written only in constants.js. */
+/* --slots comes from MAX_COMPARE, so the limit is written only in constants.js. */
 .compare-bar__chips {
   display: grid;
   grid-template-columns: repeat(var(--slots, 3), minmax(0, 1fr));
@@ -2449,10 +2241,7 @@ a.listing__title::after {
   min-width: 0;
 }
 
-/* A fixed height and a single line keep every card the same size, filled or
-   empty, whatever the kos is called: a long name ends in an ellipsis rather
-   than growing its card. 40px is the button height, so the bar reads as one
-   set of controls. */
+/* A fixed height and one line keep every card the same size; long names get an ellipsis. */
 .compare-chip {
   display: flex;
   align-items: center;
@@ -2493,7 +2282,6 @@ a.listing__title::after {
   background: none;
 }
 
-/* The count starts the row, under the first card; the buttons end it. */
 .compare-bar__actions {
   display: flex;
   flex: 1 1 100%;
@@ -2504,16 +2292,12 @@ a.listing__title::after {
 
 .compare-bar__actions > .meta { margin-right: auto; }
 
-/* Three slots across a narrow bar would cut most names short; below the
-   breakpoint where the comparison itself stacks, the slots stack too. */
+/* Below the breakpoint where the comparison stacks, the slots stack too. */
 @media (max-width: 900px) {
   .compare-bar__chips { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Stacked on a phone, the reversed column puts the count last. Add kos is
-   lifted to the top, above Compare, at the user's request: pick the kos,
-   then compare them, top to bottom, as the wide bar reads left to right and
-   as focus moves. */
+/* Stacked on a phone, Add kos sits above Compare (the user's request). */
 @media (max-width: 640px) {
   .compare-bar { flex-direction: column; align-items: stretch; }
   .compare-bar__actions { flex-direction: column-reverse; align-items: stretch; }
@@ -2522,12 +2306,7 @@ a.listing__title::after {
   .compare-bar__add { order: 1; }
 }
 
-/* --- Sectioned ledger on narrow screens -----------------------------------
-   The narrow ledger rules above turn each table body into a card. Here the
-   section already is the card, so the body drops its own frame. The column
-   header card goes too: every section still carries its column headers for
-   screen readers, and the chips in the compare bar hold the Remove buttons.
-   Placed last so it wins on source order, not on specificity. */
+/* --- Sectioned ledger on narrow screens (last, to win on source order) --- */
 
 @media (max-width: 900px) {
   .ledger-sections { overflow-x: visible; }
@@ -2540,21 +2319,13 @@ a.listing__title::after {
     border-radius: 0;
   }
 
-  /* Each label sits flush above its values. The narrow `.ledger__criterion`
-     rule above (0,1,0) loses to the desktop `.ledger th` (0,1,1), which left
-     12px padding and right and bottom hairlines boxed around every label —
-     the specificity trap recorded in docs/DESIGN-SYSTEM.md. The doubled class
-     wins without !important, for the Best Match breakdown too. */
+  /* Doubled class: the narrow .ledger__criterion (0,1,0) lost to .ledger th (0,1,1). */
   .ledger .ledger__criterion {
     padding: 0 0 var(--space-2);
     border: none;
   }
 
-  /* A figure fits beside its kos name; a paragraph does not. The narrow
-     rules above keep each value to one unshrinking line, which ran notes
-     off the card while squeezing the name into two lines. A note instead
-     sits under its kos name at full width, and the extra space between
-     notes keeps three paragraphs from reading as one block. */
+  /* A note sits under its kos name at full width: on one unshrinking line it ran off the card. */
   .ledger td.ledger__prose {
     flex-direction: column;
     align-items: stretch;
@@ -2570,9 +2341,7 @@ a.listing__title::after {
   }
 }
 
-/* --- Account pages ---------------------------------------------------------
-   Log in and create an account: one narrow card, centred. The way in, not a
-   destination, so nothing competes with the form. */
+/* --- Account pages --- */
 
 .auth {
   display: flex;
@@ -2612,20 +2381,7 @@ a.listing__title::after {
   .auth__card { padding: var(--space-5) var(--space-4); }
 }
 
-/* --- Touch targets ---------------------------------------------------------
-   Apple's default control size on iPhone and iPad is 44×44pt, and a survey
-   is recorded on a phone. On a touch screen (pointer: coarse) every control
-   reaches --target-min; with a mouse the denser 40px stays.
-
-   - Full-size controls — buttons, fields, choice tiles, compare slots —
-     grow to it.
-   - Small and text-only controls keep their look, and take an invisible
-     hit area of that size centred on them: a 44px-tall button with 13px
-     text would read as a mistake.
-
-   Controls sit 12px apart, which Apple suggests around bezelled controls,
-   so the enlarged areas do not meet. Placed last so it wins on source
-   order, not specificity. */
+/* --- Touch targets: 44px on coarse pointers; small controls get a centred hit area (last, to win) --- */
 
 @media (pointer: coarse) {
   .btn:not(.btn--small),
@@ -2635,8 +2391,7 @@ a.listing__title::after {
   /* Stays square as it grows. */
   .btn--icon:not(.btn--small) { min-width: var(--target-min); }
 
-  /* The wrapper draws the border, so the control inside is 2px shorter and
-     the pair lands on the same 44px as a plain field. */
+  /* The wrapper draws the border, so the control inside is 2px shorter. */
   .field__group .field__control { min-height: calc(var(--target-min) - 2px); }
 
   /* The slots match the buttons beside them, as they do at 40px. */
@@ -2680,10 +2435,7 @@ a.listing__title::after {
   .dialog__actions,
   .lightbox__nav { gap: var(--space-3); }
 
-  /* Leaflet sizes its zoom buttons at 30px even in touch mode. The map is
-     pinned by hand mid-visit, so they get the same 44px as everything
-     else. Three classes deep so it wins whichever stylesheet loads last —
-     Leaflet's arrives on demand. */
+  /* Leaflet's zoom buttons are 30px even on touch; three classes deep to win whichever loads last. */
   .mappicker .leaflet-touch .leaflet-bar a {
     width: var(--target-min);
     height: var(--target-min);

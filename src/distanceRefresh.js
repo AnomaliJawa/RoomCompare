@@ -3,24 +3,7 @@ import { walkingDistance, ROUTE_STATUS } from './utils/route.js';
 import { isValidPoint } from './utils/geo.js';
 import { DISTANCE_BASIS } from './constants.js';
 
-/**
- * Brings the account's straight-line distances up to walking routes.
- *
- * Distances were straight lines until 2026-10-03, and a survey saved while
- * the routing service could not be reached still has one. At the user's
- * request they are replaced without anyone editing them: once the account's
- * surveys are on screen, whenever the browser comes back online, and soon
- * after a change that leaves a straight line, each such survey is routed in
- * turn — utils/route.js keeps requests a second apart, as the service asks —
- * and its distance updated. sync.js sends that to the account like any other
- * change.
- *
- * A survey open in the form is left alone: the form measures its own route,
- * and Cancel there promises the stored record is untouched. A route is
- * applied only while the survey still has the pins it was measured for. When
- * the service cannot be reached, the pass stops and tries again once the
- * browser is back online, or after a while.
- */
+/** Walks own straight-line distances in the background, one at a time, skipping a survey open in the form. */
 
 const RETRY_MS = 10 * 60_000;
 const NUDGE_MS = 2000;
@@ -48,8 +31,7 @@ function needsWalking(survey) {
 const samePin = (a, b) => Number(a?.lat) === Number(b?.lat) && Number(a?.lng) === Number(b?.lng);
 
 async function pass(signal) {
-  // Each survey once a pass, so one with no walking route between its pins
-  // is not asked about over and over.
+  // Each survey once a pass, so one with no route is not asked about over and over.
   const tried = new Set();
   for (;;) {
     if (signal.aborted || !store.getState().user) return;
@@ -67,8 +49,7 @@ async function pass(signal) {
     }
     if (result.status !== ROUTE_STATUS.OK) continue;
 
-    // The survey may have been edited, opened or deleted while its route was
-    // being fetched.
+    // The survey may have been edited, opened or deleted while its route was fetched.
     const now = store.getState().surveys.find((s) => s.id === survey.id);
     if (!now || now.id === openFormSurveyId()) continue;
     if (!samePin(now.kos?.kosLocation, kosLocation) || !samePin(now.kos?.campusLocation, campusLocation)) continue;
@@ -97,11 +78,7 @@ function nudge() {
   nudgeTimer = setTimeout(schedule, NUDGE_MS);
 }
 
-// A survey saved while the route could not be measured arrives as a store
-// change, as does a pin moved while its old route was being measured. Most
-// changes are neither, and cost nothing: no request is made unless some
-// survey still has a straight line. While an outage is being waited out,
-// changes do not cut the wait short.
+// Only a change that leaves a straight line costs a request; an outage is waited out.
 function onStoreChange() {
   if (retryTimer) return;
   if (!store.getState().surveys.some(needsWalking)) return;
@@ -112,7 +89,6 @@ function onStoreChange() {
   nudge();
 }
 
-/** Begin, for the account whose surveys are now on screen. */
 export function start() {
   stop();
   active = true;
@@ -121,7 +97,6 @@ export function start() {
   schedule();
 }
 
-/** Stop, at logout or when the session ends. A route being fetched is abandoned. */
 export function stop() {
   active = false;
   current?.controller.abort();

@@ -2,23 +2,10 @@ import { html, raw, qs, qsa, mount } from '../utils/dom.js';
 import { loadMedia } from '../media.js';
 import { urlFor, releaseUrl } from '../db.js';
 
-/**
- * Photo and video gallery for a recorded survey.
- *
- * Blobs live in IndexedDB, so the view renders a placeholder first and fills
- * it once the records arrive. Object urls are released when the view is torn
- * down: each one pins its blob in memory until revoked, and a gallery of
- * forty photos left behind on every navigation adds up quickly.
- *
- * The lightbox is a <dialog>, which brings the focus trap and Escape with it,
- * and arrow keys move between photos without leaving the keyboard.
- */
+/** Object URLs are released on teardown: each pins its blob in memory until revoked. */
 
 let openIds = [];
 
-/* --- Markup -------------------------------------------------------------- */
-
-/** Rendered synchronously; filled by mountGalleries once the blobs load. */
 export function galleryField({ section, label, mediaIds = [], kind = 'photo' }) {
   if (!mediaIds.length) {
     return html`<p class="meta">No ${label} recorded.</p>`;
@@ -39,8 +26,6 @@ export function galleryField({ section, label, mediaIds = [], kind = 'photo' }) 
     </div>
   `;
 }
-
-/* --- Lightbox ------------------------------------------------------------ */
 
 function lightboxMarkup(records, index) {
   const record = records[index];
@@ -89,7 +74,6 @@ function openLightbox(records, startIndex, returnFocusTo) {
   function onClick(event) {
     const button = event.target.closest('[data-lightbox]');
     if (!button) {
-      // Clicking the backdrop closes, which is what the area outside implies.
       if (event.target === node) node.close();
       return;
     }
@@ -114,7 +98,6 @@ function openLightbox(records, startIndex, returnFocusTo) {
     node.removeEventListener('keydown', onKeydown);
     node.removeEventListener('close', onClose);
     node.innerHTML = '';
-    // Put the user back where they were, not at the top of the page.
     returnFocusTo?.focus();
   }
 
@@ -126,13 +109,7 @@ function openLightbox(records, startIndex, returnFocusTo) {
   node.showModal();
 }
 
-/* --- Mounting ------------------------------------------------------------ */
-
-/**
- * Files never leave the device they were added on; only the survey record
- * travels to the account. On any other device its files are listed but not
- * here, which is worth saying plainly rather than implying they were lost.
- */
+/** Files stay on the device that added them; elsewhere they are listed as not here. */
 function notHere(count, kind) {
   const noun = kind === 'video' ? 'video' : 'photo';
   const what = count === 1 ? `1 ${noun} is` : `${count} ${noun}s are`;
@@ -187,7 +164,6 @@ function renderRecords(node, records, expected) {
   });
 }
 
-/** Load every gallery in a view. Returns a handle that frees the object urls. */
 export async function mountGalleries(root) {
   const nodes = qsa('[data-gallery]', root);
   if (!nodes.length) return { destroy() {} };

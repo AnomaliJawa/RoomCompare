@@ -17,7 +17,7 @@ import {
   kosTypeLabel,
 } from '../constants.js';
 
-/** Missing values read "Not recorded" — unknown and absent are different facts. */
+/** Missing values read "Not recorded": unknown and absent are different facts. */
 function value(input) {
   if (input === null || input === undefined || input === '') {
     return html`<span class="unrecorded">Not recorded</span>`;
@@ -34,24 +34,14 @@ function definition(label, input) {
   `;
 }
 
-/**
- * The contact number as a tel: link, so it can be dialled from the phone the
- * survey is read on. The href keeps only digits and a leading +; the label
- * stays exactly as typed. A value with no diallable digits still shows as
- * plain text rather than a dead link, and an empty one reads "Not recorded".
- */
+/** The href keeps only digits and a leading +; the label stays as typed. */
 function contactValue(phone) {
   if (!phone) return null;
   const href = phone.replace(/[^+0-9]/g, '');
   return href ? html`<a href="tel:${href}">${phone}</a>` : html`${phone}`;
 }
 
-/**
- * Facilities are shown as the full checklist with present and absent marked,
- * not as a list of what happens to be there. "No AC" is information.
- * Absent is ✗ here (the user's choice, 2026-09-30); the comparison keeps its
- * own ✓ / —.
- */
+/** Every facility is listed, present or absent: "No AC" is information. */
 function checklist(all, selected) {
   const chosen = new Set(selected ?? []);
   return html`
@@ -71,41 +61,29 @@ function checklist(all, selected) {
   `;
 }
 
-/**
- * An icon before each section's heading, where the survey form puts the
- * section's number. Decorative: the heading's words name the section, so
- * screen readers skip it. Drawn on a 20px grid, shown at 24 to sit with the
- * heading's 25px type.
- */
+/** Decorative: the heading's words name the section, so screen readers skip the icon. */
 const icon = (paths) =>
   '<svg width="24" height="24" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" ' +
   `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 
 const SECTION_ICONS = {
-  // A house.
   kos: icon('<path d="M2.5 9.5 10 3l7.5 6.5"/><path d="M4.5 8v8.5h11V8"/><path d="M8.25 16.5V12h3.5v4.5"/>'),
-  // A bed, with its pillow.
   room: icon(
     '<path d="M2.5 4.5v12M17.5 10v6.5M2.5 10h15M2.5 13.5h15"/>' +
       '<rect x="4.5" y="6.75" width="4.5" height="3.25" rx="1"/>',
   ),
-  // A bathtub and its tap.
   bathroom: icon(
     '<path d="M2.5 10h15v2a4.5 4.5 0 0 1-4.5 4.5H7A4.5 4.5 0 0 1 2.5 12z"/>' +
       '<path d="M5 10V5.25a2.25 2.25 0 0 1 4.5 0v.5"/><path d="M5.5 16.5 4.75 18M14.5 16.5l.75 1.5"/>',
   ),
-  // Two people: what the tenants share.
   shared: icon(
     '<circle cx="7.5" cy="6.75" r="2.75"/><path d="M2.75 17a4.75 4.75 0 0 1 9.5 0"/>' +
       '<circle cx="14" cy="7.25" r="2.25"/><path d="M13.5 12.25a4.25 4.25 0 0 1 4.25 4.75"/>',
   ),
-  // A map pin.
   surroundings: icon(
     '<path d="M10 17.75s5.5-4.75 5.5-9.5a5.5 5.5 0 0 0-11 0c0 4.75 5.5 9.5 5.5 9.5z"/><circle cx="10" cy="8.25" r="2"/>',
   ),
-  // A page of notes.
   additional: icon('<path d="M5 2.5h6.5L15 6v11.5H5z"/><path d="M11.5 2.5V6H15"/><path d="M7.5 10h5M7.5 13h5"/>'),
-  // A camera.
   media: icon(
     '<path d="M2.5 7A1.5 1.5 0 0 1 4 5.5h2l1.25-2h5.5l1.25 2h2A1.5 1.5 0 0 1 17.5 7v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 15z"/>' +
       '<circle cx="10" cy="10.75" r="3"/>',
@@ -131,15 +109,7 @@ function section(title, iconKey, body) {
 
 const count = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`;
 
-/**
- * Every photo and video in one panel, grouped by the part of the kos it shows.
- * Spread through the sections, they were hard to review together, and a
- * survey without any read as four separate "No … recorded" lines.
- *
- * The groups follow the form's order, and the galleries are the same ones the
- * sections held: `data-gallery` keeps its section name, so mountGalleries,
- * the lightbox and the "not on this device" note work unchanged.
- */
+/** data-gallery keeps its section name, so the galleries and the lightbox work unchanged. */
 function mediaPanel(survey) {
   const groups = [
     { title: 'Room', section: 'room', label: 'room photos', ids: survey.room?.photoIds },
@@ -193,9 +163,7 @@ export function renderSurveyDetail({ id }) {
     ? html`${editLink(survey)} ${deleteButton(survey)}`
     : starButton(survey, { starred: isStarred(survey.id) });
 
-  // The breadcrumbs sit above the head, not in it, so the buttons centre on
-  // the kos name and location rather than starting level with the trail. A
-  // draft has no Add to compare: only published surveys can be compared.
+  // The breadcrumbs sit above the head, so its buttons centre on the name; a draft has no Add to compare.
   return html`
     ${breadcrumbs(
       [own ? { label: 'My surveys', href: '#/surveys' } : { label: 'Community', href: '#/community' }],
@@ -284,7 +252,6 @@ export function renderSurveyDetail({ id }) {
   `;
 }
 
-/** Load the stored blobs once the markup is in the document. */
 export function mountSurveyDetail(root) {
   let handle = null;
   mountGalleries(root).then((result) => {

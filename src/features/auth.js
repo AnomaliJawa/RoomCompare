@@ -2,19 +2,7 @@ import { html } from '../utils/dom.js';
 import { textField } from '../components/fields.js';
 import { ACCOUNT_LIMITS } from '../utils/validate.js';
 
-/**
- * Log in, and create an account.
- *
- * Short on purpose: the product is the surveys, and the way in should not
- * feel like a form to fill before the real one. Each field says what it is
- * for, so a password manager can fill it and a phone offers the email
- * keyboard. Errors are checked on submit, as on the survey form, and the
- * server's answer — a taken email, a wrong password — lands in the same
- * places.
- *
- * Both routes own their DOM, like the survey form: a store change while
- * someone is typing must not wipe what they typed.
- */
+/** Both routes own their DOM: a store change mid-typing must not wipe the form. */
 
 function page({ title, lede, form, alternate }) {
   return html`
@@ -51,8 +39,6 @@ export function renderLogin() {
 export function renderRegister() {
   return page({
     title: 'Create your account',
-    // Photos do not travel with the account, and this is where the
-    // expectation is set.
     lede: 'One account keeps every kos you survey, on any device you log in from. Photos stay on the device you add them on.',
     form: html`<form class="auth__form" data-action="submit-register" novalidate>
       ${textField({ name: 'name', label: 'Your name', autocomplete: 'name' })}
@@ -70,7 +56,7 @@ export function renderRegister() {
   });
 }
 
-/** What the form holds. The password is taken exactly as typed. */
+/** The password is taken exactly as typed. */
 export function readCredentials(form) {
   const value = (name) => form.elements.namedItem(name)?.value ?? '';
   return { name: value('name').trim(), email: value('email').trim(), password: value('password') };

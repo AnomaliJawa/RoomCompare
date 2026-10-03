@@ -1,20 +1,11 @@
 import { html, raw, mount } from '../utils/dom.js';
 import { SURVEY_GUIDE } from '../content/guidance.js';
 
-/**
- * The Survey guide: what to bring, what to ask the owner, and how to fill
- * the form on site, so nobody has to visit the same kos twice.
- *
- * It opens by itself the first time a new survey form opens on this device,
- * and again from the ? beside the form's title. It is a sheet on a phone
- * and a dialog elsewhere (#app-survey-guide), outside the form, so it
- * cannot change an answer.
- */
+/** Opens by itself on the first new survey on this device, and from the ? beside the title. */
 
 const SEEN_KEY = 'roomcompare:survey-guide-seen';
 
-// Where storage is blocked (a private window), the guide is still shown
-// only once per visit rather than every time the form opens.
+// Where storage is blocked, the guide still shows only once per visit.
 let seenThisVisit = false;
 let opener = null;
 
@@ -32,11 +23,9 @@ function remember() {
   try {
     window.localStorage.setItem(SEEN_KEY, 'true');
   } catch {
-    // Kept for this visit only; the variable above covers it.
   }
 }
 
-// A question mark in a circle, drawn in the button's own colour.
 const HELP_ICON =
   '<svg class="page-head__help-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
   '<circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.75" />' +
@@ -45,7 +34,6 @@ const HELP_ICON =
   '<circle cx="12" cy="16.75" r="1.1" fill="currentColor" />' +
   '</svg>';
 
-/** The ? that reopens the guide, for beside the form's title. */
 export function surveyGuideButton() {
   return html`<button
     class="page-head__help"
@@ -81,7 +69,6 @@ export function renderSurveyGuide() {
   `;
 }
 
-/** Open the guide. `trigger` gets focus back when it closes. */
 export function openSurveyGuide(trigger = null) {
   const node = document.getElementById('app-survey-guide');
   if (!node) return false;
@@ -91,14 +78,12 @@ export function openSurveyGuide(trigger = null) {
   return true;
 }
 
-/** Open the guide if this device has not been shown it yet. */
 export function maybeShowSurveyGuide() {
   if (seen()) return false;
   remember();
   return openSurveyGuide();
 }
 
-/** Wire the guide once, at startup: focus goes back to the ? that opened it. */
 export function initSurveyGuide() {
   const node = document.getElementById('app-survey-guide');
   if (!node) return;

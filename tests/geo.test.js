@@ -9,7 +9,7 @@ import {
 } from '../src/utils/geo.js';
 
 describe('haversineKm', () => {
-  // Published great-circle distances. The requirement asks for 1%.
+  // Published great-circle distances; the requirement asks for 1%.
   const cases = [
     { name: 'Lowokwaru to Universitas Brawijaya', a: { lat: -7.9391, lng: 112.6167 }, b: { lat: -7.9526, lng: 112.6148 }, km: 1.51 },
     { name: 'London to Paris', a: { lat: 51.5074, lng: -0.1278 }, b: { lat: 48.8566, lng: 2.3522 }, km: 343.6 },
@@ -41,8 +41,7 @@ describe('haversineKm', () => {
 });
 
 describe('missing coordinates', () => {
-  // Number(null) and Number('') are both 0, so an unpinned coordinate read as
-  // a valid zero and measured distance to the prime meridian.
+  // Number(null) is 0: an unpinned coordinate once measured to the prime meridian.
   it('rejects null, undefined and empty strings rather than reading them as zero', () => {
     expect(isValidLat(null)).toBe(false);
     expect(isValidLat(undefined)).toBe(false);

@@ -1,12 +1,4 @@
-/**
- * localStorage access, isolated from the store so the failure modes live in
- * one place and can be reasoned about on their own.
- *
- * Three things can go wrong, and all three are ordinary rather than
- * exceptional: storage can be unavailable (private browsing, blocked site
- * data), the stored JSON can be unreadable, and a write can exceed quota.
- * None of them may lose the user's typed input or leave a blank page.
- */
+/** localStorage failures (unavailable, unreadable, over quota) are ordinary and handled here. */
 
 export const STORAGE_KEY = 'roomcompare:v1';
 export const SCHEMA_VERSION = 1;
@@ -25,10 +17,7 @@ export const SAVE_RESULT = {
   FAILED: 'failed',
 };
 
-/**
- * Reading `window.localStorage` can itself throw when site data is blocked,
- * so the probe has to cover access as well as writing.
- */
+/** Reading window.localStorage can itself throw when site data is blocked. */
 export function isAvailable() {
   try {
     const probe = '__roomcompare_probe__';
@@ -50,16 +39,12 @@ function looksValid(parsed) {
   );
 }
 
-/**
- * Keep unreadable data instead of discarding it — it is the only copy of
- * whatever the user recorded, and a later version may be able to salvage it.
- */
+/** Unreadable data is kept, not discarded: it may be the only copy. */
 function quarantine(raw) {
   try {
     window.localStorage.setItem(`${STORAGE_KEY}:corrupt-${Date.now()}`, raw);
     window.localStorage.removeItem(STORAGE_KEY);
   } catch {
-    // Nothing further to do: the data was already unusable.
   }
 }
 
@@ -83,8 +68,7 @@ export function load() {
     return { status: LOAD_STATUS.CORRUPT, data: null };
   }
 
-  // A shape we do not recognise is as unusable as invalid JSON, including a
-  // schemaVersion from some future build.
+  // An unrecognised shape, including a future schemaVersion, counts as unreadable.
   if (!looksValid(parsed)) {
     quarantine(raw);
     return { status: LOAD_STATUS.CORRUPT, data: null };
@@ -93,11 +77,7 @@ export function load() {
   return { status: LOAD_STATUS.OK, data: parsed };
 }
 
-/**
- * `ownerId` says whose account this copy belongs to. It is null for data
- * recorded before accounts existed, and after a logout; the app only shows
- * the copy to the account that owns it.
- */
+/** ownerId is null for data from before accounts, and after a logout. */
 export function save({ surveys, starredIds, ownerId = null }) {
   if (!isAvailable()) return SAVE_RESULT.UNAVAILABLE;
 
@@ -128,16 +108,9 @@ function isQuotaError(error) {
   );
 }
 
-/**
- * Best Match weights, one entry per account on this device. They are kept
- * apart from the surveys' copy, which belongs to whoever logged in last and
- * is emptied at logout: weights stay filed under their account, like the
- * queue of unsent changes, so its next login here finds them again. They do
- * not follow the account to another device.
- */
+/** Weights are filed per account and survive logout, unlike the surveys' copy. */
 const weightsKey = (userId) => `${STORAGE_KEY}:weights:${userId}`;
 
-/** The account's saved weights as stored, or null. The store checks them. */
 export function loadWeights(userId) {
   try {
     const raw = window.localStorage.getItem(weightsKey(userId));
@@ -147,7 +120,7 @@ export function loadWeights(userId) {
   }
 }
 
-/** Save an account's weights. `null` removes them, so the defaults apply. */
+/** null removes them, so the defaults apply. */
 export function saveWeights(userId, weights) {
   if (!isAvailable()) return SAVE_RESULT.UNAVAILABLE;
   try {
@@ -159,11 +132,7 @@ export function saveWeights(userId, weights) {
   }
 }
 
-/**
- * Surveys recorded here before accounts existed, which the user chose not
- * to add to their account. Kept aside rather than deleted, like unreadable
- * data: it may be the only copy of something they recorded.
- */
+/** Declined pre-account surveys are kept aside, never deleted. */
 export function keepUnclaimed(surveys) {
   try {
     window.localStorage.setItem(`${STORAGE_KEY}:unclaimed-${Date.now()}`, JSON.stringify(surveys));
@@ -173,7 +142,6 @@ export function keepUnclaimed(surveys) {
   }
 }
 
-/** Used by the reset affordance and by tests. */
 export function clear() {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
@@ -183,7 +151,6 @@ export function clear() {
   }
 }
 
-/** Roughly how much space the record currently takes, for the storage notice. */
 export function approximateSize() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);

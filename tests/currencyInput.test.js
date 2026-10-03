@@ -1,11 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { attachCurrencyInput } from '../src/components/currencyInput.js';
 
-/**
- * The caret is the hard part: inserting a separator shifts every character to
- * its right, so anchoring on the raw index sends the caret to the end while
- * someone is still typing.
- */
+/** Inserting a separator shifts the caret: anchoring on the raw index sends it to the end. */
 
 let input;
 let handle;
@@ -113,8 +109,7 @@ describe('deleting', () => {
   });
 
   it('deletes the digit behind a separator, not the separator itself', () => {
-    // Removing the separator alone leaves the same digits, so it is re-derived
-    // and the caret appears stuck.
+    // Removing the separator alone leaves the same digits, so the caret appears stuck.
     handle.setValue(1500000);
     input.setSelectionRange(2, 2);
     press('Backspace');

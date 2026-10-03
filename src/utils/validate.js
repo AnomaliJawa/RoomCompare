@@ -1,17 +1,7 @@
 import { isValidPoint } from './geo.js';
 import { KOS_TYPES } from '../constants.js';
 
-/**
- * Survey validation.
- *
- * Two rule sets, because the two actions promise different things. Saving a
- * draft asks only for a name: a survey is filled in mid-visit and an
- * interrupted one must still be keepable. Publishing asserts the record is
- * complete enough to compare against others, so it asks for the fields that
- * every comparison and every score depends on.
- *
- * Messages say what to do, not what went wrong.
- */
+/** A draft needs only a name; publishing needs everything a comparison depends on. */
 
 export const LIMITS = {
   NAME_MAX: 80,
@@ -23,7 +13,6 @@ export const LIMITS = {
   LIKERT_MAX: 4,
 };
 
-/** Which numbered section each field belongs to, for the per-section counts. */
 export const FIELD_SECTION = {
   name: 1,
   type: 1,
@@ -89,10 +78,6 @@ function checkLikert(value, key, errors, { required }) {
   }
 }
 
-/**
- * Validate a survey for the given intent.
- * Returns { ok, errors, firstField, sectionCounts }.
- */
 export function validateSurvey(data, { mode = 'publish' } = {}) {
   const errors = {};
   const publishing = mode === 'publish';
@@ -114,13 +99,12 @@ export function validateSurvey(data, { mode = 'publish' } = {}) {
     checkLikert(data.room.internet, 'internet', errors, { required: true });
     checkLikert(data.additional.security, 'security', errors, { required: true });
   } else {
-    // A draft still rejects nonsense, it just does not demand completeness.
     checkLikert(data.room.cleanliness, 'cleanliness', errors, { required: false });
     checkLikert(data.room.internet, 'internet', errors, { required: false });
     checkLikert(data.additional.security, 'security', errors, { required: false });
   }
 
-  // Campus is optional either way; without it there is simply no distance.
+  // Campus is optional either way; without it there is no distance.
   if (data.kos.campusLocation && !isValidPoint(data.kos.campusLocation)) {
     const hasPartialPin =
       data.kos.campusLocation.lat !== null || data.kos.campusLocation.lng !== null;
@@ -137,8 +121,7 @@ export function validateSurvey(data, { mode = 'publish' } = {}) {
     sectionCounts[section] = (sectionCounts[section] ?? 0) + 1;
   });
 
-  // Report fields in the order they appear on the form, so focus lands on the
-  // first problem the user would reach rather than the first one checked.
+  // Fields in form order, so focus lands on the first problem the user would reach.
   const ordered = Object.keys(FIELD_SECTION).filter((key) => keys.includes(key));
 
   return {
@@ -149,9 +132,7 @@ export function validateSurvey(data, { mode = 'publish' } = {}) {
   };
 }
 
-/* --- Accounts ---------------------------------------------------------------
-   The same rules and wording as server.py, which checks again: the browser
-   answers at once, the server has the final say. */
+// Accounts: the same rules and wording as server.py, which has the final say.
 
 export const ACCOUNT_LIMITS = {
   NAME_MAX: 60,
@@ -169,7 +150,6 @@ function checkEmail(email, errors) {
   }
 }
 
-/** Shaped like validateSurvey's result, so showErrors() can present it. */
 function accountResult(errors, order) {
   const keys = Object.keys(errors);
   return { ok: keys.length === 0, errors, firstField: order.find((key) => keys.includes(key)) ?? null, sectionCounts: {} };
@@ -193,10 +173,7 @@ export function validateRegistration({ name = '', email = '', password = '' }) {
   return accountResult(errors, ['name', 'email', 'password']);
 }
 
-/**
- * Two kos can genuinely share a name, so this never blocks a save — it only
- * gives the user the chance to notice.
- */
+/** Two kos can share a name, so this only warns. */
 export function findDuplicateName(surveys, name, { excludeId = null } = {}) {
   const target = name?.trim().toLowerCase();
   if (!target) return null;

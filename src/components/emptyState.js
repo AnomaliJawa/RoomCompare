@@ -1,13 +1,5 @@
 import { html, raw } from '../utils/dom.js';
 
-/**
- * An empty screen is an invitation to act, not a shrug.
- *
- * Every empty state says what is not there, why, and what to do next. They
- * were written inline in four features and had already drifted in tone, so
- * they share one shape here.
- */
-
 function action({ label, href, actionName }) {
   if (href) return html`<a class="btn btn--primary" href="${href}">${label}</a>`;
   return html`<button class="btn btn--secondary" type="button" data-action="${actionName}">${label}</button>`;
@@ -22,8 +14,6 @@ export function emptyState({ title, body, actions = [] }) {
     </section>
   `;
 }
-
-/* Named states, so wording stays consistent wherever they appear. */
 
 export const noSurveysYet = () =>
   emptyState({

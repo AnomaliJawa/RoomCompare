@@ -44,7 +44,7 @@ describe('the comparison, one section per category', () => {
     }
   });
 
-  // Rule 1 in CLAUDE.md: never truncated. Splitting the table must not drop rows.
+  // Never truncated: splitting the table must not drop rows.
   it('keeps every criterion and every facility row', () => {
     const labels = [...host.querySelectorAll('tbody th[scope="row"]')].map((th) => th.textContent.trim());
     for (const item of [...ROOM_FACILITIES, ...BATHROOM_FACILITIES, ...SHARED_FACILITIES, ...SURROUNDINGS]) {
@@ -158,7 +158,6 @@ describe('the kos picker dialog', () => {
   it('lists your own surveys and every community survey, each under its source', () => {
     const host = render(candidatePickerDialog(candidates, []));
     const groups = [...host.querySelectorAll('.picker-group')];
-    // Each group is named by its own heading.
     const titles = groups.map((group) => group.querySelector(`#${group.getAttribute('aria-labelledby')}`));
     expect(titles.map(text)).toEqual(['My surveys', 'Community']);
     expect(listed(groups[0])).toEqual(candidates.own.map((s) => s.kos.name));

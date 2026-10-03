@@ -127,8 +127,7 @@ describe('bringing old distances up to walking routes', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(find('svy-moving').kos.distanceBasis).toBeUndefined();
 
-    // The move itself was a change with a straight line in it, so the new
-    // pins are walked shortly after.
+    // The move was itself a change with a straight line in it, so the new pins are walked soon after.
     await vi.advanceTimersByTimeAsync(3000);
     expect(find('svy-moving').kos).toMatchObject({ distanceKm: 5.2, distanceBasis: 'walking' });
     refresh.stop();

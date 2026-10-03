@@ -4,30 +4,9 @@ import { BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../cons
 import { DEFAULT_WEIGHTS, isDefault } from '../utils/weights.js';
 import { bestMatchWeights } from '../store.js';
 
-/**
- * The optional weighted score.
- *
- * Deliberately separate from the comparison: this module imports nothing from
- * the table and the table imports nothing from here, so the whole feature can
- * be removed by deleting one mount point without touching the comparison the
- * product actually turns on.
- *
- * Every sub-score is derived from data the user recorded. The prototype
- * stored priceScore, facilityScore and the rest as literal constants on each
- * seed object, so the "score" ranked nothing and every new survey scored
- * identically.
- *
- * Two of the six criteria are relative to the kos being compared, not
- * absolute: being the cheapest of three says nothing about being cheap. The
- * panel says so rather than leaving "92" to be read as a rating.
- *
- * The weights are the user's to set (Edit criteria), and the PRD's figures
- * are the defaults. The panel reads them from the store itself, so the
- * comparison's one mount line does not change with them.
- */
+/** Optional and detachable: it imports nothing from the comparison, which imports nothing from here. */
 
-/** Likert 1-4 -> 0-100. 1 is the floor, so (v-1)/3 rather than v/4: a "Poor"
- *  rating should not read as a quarter mark. */
+/** 1 is the floor, so (v-1)/3: a "Poor" rating must not read as a quarter mark. */
 function fromLikert(value) {
   if (value === null || value === undefined) return null;
   const n = Number(value);
@@ -35,21 +14,15 @@ function fromLikert(value) {
   return ((n - 1) / 3) * 100;
 }
 
-/**
- * Position within the compared set, 100 for the best value.
- * When every kos matches, they all score full marks — none is worse.
- */
+/** 100 for the best value; when every kos matches, none is worse. */
 function relative(values, index, { lowerIsBetter }) {
   if (!Number.isFinite(values[index])) return null;
 
-  // Only values that were actually recorded take part. A kos whose own value
-  // is missing is suppressed elsewhere; it must not drag down the kos that
-  // were recorded properly, which is what requiring two values did.
+  // Only recorded values take part, so a missing one cannot drag the others down.
   const present = values.filter((value) => Number.isFinite(value));
 
   const min = Math.min(...present);
   const max = Math.max(...present);
-  // Nothing to rank against, or nothing to separate them: none is worse.
   if (min === max) return 100;
 
   const position = (values[index] - min) / (max - min);
@@ -64,14 +37,7 @@ function facilityScore(survey) {
   return (count / TOTAL_FACILITY_COUNT) * 100;
 }
 
-/**
- * The requirement weights "Location" at 15% but never says which recorded
- * field it means. Coordinates are already spent on Distance, and raw
- * latitude does not rank. Surroundings is the only recorded field that
- * expresses locational quality, and section 5 describes it in those terms:
- * places nearby that support daily needs. Labelled as such in the panel so
- * the reading is visible rather than implied.
- */
+/** Location reads as surroundings recorded out of 7: the requirement names no field (unconfirmed). */
 function locationScore(survey) {
   return ((survey.surroundings?.length ?? 0) / SURROUNDINGS.length) * 100;
 }
@@ -83,13 +49,7 @@ const MISSING_LABELS = {
   distance: 'distance to campus',
 };
 
-/**
- * Score every kos in the set, with `weights` in whole percentages.
- * A kos missing any weighted input gets no total at all: treating "not
- * recorded" as zero would rank an unfinished survey as the worst option,
- * which is a claim the data does not support. A criterion weighted 0% is out
- * of the score, so its data is not needed and its absence blocks nothing.
- */
+/** A kos missing any weighted input gets no total; a criterion at 0% needs no data. */
 export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
   const counted = BEST_MATCH_CRITERIA.filter((criterion) => weights[criterion.key] > 0);
   const rents = surveys.map((survey) => survey.kos.rent ?? NaN);
@@ -117,8 +77,7 @@ export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
     return { survey, parts, missing, total };
   });
 
-  // Ties are shown as ties; picking a winner arbitrarily would invent a
-  // distinction the numbers do not make.
+  // Ties are shown as ties; picking a winner would invent a distinction.
   const best = scored.reduce((highest, item) => {
     if (item.total === null) return highest;
     return highest === null || item.total > highest ? item.total : highest;
@@ -131,18 +90,7 @@ export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
   };
 }
 
-/* --- Rendering ----------------------------------------------------------- */
-
-/**
- * What a figure is, for narrow screens: there the table stacks each criterion
- * into a list, and bare figures under "Facilities" did not say which kos each
- * one was. It reads `Kos Pelangi: 58`. The colon sits outside the name, so a
- * long name can end in an ellipsis and keep it.
- *
- * aria-hidden, because the column header names the cell for assistive
- * technology. The table's explicit roles keep that header when the narrow
- * layout turns the table into blocks, as in the comparison.
- */
+/** Names each figure on narrow screens; aria-hidden, as the column header names the cell. */
 function cellLabel(name) {
   return html`<span class="ledger__cell-label" aria-hidden="true"><span class="bestmatch__cell-name">${name}</span>:</span>`;
 }
@@ -168,11 +116,7 @@ function scoreRow(item, leaders) {
   </span>`;
 }
 
-/**
- * `data-keep-open`: the view is rebuilt on every store change, and saving new
- * weights is one, so main.js's refresh() reopens the panel rather than
- * closing it on the scores the user just asked for. It still starts closed.
- */
+/** data-keep-open: refresh() reopens the panel after saving weights rebuilds the view. */
 export function bestMatchPanel(surveys, weights = bestMatchWeights()) {
   const { scored, leaders } = computeBestMatch(surveys, weights);
   const tied = leaders.length > 1;
@@ -217,8 +161,7 @@ export function bestMatchPanel(surveys, weights = bestMatchWeights()) {
             </thead>
             <tbody role="rowgroup">
               ${BEST_MATCH_CRITERIA.map(
-                // A criterion at 0% stays in the table, quieter: it is out of
-                // the score, not hidden.
+                // A criterion at 0% stays in the table, quieter: out of the score, not hidden.
                 (criterion) => html`<tr role="row" class="${weights[criterion.key] === 0 ? 'bestmatch__row--off' : ''}">
                   <th class="ledger__criterion" scope="row" role="rowheader">${criterion.label}</th>
                   <td class="numeric bestmatch__weight" role="cell">${cellLabel('Weight')}<span class="ledger__cell-value">${weights[criterion.key]}%</span></td>
