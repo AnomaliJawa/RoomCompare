@@ -4,6 +4,7 @@ import { candidatePickerDialog } from '../src/components/candidatePicker.js';
 import { compareBar } from '../src/components/compareBar.js';
 import { ownSurveys } from '../src/seed/ownSurveys.js';
 import { communitySurveys } from '../src/seed/communitySurveys.js';
+import { formatDistance } from '../src/utils/format.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -92,6 +93,17 @@ describe('the comparison, one section per category', () => {
     const written = { ...three[0], additional: { ...three[0].additional, notes: 'Quiet street.\n\nGate locks at 10pm.' } };
     const cell = [...render(comparisonTable([written, three[1]])).querySelectorAll('td.ledger__prose')][0];
     expect(cell.querySelector('.ledger__cell-value').textContent).toBe('Quiet street.\n\nGate locks at 10pm.');
+  });
+
+  it('marks a distance that is only a straight line, so it is not read as a walk beside the others', () => {
+    const older = { ...three[0], kos: { ...three[0].kos, distanceBasis: undefined } };
+    const row = [...render(comparisonTable([older, three[1]])).querySelectorAll('tbody tr')].find(
+      (tr) => tr.querySelector('th').textContent.trim() === 'Distance to campus',
+    );
+    expect([...row.querySelectorAll('.ledger__cell-value')].map((value) => value.textContent.trim())).toEqual([
+      `${formatDistance(older.kos.distanceKm)} (straight\u00a0line)`,
+      formatDistance(three[1].kos.distanceKm),
+    ]);
   });
 
   it('leaves removing a kos to the compare bar: the table carries no Remove', () => {

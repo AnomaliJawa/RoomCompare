@@ -1,4 +1,4 @@
-import { STATUS } from '../constants.js';
+import { STATUS, DISTANCE_BASIS } from '../constants.js';
 import { withSamplePhotos } from './samplePhotos.js';
 
 /**
@@ -32,7 +32,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-6677-2233',
       kosLocation: { lat: -7.9448, lng: 112.6135, label: 'Ketawanggede, Malang', address: 'Jalan Kartika 5, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 0.9,
+      distanceKm: 2.6,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1650000,
     },
     room: {
@@ -68,7 +69,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-4411-3322',
       kosLocation: { lat: -7.9302, lng: 112.6221, label: 'Blimbing, Malang', address: 'Jalan Pondok Biru 11, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 3.4,
+      distanceKm: 5.3,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 950000,
     },
     room: {
@@ -101,7 +103,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-9988-7766',
       kosLocation: { lat: -7.9487, lng: 112.6077, label: 'Dinoyo, Malang', address: 'Jalan Griya Asri 8, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.4,
+      distanceKm: 1.9,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1450000,
     },
     room: {
@@ -143,7 +146,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-5544-6677',
       kosLocation: { lat: -7.9601, lng: 112.6203, label: 'Sukun, Malang', address: 'Jalan Wisma Cempaka 6, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 4.1,
+      distanceKm: 1.5,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1100000,
     },
     room: {
@@ -176,7 +180,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-1234-5678',
       kosLocation: { lat: -7.9412, lng: 112.6198, label: 'Lowokwaru, Malang', address: 'Jalan Bunga Mawar, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.7,
+      distanceKm: 3.6,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1750000,
     },
     room: {
@@ -205,7 +210,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-3322-1100',
       kosLocation: { lat: -7.9366, lng: 112.6024, label: 'Tlogomas, Malang', address: 'Jalan Tirto Utomo, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 2.6,
+      distanceKm: 4.0,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1050000,
     },
     room: {
@@ -234,7 +240,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-9090-4545',
       kosLocation: { lat: -7.9538, lng: 112.6091, label: 'Dinoyo, Malang', address: 'Jalan Anggrek, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.2,
+      distanceKm: 1.1,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1550000,
     },
     room: {
@@ -263,7 +270,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-7788-9900',
       kosLocation: { lat: -7.9285, lng: 112.6157, label: 'Blimbing, Malang', address: 'Jalan Bagas Raya, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 3.1,
+      distanceKm: 4.6,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 890000,
     },
     room: {
@@ -292,7 +300,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-2468-1357',
       kosLocation: { lat: -7.9471, lng: 112.6242, label: 'Sumbersari, Malang', address: 'Jalan Harmoni, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 2.0,
+      distanceKm: 2.7,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1300000,
     },
     room: {
@@ -321,7 +330,8 @@ export const communitySurveys = withSamplePhotos([
       contactPhone: '0810-1122-3344',
       kosLocation: { lat: -7.9603, lng: 112.6118, label: 'Sukun, Malang', address: 'Jalan Cendana, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 3.8,
+      distanceKm: 1.3,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1150000,
     },
     room: {

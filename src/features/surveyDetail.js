@@ -1,5 +1,5 @@
 import { html, raw } from '../utils/dom.js';
-import { numberToCurrency, formatDistance } from '../utils/format.js';
+import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import { findSurvey, isOwnSurvey, isStarred, getState } from '../store.js';
 import { notFound } from '../components/emptyState.js';
 import { galleryField, mountGalleries } from '../components/photoGallery.js';
@@ -220,7 +220,7 @@ export function renderSurveyDetail({ id }) {
 
     <div class="facts panel">
       <div><span class="facts__label">Monthly rent</span><span class="facts__value">${numberToCurrency(survey.kos.rent)}</span></div>
-      <div><span class="facts__label">Distance to campus</span><span class="facts__value">${formatDistance(survey.kos.distanceKm)}</span></div>
+      <div><span class="facts__label">Distance to campus</span><span class="facts__value">${formatKosDistance(survey.kos)}</span></div>
       <div><span class="facts__label">Room</span><span class="facts__value">${
         survey.room.lengthM && survey.room.widthM
           ? `${survey.room.lengthM} × ${survey.room.widthM} m`
@@ -239,7 +239,7 @@ export function renderSurveyDetail({ id }) {
           ${raw(definition('Address', survey.kos.kosLocation?.address))}
           ${raw(definition('Pinned at', survey.kos.kosLocation?.lat == null ? null : formatCoordinate(survey.kos.kosLocation)))}
           ${raw(definition('Campus', survey.kos.campusLocation?.label))}
-          ${raw(definition('Distance to campus', formatDistance(survey.kos.distanceKm)))}
+          ${raw(definition('Distance to campus', survey.kos.distanceKm == null ? null : formatKosDistance(survey.kos)))}
           ${raw(definition('Monthly rent', numberToCurrency(survey.kos.rent)))}
           ${raw(definition('Owner or security phone', contactValue(survey.kos.contactPhone)))}
         </dl>`,

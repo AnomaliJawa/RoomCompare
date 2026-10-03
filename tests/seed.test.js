@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { ownSurveys } from '../src/seed/ownSurveys.js';
 import { communitySurveys } from '../src/seed/communitySurveys.js';
 import { MAX_PHOTOS_PER_SECTION, SAMPLE_PHOTO_PREFIX } from '../src/constants.js';
+import { distanceBetween } from '../src/utils/geo.js';
 
 const SECTIONS = ['room', 'bathroom', 'shared'];
 const all = [...ownSurveys, ...communitySurveys];
@@ -34,5 +35,16 @@ describe('the sample surveys and their photos', () => {
       }
     }
     expect(communitySurveys[0].room.photoIds[0]).not.toBe(ownSurveys[0].room.photoIds[0]);
+  });
+});
+
+describe('the distances in the sample surveys', () => {
+  it('are walked, as the form measures them, so none is marked a straight line', () => {
+    for (const survey of all) {
+      const { distanceKm, distanceBasis, kosLocation, campusLocation } = survey.kos;
+      expect(distanceBasis, survey.id).toBe('walking');
+      // A walk is never shorter than the straight line between the same pins.
+      expect(distanceKm, survey.id).toBeGreaterThanOrEqual(distanceBetween(kosLocation, campusLocation));
+    }
   });
 });

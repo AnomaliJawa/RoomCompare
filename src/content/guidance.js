@@ -14,8 +14,9 @@
  * split into those parts here, with no facts added.
  *
  * Two lines differ from the concept on purpose:
- * - Distance to campus is measured in a straight line between the two pins
- *   (utils/geo.js), not along the road, and the copy says so.
+ * - Distance to campus says walking where the concept says road, since the
+ *   route is measured on foot (utils/route.js, the user's request,
+ *   2026-10-03), and its rules add the straight-line fallback.
  * - Monthly rent's helper states its limit, as the PRD's helper-text
  *   requirement asks of every limited field.
  */
@@ -148,11 +149,12 @@ export const FIELD_GUIDE = {
   },
   distance: {
     label: 'Distance to campus',
-    helper: 'Straight-line distance between the kos pin and the campus pin.',
+    helper: 'Walking distance along the road from the kos pin to the campus pin.',
     panel: {
-      what: 'Straight-line distance between the kos pin and the campus pin.',
+      what: 'Walking distance along the road from the kos pin to the campus pin.',
       find: 'It fills in once both pins are set. To change it, move one of the pins.',
-      rules: 'Read-only. Measured in a straight line between the two pins, not along the road.',
+      rules:
+        'Read-only. Measured along the walking route, not in a straight line. When the route can’t be measured, the straight line is shown instead and marked as such.',
     },
   },
 

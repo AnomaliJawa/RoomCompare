@@ -1,5 +1,5 @@
 import { html, raw } from '../utils/dom.js';
-import { numberToCurrency, formatDistance } from '../utils/format.js';
+import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import { getState, bestMatchWeights } from '../store.js';
 import { BEST_MATCH_CRITERIA, STATUS } from '../constants.js';
 import { isDefault } from '../utils/weights.js';
@@ -48,7 +48,7 @@ function heroStrip(surveys) {
     {
       id: 'strip-distance',
       label: 'To campus',
-      value: (s) => (s.kos.distanceKm == null ? null : formatDistance(s.kos.distanceKm)),
+      value: (s) => (s.kos.distanceKm == null ? null : formatKosDistance(s.kos)),
       best: (s) => s.kos.distanceKm === nearest,
     },
   ];

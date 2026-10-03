@@ -1,5 +1,5 @@
 import { html, raw } from '../utils/dom.js';
-import { numberToCurrency, formatDistance } from '../utils/format.js';
+import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -71,7 +71,7 @@ export function buildGroups(surveys) {
         }),
         textRow(
           'Distance to campus',
-          surveys.map((s) => (s.kos.distanceKm == null ? MISSING : formatDistance(s.kos.distanceKm))),
+          surveys.map((s) => (s.kos.distanceKm == null ? MISSING : formatKosDistance(s.kos))),
           { best: lowestIndex(distances) },
         ),
       ],
