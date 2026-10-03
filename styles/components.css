@@ -342,8 +342,11 @@
   background: transparent;
 }
 
-.field__group .field__control:hover,
 .field__group .field__control:focus { border-color: transparent; }
+
+@media (hover: hover) {
+  .field__group .field__control:hover { border-color: transparent; }
+}
 
 .field[data-invalid="true"] .field__group { border-color: var(--alert); }
 
@@ -708,7 +711,7 @@
   color: var(--ink);
 }
 
-.dialog::backdrop { background: rgba(22, 36, 31, 0.4); }
+.dialog::backdrop { background: var(--backdrop); }
 
 @media (prefers-reduced-motion: no-preference) {
   .dialog[open],
@@ -869,6 +872,8 @@
 /* Buttons and the status icon sit above the title's click target, or the tooltip never shows. */
 .survey-card__actions,
 .survey-card .status { position: relative; z-index: 1; }
+
+.survey-card__link:active { color: inherit; text-decoration: underline; }
 
 @media (hover: hover) {
   .survey-card__link:hover { text-decoration: underline; }
@@ -1492,6 +1497,8 @@ a.listing__title::after {
   transition: border-color var(--duration-fast) var(--ease);
 }
 
+.gallery__thumb-button:active { border-color: var(--accent); }
+
 @media (hover: hover) {
   .gallery__thumb-button:hover { border-color: var(--accent); }
 }
@@ -1548,7 +1555,7 @@ a.listing__title::after {
   color: var(--ink);
 }
 
-.lightbox-dialog::backdrop { background: rgba(22, 36, 31, 0.6); }
+.lightbox-dialog::backdrop { background: var(--backdrop-lightbox); }
 
 .lightbox { display: flex; flex-direction: column; gap: var(--space-3); }
 
