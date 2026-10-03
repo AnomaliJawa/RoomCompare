@@ -54,8 +54,8 @@ export function renderCommunity() {
       <div class="page-head__text">
         <h1>Community surveys</h1>
         <p class="page-head__lede">
-          Kos recorded by other people. Star one to keep it, and it becomes
-          available when you compare.
+          Kos recorded by other people. Filter them, star the ones worth
+          keeping, and add any of them to a comparison.
         </p>
       </div>
     </div>
