@@ -238,6 +238,10 @@
   font-size: var(--text-xs);
 }
 
+/* On a phone the line wraps; the link goes to the next line whole rather than
+   splitting into two pieces, each half a tap target. */
+.field__credit a { white-space: nowrap; }
+
 .field__credit a:active { color: var(--accent-press); }
 
 /* --- Field guidance (the survey form) ------------------------------------
