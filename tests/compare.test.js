@@ -186,6 +186,24 @@ describe('the kos picker dialog', () => {
     expect(listed(community)).toEqual(candidates.community.map((s) => s.kos.name));
   });
 
+  it('says how many drafts it leaves out, and that publishing one makes it comparable', () => {
+    const host = render(candidatePickerDialog({ ...candidates, drafts: 2 }, []));
+    const own = host.querySelector('.picker-group');
+    expect(text(own.querySelector('.picker-group__note'))).toBe('2 drafts aren’t listed. Publish a survey to compare it.');
+    expect(listed(own)).toEqual(candidates.own.map((s) => s.kos.name));
+    expect(text(host.querySelector('.picker-dialog__body > .meta'))).toBe('Your published surveys and the community’s. Up to 3 at once.');
+  });
+
+  it('says so when every survey of your own is still a draft', () => {
+    const host = render(candidatePickerDialog({ own: [], community: candidates.community, drafts: 1 }, []));
+    const own = host.querySelector('.picker-group');
+    expect(own.querySelector('.listing')).toBeNull();
+    expect(text(own.querySelector('.meta'))).toBe('One draft isn’t listed: only published surveys can be compared.');
+    const link = own.querySelector('a[href="#/surveys"]');
+    expect(text(link)).toBe('Go to my surveys');
+    expect(link.dataset.action).toBe('close-picker');
+  });
+
   it('says so when there are no community surveys', () => {
     const host = render(candidatePickerDialog({ own: candidates.own, community: [] }, []));
     const community = host.querySelectorAll('.picker-group')[1];
@@ -215,7 +233,7 @@ describe('the compare page', () => {
     vi.resetModules();
     const store = await import('../src/store.js');
     const { renderCompare } = await import('../src/features/compare.js');
-    store.getState().surveys.slice(0, count).forEach((s) => store.toggleCompare(s.id));
+    store.compareCandidates().own.slice(0, count).forEach((s) => store.toggleCompare(s.id));
     if (shown) store.showComparison();
     return render(renderCompare());
   }

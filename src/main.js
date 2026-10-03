@@ -308,7 +308,11 @@ function wireActions() {
     const survey = store.findSurvey(dataset.id);
     const added = store.toggleCompare(dataset.id);
     if (!added) {
-      toast(`Remove one kos before adding another. You can compare up to ${MAX_COMPARE}.`);
+      toast(
+        store.canCompare(dataset.id)
+          ? `Remove one kos before adding another. You can compare up to ${MAX_COMPARE}.`
+          : `Publish ${survey.kos.name} to compare it. Drafts are left out of comparisons.`,
+      );
       return;
     }
     // Adding needs no toast: the button pressed already says so (Selected in

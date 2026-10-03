@@ -15,6 +15,9 @@ function stored() {
   return raw ? JSON.parse(raw) : null;
 }
 
+/** Ids of the user's own published surveys, the only own ones a comparison takes. */
+const published = (store) => store.compareCandidates().own.map((s) => s.id);
+
 beforeEach(() => {
   localStorage.clear();
 });
@@ -135,7 +138,7 @@ describe('writes', () => {
 describe('comparison selection', () => {
   it('holds at most three and says when it is full', async () => {
     const store = await freshStore();
-    const ids = store.getState().surveys.slice(0, 4).map((s) => s.id);
+    const ids = published(store).slice(0, 4);
     expect(store.toggleCompare(ids[0])).toBe(true);
     expect(store.toggleCompare(ids[1])).toBe(true);
     expect(store.toggleCompare(ids[2])).toBe(true);
@@ -145,7 +148,7 @@ describe('comparison selection', () => {
 
   it('toggles a selected kos back off, freeing a slot', async () => {
     const store = await freshStore();
-    const ids = store.getState().surveys.slice(0, 3).map((s) => s.id);
+    const ids = published(store).slice(0, 3);
     ids.forEach((id) => store.toggleCompare(id));
     expect(store.toggleCompare(ids[0])).toBe(true);
     expect(store.getState().compareSelection).toHaveLength(2);
@@ -161,7 +164,7 @@ describe('comparison selection', () => {
 describe('undoing Start over', () => {
   it('puts the selection back, and the open table with it', async () => {
     const store = await freshStore();
-    const ids = store.getState().surveys.slice(0, 3).map((s) => s.id);
+    const ids = published(store).slice(0, 3);
     ids.forEach((id) => store.toggleCompare(id));
     store.showComparison();
 
@@ -173,7 +176,7 @@ describe('undoing Start over', () => {
 
   it('leaves out a kos deleted in the meantime, and keeps the table shut below two', async () => {
     const store = await freshStore();
-    const ids = store.getState().surveys.slice(0, 2).map((s) => s.id);
+    const ids = published(store).slice(0, 2);
     ids.forEach((id) => store.toggleCompare(id));
     store.showComparison();
 
@@ -186,9 +189,16 @@ describe('undoing Start over', () => {
 
   it('never restores more than the comparison holds', async () => {
     const store = await freshStore();
-    const ids = store.getState().surveys.slice(0, 5).map((s) => s.id);
+    const ids = published(store).slice(0, 5);
     store.restoreCompare(ids, false);
     expect(store.getState().compareSelection).toHaveLength(3);
+  });
+
+  it('never restores a draft', async () => {
+    const store = await freshStore();
+    const draft = store.getState().surveys.find((s) => s.status === 'draft');
+    store.restoreCompare([published(store)[0], draft.id], false);
+    expect(store.getState().compareSelection).toEqual([published(store)[0]]);
   });
 });
 
@@ -216,13 +226,34 @@ describe('starring', () => {
 describe('comparison candidates', () => {
   // A new account starts with no surveys, and was offered only the one
   // community kos starred on a first visit.
-  it('are every survey of your own and every community survey, by source', async () => {
+  it('are your published surveys and every community survey, by source, with the drafts counted', async () => {
     const store = await freshStore();
     const { surveys, communitySurveys } = store.getState();
-    const { own, community } = store.compareCandidates();
-    expect(own.map((s) => s.id)).toEqual(surveys.map((s) => s.id));
+    const { own, community, drafts } = store.compareCandidates();
+    expect(own.map((s) => s.id)).toEqual(surveys.filter((s) => s.status === 'published').map((s) => s.id));
+    expect(drafts).toBe(surveys.filter((s) => s.status === 'draft').length);
+    expect(drafts).toBeGreaterThan(0);
     expect(community.map((s) => s.id)).toEqual(communitySurveys.map((s) => s.id));
     expect(store.comparableSurveys().map((s) => s.id)).toEqual([...own, ...community].map((s) => s.id));
+  });
+
+  // The user's rule (2026-10-03): a draft is still being filled in, and only
+  // publishing says a survey is complete enough to compare.
+  it('leave drafts out, and refuse one asked for directly', async () => {
+    const store = await freshStore();
+    const draft = store.getState().surveys.find((s) => s.status === 'draft');
+    expect(store.canCompare(draft.id)).toBe(false);
+    expect(store.toggleCompare(draft.id)).toBe(false);
+    expect(store.getState().compareSelection).toEqual([]);
+  });
+
+  it('take a draft once it is published', async () => {
+    const store = await freshStore();
+    const draft = store.getState().surveys.find((s) => s.status === 'draft');
+    store.updateSurvey(draft.id, { status: 'published' });
+    expect(store.canCompare(draft.id)).toBe(true);
+    expect(store.toggleCompare(draft.id)).toBe(true);
+    expect(store.compareCandidates().own.map((s) => s.id)).toContain(draft.id);
   });
 
   it('can be compared across both sources at once', async () => {

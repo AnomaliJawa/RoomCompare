@@ -219,3 +219,22 @@ describe('the star on a community survey page', () => {
     expect([remove.getAttribute('aria-label'), remove.textContent.trim()]).toEqual(['Delete Kos Media', '']);
   });
 });
+
+describe('Add to compare on the survey page', () => {
+  const addButton = (host) => host.querySelector('.page-head__actions [data-action="toggle-compare"]');
+
+  // The user's rule (2026-10-03): only published surveys can be compared.
+  it('is not offered on a draft', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    expect(addButton(render(renderSurveyDetail({ id: 'svy-media' })))).toBeNull();
+  });
+
+  it('is offered once the survey is published, and on a community survey', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey({ ...survey(), status: 'published' });
+    expect(addButton(render(renderSurveyDetail({ id: 'svy-media' }))).textContent.trim()).toBe('Add to compare');
+    const { id } = store.getState().communitySurveys[0];
+    expect(addButton(render(renderSurveyDetail({ id })))).not.toBeNull();
+  });
+});
