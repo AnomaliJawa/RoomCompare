@@ -4,20 +4,7 @@ import { STATUS, STATUS_LABELS, kosTypeLabel } from '../constants.js';
 import { starButton } from './starButton.js';
 import { editLink, deleteButton } from './surveyActions.js';
 
-/**
- * One card for both survey lists.
- *
- * The prototype had two renderers that were ~80% identical and had already
- * drifted apart; merging them is the largest de-duplication in the rebuild.
- */
-
-/**
- * The first recorded photo, or the placeholder tile when there is none.
- *
- * The image is left empty here and filled by mountThumbs once the blob loads
- * from the database: the card renders synchronously, and the record only
- * carries ids.
- */
+/** Filled by mountThumbs once the blob loads: the record only carries ids. */
 function thumb(survey) {
   const photoId =
     survey.room?.photoIds?.[0] ?? survey.shared?.photoIds?.[0] ?? survey.bathroom?.photoIds?.[0];
@@ -32,12 +19,7 @@ function thumb(survey) {
   />`;
 }
 
-/**
- * A survey's status as an icon (the user's request, 2026-09-30): a dashed
- * circle for a draft, still being filled in, and a ticked one once it is
- * published. The word stays as its name for a screen reader and as its
- * tooltip.
- */
+/** The status word stays as the icon's name and tooltip. */
 const statusIcon = (paths) =>
   '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" ' +
   `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
@@ -71,9 +53,7 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
   const isCommunity = variant === 'community';
   const href = isCommunity ? `#/community/${survey.id}` : `#/surveys/${survey.id}`;
 
-  // The location only, on both lists. A community card no longer names who
-  // shared the survey (removed at the user's request, 2026-10-03); its own
-  // page still says "Shared by …".
+  // The location only: a community card does not name who shared it.
   const meta = html`<span class="meta">${survey.kos.kosLocation?.label}</span>`;
 
   const badge = isCommunity

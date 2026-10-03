@@ -1,12 +1,4 @@
-/**
- * Single source of truth for every enumerated value in RoomCompare.
- *
- * The prototype wrote these 31 facility labels twice — once as `<input value>`
- * in index.html, once as strings in the seed array — and checkbox restoration
- * broke silently whenever the two drifted. Checkbox groups, the community
- * facility filters, the comparison rows and the facility sub-score all read
- * from here instead.
- */
+/** Every enumerated value lives here and nowhere else: duplicated labels once drifted silently. */
 
 export const STATUS = {
   DRAFT: 'draft',
@@ -18,12 +10,7 @@ export const STATUS_LABELS = {
   [STATUS.PUBLISHED]: 'Published',
 };
 
-/**
- * How a survey's distance to campus was measured, saved beside it as
- * `kos.distanceBasis`. Walking, along the road, since 2026-10-03. A straight
- * line is the fallback when no route could be had, and what every distance
- * saved before then is, so a record without the field reads as straight.
- */
+/** How distanceKm was measured; a record without it predates walking routes, so it is a straight line. */
 export const DISTANCE_BASIS = {
   WALKING: 'walking',
   STRAIGHT: 'straight',
@@ -78,7 +65,6 @@ export const SURROUNDINGS = [
   'Gym / sports facilities',
 ];
 
-/** Total checkbox count across the three facility sections. Drives the facility sub-score. */
 export const TOTAL_FACILITY_COUNT =
   ROOM_FACILITIES.length + BATHROOM_FACILITIES.length + SHARED_FACILITIES.length;
 
@@ -99,15 +85,7 @@ export function kosTypeLabel(value) {
   return match ? match.label : null;
 }
 
-/**
- * The Best Match criteria, with the PRD's weights as the defaults. Each
- * account can set its own (utils/weights.js holds the rule).
- *
- * Weights are whole percentages, not fractions: they are what the user
- * edits, and whole numbers add up exactly where 0.13 + 0.12 need not.
- * `description` says what a criterion measures, for the dialog where the
- * weights are set. It restates the Best Match panel's method notes.
- */
+/** The PRD's default weights, as whole percentages so they total exactly 100. */
 export const BEST_MATCH_CRITERIA = [
   {
     key: 'price',
@@ -147,7 +125,6 @@ export const BEST_MATCH_CRITERIA = [
   },
 ];
 
-/** Comparison groups, in PRD order. Section 6 is added — see plan ambiguity 2. */
 export const COMPARISON_GROUPS = [
   { key: 'kos', label: 'Kos information' },
   { key: 'room', label: 'Room' },
@@ -161,10 +138,5 @@ export const MAX_COMPARE = 3;
 export const MIN_COMPARE = 2;
 export const MAX_PHOTOS_PER_SECTION = 10;
 
-/**
- * Sample photographs ship with the app as seed-photos/<name>.jpg. A photo id
- * with this prefix names one of those files ("seed:room-2-1") rather than a
- * file stored in the browser, so the sample surveys show their photos on
- * every device and nothing is stored for them. media.js resolves these ids.
- */
+/** A photo id with this prefix names a file in seed-photos/, not a stored blob. */
 export const SAMPLE_PHOTO_PREFIX = 'seed:';

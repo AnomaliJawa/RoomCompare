@@ -1,11 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import { toast, dismissToast, TOAST_DURATION } from '../src/components/feedback.js';
 
-/*
- * The toast module watches its region once, the first time it is used, so
- * the region is created once for the whole file and only emptied between
- * tests.
- */
+// The module watches its region once, so the region is created once and emptied between tests.
 let region;
 
 beforeAll(() => {

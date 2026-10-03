@@ -1,26 +1,4 @@
-/**
- * Guidance copy for the survey form: section intros, a helper line under
- * every field, the 1–4 score rubrics, and the How to fill panel behind each
- * field's ⓘ. What a field is required for is said in its panel's rules.
- *
- * The wording comes from "Guidelines Feature Concept – RoomCompare" and is
- * changed there first, then here. It is plain data, kept apart from the
- * components, so copy can change without touching markup, and it ships with
- * the app, so it still shows with no connection.
- *
- * Each panel follows the same order, so it is easy to scan: what to fill,
- * how to find it, an example, the rules the form checks, and an optional
- * survey tip. The concept gives each field's panel as one paragraph; it is
- * split into those parts here, with no facts added.
- *
- * Where this differs from the concept, on purpose:
- * - Distance to campus says walking where the concept says road, since the
- *   route is measured on foot (utils/route.js, the user's request,
- *   2026-10-03), and its rules add the straight-line fallback. It has no
- *   helper line under the field, also at the user's request.
- * - Monthly rent's helper states its limit, as the PRD's helper-text
- *   requirement asks of every limited field.
- */
+/** Survey form copy from the user's Guidelines concept doc: change the doc first, then here. */
 
 export const SECTION_INTROS = {
   kos: 'Start with the basics: name, rent, type, and location. These are the base for comparing every kos.',
@@ -31,7 +9,6 @@ export const SECTION_INTROS = {
   additional: 'Add anything else that affects your choice: security, notes, and videos.',
 };
 
-/** The panel's parts, in the order they are shown. */
 export const PANEL_PARTS = [
   ['what', 'What to fill'],
   ['find', 'How to find it'],
@@ -56,12 +33,6 @@ const ROOM_SIZE_PANEL = {
 const COORDINATES_EXAMPLE =
   'Map not loading? Enter coordinates: in Google Maps, long-press the spot and copy the numbers, e.g. -7.7713, 110.3775.';
 
-/**
- * One entry per field, keyed as the form keys it.
- * - `counter`: a character limit to count against as the user types.
- * - `panel`: the How to fill panel, by part (PANEL_PARTS).
- * - `photos`: what to photograph, for the photo fields.
- */
 export const FIELD_GUIDE = {
   // 1. Kos information
   name: {
@@ -148,8 +119,7 @@ export const FIELD_GUIDE = {
       rules: 'Optional. Without it, no distance is calculated.',
     },
   },
-  // The one field with no helper line: it was removed at the user's request
-  // (2026-10-03). Its panel still says what the distance is.
+  // No helper line under this field, at the user's request; its panel explains it.
   distance: {
     label: 'Distance to campus',
     panel: {
@@ -334,11 +304,6 @@ export const FIELD_GUIDE = {
   },
 };
 
-/**
- * What each point of a 1–4 score means, in what can be seen or measured.
- * The labels match LIKERT in constants.js. Internet adds the average
- * Download from Speedtest by Ookla that each level corresponds to.
- */
 export const RUBRICS = {
   cleanliness: [
     { score: 1, label: 'Poor', text: 'Visible dirt or stains, a bad smell, mold, or signs of pests.' },
@@ -360,11 +325,6 @@ export const RUBRICS = {
   ],
 };
 
-/**
- * The Survey guide, shown the first time the survey form opens and again
- * from the ? beside its title: what to prepare before visiting a kos. The
- * concept's three sentences, as lists, so each item can be ticked off.
- */
 export const SURVEY_GUIDE = {
   title: 'Survey guide',
   sections: [
@@ -398,13 +358,11 @@ export const SURVEY_GUIDE = {
   ],
 };
 
-/** The line shown under a scale for one level, e.g. "3 Good: …". */
 export function rubricLine(level) {
   const base = `${level.score} ${level.label}: ${level.text}`;
   return level.benchmark ? `${base} Average Download ${level.benchmark}.` : base;
 }
 
-/** The line for a score on a rubric, or '' when there is no such score. */
 export function rubricText(key, score) {
   const level = RUBRICS[key]?.find((step) => step.score === Number(score));
   return level ? rubricLine(level) : '';

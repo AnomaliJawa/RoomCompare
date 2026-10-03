@@ -2,19 +2,7 @@ import { html, raw } from '../utils/dom.js';
 import { textField, currencyField, selectField } from './fields.js';
 import { KOS_TYPES, ROOM_FACILITIES, BATHROOM_FACILITIES, SHARED_FACILITIES } from '../constants.js';
 
-/**
- * Filters for shared surveys.
- *
- * The controls live in a dialog rather than above the list: there are five of
- * them plus 24 facilities, and inline they pushed the surveys — the thing
- * being looked for — most of the way down the page. The bar that remains
- * reports what is being shown and how many filters are doing it, so the state
- * is never hidden behind a button.
- *
- * Facility requirements are scoped to their section, because the same word
- * means different things in different places: a Refrigerator in the room is
- * not a Refrigerator in a shared kitchen, and the requirement lists both.
- */
+/** Facility filters are scoped to their section: a room refrigerator is not a shared one. */
 
 export const FACILITY_SECTIONS = [
   { key: 'room', legend: 'Room facilities', options: ROOM_FACILITIES },
@@ -24,7 +12,6 @@ export const FACILITY_SECTIONS = [
 
 export const facilityKey = (section, name) => `${section}:${name}`;
 
-/** How many filters are doing something, for the button and the summary. */
 export function activeFilterCount(filters) {
   return (
     (filters.location ? 1 : 0) +
@@ -35,8 +22,6 @@ export function activeFilterCount(filters) {
     (filters.facilities?.length ?? 0)
   );
 }
-
-/* --- The bar that stays on the page -------------------------------------- */
 
 export function filterBar(filters, { total, showing }) {
   const active = activeFilterCount(filters);
@@ -61,8 +46,6 @@ export function filterBar(filters, { total, showing }) {
     </div>
   `;
 }
-
-/* --- The dialog ---------------------------------------------------------- */
 
 function facilityGroup({ key, legend, options }, selected) {
   return html`

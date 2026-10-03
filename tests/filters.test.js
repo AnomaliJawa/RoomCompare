@@ -124,8 +124,7 @@ describe('facility requirements', () => {
   });
 
   it('scopes a name to its section, since several appear in more than one', () => {
-    // Refrigerator and Dispenser are both room and shared facilities; an
-    // unscoped name would match either and quietly return the wrong kos.
+    // Refrigerator and Dispenser are room and shared facilities; an unscoped name would match either.
     expect(names(['room:Refrigerator'])).not.toEqual(names(['shared:Refrigerator']));
     expect(names(['room:Dispenser'])).not.toEqual(names(['shared:Dispenser']));
 

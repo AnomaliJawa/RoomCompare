@@ -2,15 +2,7 @@ import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import { MAX_COMPARE } from '../constants.js';
 
-/**
- * What can be compared: the user's own published surveys and every community
- * survey, each under its source's name, so a kos's origin is clear without a
- * column to say it. A community survey no longer has to be starred first: a
- * new account has no surveys of its own, and was offered a single kos.
- *
- * Drafts are left out (store.canCompare), and the My surveys group says how
- * many, so a survey the user just recorded is not simply missing.
- */
+/** Own published surveys and every community survey; drafts are left out and counted. */
 
 function candidateList(candidates, selection) {
   const full = selection.length >= MAX_COMPARE;
@@ -41,7 +33,6 @@ function candidateList(candidates, selection) {
   `;
 }
 
-/** One source: its name, then its kos, or what to do when it has none. */
 function candidateGroup({ id, title, candidates, selection, empty, note = null }) {
   return html`
     <section class="picker-group" aria-labelledby="${id}">
@@ -53,10 +44,7 @@ function candidateGroup({ id, title, candidates, selection, empty, note = null }
 
 const draftCount = (drafts) => (drafts === 1 ? 'One draft isn’t' : `${drafts} drafts aren’t`);
 
-/**
- * What My surveys shows with nothing to list. Both links leave the Compare
- * page, so they close the dialog too.
- */
+/** Both links leave the Compare page, so they close the dialog too. */
 function ownEmpty(drafts) {
   return drafts
     ? html`<div class="picker-group__empty">
@@ -69,11 +57,6 @@ function ownEmpty(drafts) {
       </div>`;
 }
 
-/**
- * The picker as a dialog, opened from Add kos above the comparison. Same
- * shape as the filter dialog: a scrolling body between a fixed head and foot,
- * with the count in the foot updating as kos are picked.
- */
 export function candidatePickerDialog({ own, community, drafts = 0 }, selection) {
   return html`
     <div class="picker-dialog">

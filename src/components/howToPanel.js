@@ -1,19 +1,7 @@
 import { html, mount } from '../utils/dom.js';
 import { FIELD_GUIDE, PANEL_PARTS, RUBRICS } from '../content/guidance.js';
 
-/**
- * The How to fill panel behind each survey field's ⓘ.
- *
- * It always reads in the same order — what to fill, how to find it, an
- * example, the rules the form checks, a survey tip — so it can be scanned.
- * A 1–4 field adds all four levels, and a photo field lists what to shoot.
- *
- * One <dialog> (#app-howto) serves every field, so only one panel is ever
- * open. It lives outside the form, so reading it cannot change an answer.
- * On a phone it is a sheet (components.css); on a wider screen it sits
- * beside the ⓘ, like a popover. Being a modal dialog, it closes on Esc and
- * on Android's back gesture without any code here.
- */
+/** One <dialog> outside the form serves every field's ⓘ: a sheet on phones, a popover elsewhere. */
 
 const NARROW = '(max-width: 640px)';
 const GAP = 8; // between the ⓘ and the panel: --space-2
@@ -50,15 +38,12 @@ function shots(list) {
   return part('Suggested shots', html`<ul class="howto__shots">${list.map((item) => html`<li>${item}</li>`)}</ul>`);
 }
 
-/** The panel for one field, or null when the field has none. */
 export function renderHowTo(key) {
   const guide = FIELD_GUIDE[key];
   if (!guide?.panel) return null;
 
   const sections = [];
   for (const [name, heading] of PANEL_PARTS) {
-    // The four levels come before the example that uses them; a photo
-    // field's list of shots is its example.
     if (name === 'example' && RUBRICS[key]) sections.push(scores(RUBRICS[key]));
     if (name === 'example' && guide.photos) sections.push(shots(guide.photos));
     if (guide.panel[name]) sections.push(part(heading, html`<p>${guide.panel[name]}</p>`));
@@ -75,12 +60,7 @@ export function renderHowTo(key) {
   `;
 }
 
-/**
- * Beside the ⓘ on a wide screen: below it, or above when it only fits
- * there. When it fits neither side, it takes the roomier one and scrolls
- * inside it, rather than covering the ⓘ it belongs to. It always stays
- * inside the window. A phone's sheet is placed by CSS.
- */
+/** Below or above the ⓘ, whichever fits, scrolling inside rather than covering it. */
 export function placeHowTo(node, trigger) {
   node.style.top = '';
   node.style.left = '';
@@ -90,8 +70,7 @@ export function placeHowTo(node, trigger) {
   const anchor = trigger.getBoundingClientRect();
   const below = window.innerHeight - MARGIN - (anchor.bottom + GAP);
   const above = anchor.top - GAP - MARGIN;
-  // Its layout size, not its drawn box: the panel is placed while its
-  // arrival animation still has it scaled down, which would place it short.
+  // Layout size, not the drawn box: the arrival animation still has it scaled down.
   let panel = node.offsetHeight;
 
   let top;
@@ -111,7 +90,6 @@ export function placeHowTo(node, trigger) {
   node.style.left = `${Math.round(Math.max(MARGIN, left))}px`;
 }
 
-/** Open a field's panel. Returns false when there is nothing to show. */
 export function openHowTo(key, trigger = null) {
   const node = document.getElementById('app-howto');
   const content = renderHowTo(key);
@@ -124,13 +102,7 @@ export function openHowTo(key, trigger = null) {
   return true;
 }
 
-/**
- * Wire the panel once, at startup.
- * - A click on the backdrop closes it, as the area outside a popover would.
- * - Closing returns focus to the ⓘ that opened it, in the field's own head,
- *   rather than leaving it at the top of the page. Safari does not focus a
- *   clicked button, so the browser's own return would miss it there.
- */
+/** Focus returns to the ⓘ itself: Safari does not focus a clicked button. */
 export function initHowTo() {
   const node = document.getElementById('app-howto');
   if (!node) return;
@@ -138,8 +110,7 @@ export function initHowTo() {
     if (event.target === node) node.close();
   });
   node.addEventListener('close', () => {
-    // `close` arrives a moment after the panel shuts. If another ⓘ has
-    // opened it again since, that one is its opener now: leave it.
+    // close arrives late; if another ⓘ has reopened the panel since, leave its opener.
     if (node.open) return;
     const trigger = opener;
     opener = null;

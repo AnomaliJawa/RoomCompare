@@ -1,16 +1,6 @@
 import { SAMPLE_PHOTO_PREFIX } from '../constants.js';
 
-/**
- * Photos for the sample surveys, from the drawn illustrations in seed-photos/
- * that the app serves itself (tools-make-assets.py makes them). Each id names
- * a file, so the photos show on every device without being stored anywhere.
- *
- * There are four sets, each with 3 room, 2 bathroom and 2 shared-facility
- * photos. A survey takes each section's photos from a different set, and the
- * sets rotate from one survey to the next, so neighbouring cards differ. A
- * section with no facilities recorded gets no photos: nobody photographs a
- * shared kitchen that is not there.
- */
+/** Photos from seed-photos/, rotated so neighbouring cards differ; none for absent facilities. */
 
 const SETS = 4;
 const COUNTS = { room: 3, bathroom: 2, shared: 2 };

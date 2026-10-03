@@ -9,25 +9,11 @@ import {
   kosTypeLabel,
 } from '../constants.js';
 
-/**
- * The comparison itself: never scored, never truncated.
- *
- * The prototype joined facilities into a comma list and cut it with
- * `.slice(0, 5)`, so a reader could not tell whether "AC" was absent or
- * merely hidden. Every facility gets its own row with an explicit mark.
- *
- * Explicit ARIA roles are set because the narrow layout turns the table into
- * blocks, which would otherwise strip the roles a browser derives from table
- * elements.
- */
+/** Never scored or truncated: every facility row gets an explicit ✓ or —. */
 
 const MISSING = Symbol('missing');
 
-/**
- * `prose` marks a value written by the user as sentences rather than a
- * figure — notes. It keeps the writer's line breaks, wraps at any length, and
- * on narrow screens sits under its kos name instead of beside it.
- */
+/** prose: notes keep their line breaks and sit under the kos name on narrow screens. */
 function textRow(label, values, { best = null, prose = false } = {}) {
   return { kind: 'text', label, values, best, prose };
 }
@@ -41,7 +27,6 @@ function facilityRows(all, pick) {
   }));
 }
 
-/** Index of the lowest finite number, or null when nothing separates them. */
 function lowestIndex(numbers) {
   let best = null;
   numbers.forEach((n, i) => {
@@ -57,9 +42,7 @@ export function buildGroups(surveys) {
   const rents = surveys.map((s) => s.kos.rent ?? NaN);
   const distances = surveys.map((s) => s.kos.distanceKm ?? NaN);
 
-  // No Status row (removed at the user's request, 2026-10-03): draft or
-  // published describes the record, not the kos, so it never helps choose
-  // between them. The survey page and the card still show it.
+  // No Status row: draft or published describes the record, not the kos.
   return [
     {
       label: 'Kos information',
@@ -118,18 +101,12 @@ export function buildGroups(surveys) {
 }
 
 export function rowDiffers(row) {
-  // Values are primitives or the MISSING symbol, so identity comparison is
-  // enough — "not recorded" never reads as equal to a real value that
-  // happens to stringify the same way.
+  // Identity comparison, so "not recorded" never equals a value that stringifies alike.
   const [first, ...rest] = row.values;
   return rest.some((value) => value !== first);
 }
 
-/**
- * One value. The kos name is repeated inside the cell for the stacked narrow
- * layout, and marked aria-hidden because the column header still provides
- * that association.
- */
+/** The kos name repeats in each cell for the stacked layout; aria-hidden, as the header names it. */
 function cell(row, value, index, kosName) {
   const label = html`<span class="ledger__cell-label" aria-hidden="true">${kosName}</span>`;
 
@@ -146,12 +123,7 @@ function cell(row, value, index, kosName) {
   return html`<td class="${kind}${best}" role="cell">${label}<span class="ledger__cell-value">${value}</span></td>`;
 }
 
-/**
- * One column set, shared by every table in the comparison. With
- * `table-layout: fixed` the columns take their widths from here rather than
- * from their contents, so "Monthly rent" in the first section and "Laundry"
- * in the fifth sit on exactly the same vertical lines.
- */
+/** One column set for every table, so the columns line up across sections. */
 function columns(count) {
   return html`<colgroup>
     <col class="ledger__col-criterion" />
@@ -159,8 +131,7 @@ function columns(count) {
   </colgroup>`;
 }
 
-/* Names only. A kos is removed from its chip in the compare bar, or by
-   toggling it off in the picker; a Remove here only duplicated the chip's. */
+// Names only: a kos is removed from its chip or the picker, never from the table.
 function headerRow(surveys) {
   return html`<tr role="row">
     <th class="ledger__criterion" scope="col" role="columnheader">Criterion</th>
@@ -172,13 +143,7 @@ function headerRow(surveys) {
   </tr>`;
 }
 
-/**
- * A category as its own card. The heading names the table, so a screen
- * reader announces "Room, table" and heading navigation reaches each
- * category. The column headers are repeated inside every table for assistive
- * technology — each table has to stand on its own — but shown only once, in
- * the card above the first section.
- */
+/** Each table repeats its column headers for assistive technology; they show once, above. */
 function section(group, index, surveys) {
   const id = `ledger-group-${index}`;
   return html`<section class="ledger-section" aria-labelledby="${id}">
@@ -208,9 +173,7 @@ function section(group, index, surveys) {
 export function comparisonTable(surveys) {
   const groups = buildGroups(surveys);
 
-  // One scroller around everything: if the page ever gets narrow enough to
-  // scroll sideways, every section moves together and the columns stay lined
-  // up, instead of each card scrolling on its own.
+  // One scroller for every section, so the columns stay lined up when it scrolls.
   return html`
     <div class="ledger-sections" data-reveal>
       <div class="ledger-section ledger-section--columns">

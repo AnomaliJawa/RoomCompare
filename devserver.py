@@ -1,8 +1,4 @@
-"""
-Kept so that `python devserver.py [port]` still works. It now starts
-server.py, which serves the app and its API: the app needs the API to log in,
-so a static server alone can no longer run it.
-"""
+"""Kept so `python devserver.py [port]` still works: it starts server.py."""
 
 import sys
 

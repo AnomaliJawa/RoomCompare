@@ -1,17 +1,4 @@
-/**
- * IndexedDB store for photo and video blobs.
- *
- * Survey records live in localStorage and hold only photoIds; the binary data
- * lives here. The PRD allows ten photos per section across four sections, so a
- * single survey can carry forty images — localStorage holds strings only, so
- * they would have to be base64-encoded (inflating them by about a third)
- * inside the same few megabytes that hold every survey record. A couple of
- * phone photos would exhaust it.
- *
- * Every call resolves rather than rejecting on a missing database: if storage
- * is blocked, photos cannot be kept, but nothing else about the app should
- * break.
- */
+/** Photo and video blobs live in IndexedDB: localStorage holds strings only and would fill up. */
 
 const DB_NAME = 'roomcompare';
 const DB_VERSION = 1;
@@ -76,7 +63,6 @@ export async function isAvailable() {
   return (await openDatabase()) !== null;
 }
 
-/** Wrap one transaction, resolving with whatever `work` produced. */
 async function withStore(mode, work) {
   const db = await openDatabase();
   if (!db) return null;
@@ -118,12 +104,7 @@ function requestValue(request) {
   return box;
 }
 
-/* --- Writes -------------------------------------------------------------- */
-
-/**
- * Store one asset. Returns its id, or null when media storage is unavailable
- * so the caller can report the failure for that file alone.
- */
+/** Returns null when media storage is unavailable, so only that file fails. */
 export async function putMedia(record) {
   const saved = await withStore('readwrite', (store) => {
     store.put(record);
@@ -139,7 +120,6 @@ export async function deleteMedia(id) {
   });
 }
 
-/** Remove every asset belonging to a survey. Called when a survey is deleted. */
 export async function deleteMediaForSurvey(surveyId) {
   return withStore('readwrite', (store) => {
     const box = { value: 0 };
@@ -162,13 +142,10 @@ export async function clearAllMedia() {
   });
 }
 
-/* --- Reads --------------------------------------------------------------- */
-
 export async function getMedia(id) {
   return withStore('readonly', (store) => requestValue(store.get(id)));
 }
 
-/** Fetch several assets in one transaction, in the order the ids were given. */
 export async function getMediaMany(ids) {
   if (!ids || !ids.length) return [];
   const found = await withStore('readonly', (store) => {
@@ -193,10 +170,7 @@ export async function getMediaForSurvey(surveyId) {
   );
 }
 
-/**
- * Who each asset belongs to, without reading any image data: the cursor's
- * values hold Blob handles, not bytes.
- */
+/** Reads owners without image data: cursor values hold Blob handles, not bytes. */
 export async function listMediaMeta() {
   const meta = await withStore('readonly', (store) => {
     const box = { value: [] };
@@ -217,11 +191,6 @@ export async function countMedia() {
   return (await withStore('readonly', (store) => requestValue(store.count()))) ?? 0;
 }
 
-/**
- * Browser-reported usage. Unlike localStorage, IndexedDB can be evicted under
- * storage pressure, so it is worth being able to show how close to the limit
- * the user is.
- */
 export async function estimateUsage() {
   if (!navigator.storage?.estimate) return null;
   try {
@@ -232,10 +201,7 @@ export async function estimateUsage() {
   }
 }
 
-/* --- Object URLs ---------------------------------------------------------
-   Every createObjectURL holds its blob in memory until revoked, so a gallery
-   that navigates away without revoking leaks the full image set. Views take
-   urls from here and release them on unmount. */
+// Every object URL pins its blob in memory until revoked; views release theirs on unmount.
 
 const urls = new Map();
 

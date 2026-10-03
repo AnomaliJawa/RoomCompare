@@ -64,8 +64,7 @@ describe('guidance on the survey form', () => {
     const helpers = [...page.querySelectorAll('.field__hint, .uploader__drop-hint')].map(text).filter(Boolean);
     expect(helpers.sort()).toEqual(Object.values(FIELD_GUIDE).map((guide) => guide.helper).filter(Boolean).sort());
     expect(helpers).toHaveLength(22);
-    // Removed at the user's request (2026-10-03): only the status line, empty
-    // until a route cannot be had, describes the distance.
+    // Removed at the user's request: only the status line describes the distance.
     const distance = page.querySelector('#f-distanceKm');
     expect(distance.getAttribute('aria-describedby')).toBe('f-distanceKm-status');
     expect(text(distance.closest('.field').querySelector('.field__hint'))).toBe('');
@@ -151,7 +150,7 @@ describe('guidance on the survey form', () => {
     const { renderSurveyForm } = await load();
     const credit = show(renderSurveyForm()).querySelector('#f-distanceKm').closest('.field').querySelector('.field__credit');
     expect(text(credit)).toBe('Route data © OpenStreetMap contributors');
-    // "Fix the map" was taken out at the user's request (2026-10-03).
+    // "Fix the map" was removed at the user's request.
     expect(credit.querySelector('a')).toBeNull();
   });
 });
@@ -205,8 +204,7 @@ describe('the owner or security phone', () => {
 describe('the survey id', () => {
   const formId = (markup) => show(markup).querySelector('#survey-form').dataset.surveyId;
 
-  // A form left through the nav, after autosave had kept it as a draft, used
-  // to pass its id to the next new survey, which then overwrote the draft.
+  // A form left through the nav once passed its draft's id to the next new survey, which overwrote it.
   it('is new for every new survey form, however the last one was left', async () => {
     const { renderSurveyForm } = await load();
     const first = formId(renderSurveyForm());

@@ -1,19 +1,4 @@
-"""
-The server, over real HTTP: accounts, sessions, survey storage, and what it
-refuses to serve.
-
-    python -m unittest discover -s tests/server -v
-
-Each test class starts the server on a free port with a throwaway database.
-Password hashing runs at 1,000 iterations here instead of 600,000, so the
-suite takes seconds, not minutes; the stored format records the count, so
-nothing else changes.
-
-The account, throttle and survey tests run twice: against server.py with
-SQLite, as it runs locally, and against the Vercel function (api/index.py)
-with Redis, as it runs in production, talking to an in-memory stand-in for
-Upstash over its REST API.
-"""
+"""The server over real HTTP; the account, throttle and survey suites run on SQLite and on Vercel's Redis path."""
 
 import http.client
 import http.cookiejar
@@ -75,12 +60,7 @@ class Client:
             return error.code, (json.loads(payload) if payload and "json" in content_type else payload), error.headers
 
     def call_with_late_body(self, method, path, raw, headers=None):
-        """call(), but the body follows the headers 50 ms later.
-
-        By then a server that answers without reading the body has closed
-        the connection, so the body arrives at a closed one. The reply is
-        read 50 ms after that, once any reset sent back has arrived.
-        """
+        """Sends the body 50 ms after the headers, as a slow client would; reads the reply 50 ms later."""
         request = urllib.request.Request(self.base + path, headers=headers or {})
         self.jar.add_cookie_header(request)
         url = urllib.parse.urlsplit(self.base)
@@ -104,12 +84,10 @@ class Client:
 
 
 def send_raw(address, request):
-    """Send a request exactly as written, which urllib will not: it writes
-    Content-Length itself. Returns the status and the JSON reply."""
+    """A request exactly as written, which urllib will not send: it writes Content-Length itself."""
     with socket.create_connection(address, timeout=10) as connection:
         connection.sendall(request)
-        # Half-closed, so a server that reads to the end of the stream gets
-        # there and answers, instead of waiting for more.
+        # Half-closed, so a server that reads to the end of the stream answers instead of waiting.
         connection.shutdown(socket.SHUT_WR)
         reply = b""
         while chunk := connection.recv(65536):
@@ -147,7 +125,6 @@ class ServerTestCase(unittest.TestCase):
     def client(self):
         return Client(self.base)
 
-    # What a test needs to reach behind the API for, per backend.
 
     def expire_sessions(self):
         with sqlite3.connect(self.db_path) as db:
@@ -329,9 +306,7 @@ class Surveys(ServerTestCase):
         self.assertEqual(not_json[0], 415)
 
     def test_a_negative_length_is_refused_without_reading_the_body(self):
-        # A negative length is under MAX_BODY, and rfile.read(-1) reads to the
-        # end of the stream, however long: this login would be read and
-        # answered 401. Below -1, read() raises instead, which was a 500.
+        # A negative length slipped under MAX_BODY: rfile.read(-1) reads to the end of the stream.
         login = json.dumps({"email": "nobody@example.com", "password": "wrong password"}).encode("utf-8")
         for length in ("-1", "-2"):
             with self.subTest(length=length):
@@ -351,14 +326,7 @@ class Surveys(ServerTestCase):
         self.assertEqual(same_site[0], 200)
 
     def test_a_refusal_arrives_even_when_the_body_comes_late(self):
-        # Each of these is refused before its body is read. Had the server
-        # answered and closed without reading it, the body would reach a
-        # closed connection, and the reset sent back destroys the reply on
-        # Windows (WinError 10053). With the body sent at once, as call()
-        # sends it, the reply was lost only now and then:
-        # test_size_and_format_limits and
-        # test_writes_from_another_site_are_refused failed about one run in
-        # three until Handler.discard_body.
+        # Refused before the body was read, the reply was lost to a reset on Windows about one run in three.
         browser = self.client()
         browser.register()
         record = json.dumps({"survey": survey("svy-a")}).encode("utf-8")
@@ -394,7 +362,7 @@ class StaticFiles(ServerTestCase):
                 self.assertEqual(browser.call("GET", path)[0], 404)
 
 
-# --- The same suites on Vercel ------------------------------------------------
+# --- The same suites on Vercel ---
 
 
 class VercelAccounts(OnVercel, Accounts):
@@ -428,8 +396,7 @@ class VercelOnly(OnVercel, ServerTestCase):
         vercel._application = None
         try:
             with mock.patch.dict(os.environ, {}, clear=True):
-                # Logging in is the first thing that needs storage; asking
-                # who is logged in, with no cookie, rightly answers 401 without it.
+                # Logging in is the first thing that needs storage; a cookieless who-am-I rightly answers 401.
                 status, body, _ = self.client().call("POST", "/api/login", {"email": "a@b.co", "password": "longenough"})
         finally:
             vercel._application = kept
@@ -447,19 +414,12 @@ class VercelOnly(OnVercel, ServerTestCase):
                 self.assertEqual(app.backend.send.url, "https://example.upstash.io/pipeline")
 
     def test_nothing_in_the_function_looks_like_a_wsgi_or_asgi_app(self):
-        # Vercel's Python runtime serves a module-level `app` or `application`
-        # in preference to `handler`. A function by either name that is not a
-        # WSGI or ASGI app stops the runtime starting, and every /api request
-        # then fails with FUNCTION_INVOCATION_FAILED. The first deploy did.
+        # Vercel serves a module-level app or application instead of handler; one deploy failed on it.
         for name in ("app", "application"):
             self.assertFalse(hasattr(vercel, name), f"api/index.py defines `{name}`")
 
     def test_the_redis_client_runs_on_server_pys_own_imports(self):
-        # This file imports urllib.request, which made it an attribute of the
-        # urllib package for server.py too, and hid that server.py never
-        # imported it. On Vercel nothing else does, and every call to Redis
-        # failed with AttributeError. A fresh interpreter has only server.py's
-        # own imports; fake_upstash loads nothing that pulls urllib.request in.
+        # Run in a fresh interpreter: this file's urllib.request import once hid server.py missing it.
         script = (
             "import sys\n"
             "sys.path[:0] = sys.argv[1:3]\n"

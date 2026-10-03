@@ -44,31 +44,21 @@ import { renderCompare, mountCompare } from './features/compare.js';
 
 const root = () => qs('#app-root');
 
-/** The most recent delete, restorable until its toast expires. */
 let pendingUndo = null;
 
-/** The selection Start over cleared, restorable until its toast expires. */
 let pendingCompareUndo = null;
 
-/** Where a logged-out visitor was headed, so logging in takes them there. */
 let returnTo = null;
 
-/** Why the server could not be asked about a session, shown on the login page. */
 let serverProblem = null;
 
-/**
- * Whatever the current view mounted. Views that hold resources — object urls
- * for photo blobs, map instances — return a handle, and it is released before
- * the next view replaces the DOM.
- */
+/** Views holding resources (object URLs, maps) return a handle, released before the next view. */
 let viewHandle = null;
 
 function releaseView() {
   viewHandle?.destroy?.();
   viewHandle = null;
 }
-
-/* --- Routes -------------------------------------------------------------- */
 
 const ROUTES = [
   // The only routes open without an account.
@@ -84,15 +74,9 @@ const ROUTES = [
   { path: '/compare', name: 'compare', render: renderCompare, nav: 'compare', mount: mountCompare },
 ];
 
-/**
- * Routes whose DOM holds live user input. A store change must not rebuild
- * these: the form owns typed values, focus, caret position, map instances and
- * uploaded thumbnails, and re-rendering would discard all of it mid-edit.
- * Autosave writes to the store on a timer, so this is not hypothetical.
- */
+/** Routes whose DOM holds live input: store changes must not re-render them (autosave writes). */
 const SELF_MANAGED_ROUTES = new Set(['survey-new', 'survey-edit', 'login', 'register']);
 
-/** Re-render the active route in place, without touching the URL. */
 function refresh() {
   renderAccount();
   const active = ROUTES.find((route) => route.name === currentRoute().name);
@@ -108,9 +92,7 @@ function refresh() {
   renderPickerDialog();
 
   const params = currentRoute().params;
-  // A panel the user opened stays open while the view is rebuilt around it.
-  // Best Match would otherwise shut the moment new weights are saved, hiding
-  // the scores they changed. A fresh visit to the page still starts closed.
+  // An opened panel stays open across rebuilds, or saving weights would shut Best Match.
   const kept = qsa('details[data-keep-open][open]', root()).map((node) => node.dataset.keepOpen);
   releaseView();
   mount(root(), active.render(params));
@@ -120,11 +102,6 @@ function refresh() {
   renderStorageNotice();
 }
 
-/**
- * Storage problems are stated plainly rather than left for the user to
- * discover by losing work. The notice sits above the view so it is seen
- * without covering anything.
- */
 function renderStorageNotice() {
   const region = qs('#storage-notice');
   if (!region) return;
@@ -151,10 +128,6 @@ function renderStorageNotice() {
   );
 }
 
-/**
- * The shell follows the session: logged out, the nav shows the wordmark
- * alone, since every other destination needs an account.
- */
 function renderAccount() {
   const { user } = store.getState();
   document.body.dataset.auth = user ? 'in' : 'out';
@@ -164,11 +137,7 @@ function renderAccount() {
   });
 }
 
-/**
- * Keep the filter dialog current. Filters apply as they are changed, so the
- * count on its primary button updates while the dialog is still open and the
- * user can see what a choice costs before committing to it.
- */
+/** Filters apply as changed, so the dialog's count updates while it is open. */
 function renderFilterDialog() {
   const node = qs('#app-filters');
   if (!node || !node.open) return;
@@ -177,15 +146,7 @@ function renderFilterDialog() {
   mount(node, filterDialogContent(communityFilters, { total: communitySurveys.length, showing }));
 }
 
-/**
- * Keep the kos picker current while it is open, so Selected and "Maximum of
- * 3" change as the user picks. The list is rebuilt under the pointer, which
- * would drop keyboard focus to the page; it goes back to the kos just
- * toggled instead. The list keeps its scroll position too: it holds every
- * community kos below the user's own, and a pick far down would otherwise
- * send it back to the top. Safari does not focus a tapped button, so focus
- * alone would not bring it back there.
- */
+/** Rebuilt under the pointer: focus and scroll go back to the kos just toggled (Safari never focused it). */
 function renderPickerDialog() {
   const node = qs('#app-picker');
   if (!node || !node.open) return;
@@ -216,8 +177,6 @@ function closeMobileNav() {
   links?.setAttribute('data-open', 'false');
   toggle?.setAttribute('aria-expanded', 'false');
 }
-
-/* --- Actions ------------------------------------------------------------- */
 
 function wireActions() {
   onAction('toggle-nav', () => {
@@ -265,14 +224,12 @@ function wireActions() {
     });
     if (!confirmed) return;
 
-    // Capture the media before the delete cascades, so undo can put the
-    // photos back and not just the record.
+    // Capture the media before the delete cascades, so undo restores the photos too.
     const captured = await loadSurveyMedia(dataset.id);
     const { removed, index, mediaCleanup } = store.deleteSurvey(dataset.id) ?? {};
     if (!removed) return;
 
-    // Wait for the cleanup to finish before offering undo: otherwise a quick
-    // undo restores the photos and the cascade then deletes them again.
+    // Wait for the cleanup before offering undo, or a quick undo's photos would be deleted again.
     await mediaCleanup;
 
     pendingUndo = { survey: removed, index, media: captured };
@@ -315,9 +272,7 @@ function wireActions() {
       );
       return;
     }
-    // Adding needs no toast: the button pressed already says so (Selected in
-    // the picker, In comparison on a card or a survey's page), and the
-    // picker's count updates with it.
+    // Adding needs no toast: the pressed button already says so.
     if (!store.getState().compareSelection.includes(dataset.id)) {
       toast(`${survey.kos.name} removed from comparison`);
     }
@@ -329,15 +284,12 @@ function wireActions() {
 
   onAction('show-comparison', () => store.showComparison());
 
-  // Start over sits beside Add kos, so a slipped tap would throw away a
-  // shortlist chosen with care. It is undoable rather than confirmed:
-  // asking first would slow every deliberate use to guard the rare mistake.
+  // Undoable rather than confirmed: a slipped tap beside Add kos must not cost a shortlist.
   onAction('clear-compare', () => {
     const { compareSelection, compareShown } = store.getState();
     pendingCompareUndo = { selection: [...compareSelection], shown: compareShown };
     store.clearCompare();
-    // Start over has just disappeared with the table; Add kos is where the
-    // next choice starts.
+    // Start over is gone with the table, so focus moves to Add kos.
     qs('[data-action="open-picker"]')?.focus();
     toast('Comparison cleared', {
       action: { name: 'undo-clear-compare', label: 'Undo' },
@@ -365,9 +317,7 @@ function wireActions() {
 
   onAction('close-picker', () => qs('#app-picker')?.close());
 
-  // The Add kos button is rebuilt with the view whenever a kos is picked, so
-  // the browser's own focus return would land on a node that no longer
-  // exists. Send it to the current button instead.
+  // Add kos is rebuilt with the view, so focus goes to the current button, not the old node.
   qs('#app-picker')?.addEventListener('close', () => qs('[data-action="open-picker"]')?.focus());
 
   onAction('cancel-form', async () => {
@@ -407,8 +357,7 @@ function wireActions() {
   );
 
   onAction('logout', async () => {
-    // Anything waiting goes now if it can; only what still cannot is worth
-    // asking about.
+    // Anything waiting goes now if it can; only what still cannot is worth asking about.
     await sync.flush();
     const waiting = sync.pendingCount();
     if (waiting) {
@@ -426,8 +375,7 @@ function wireActions() {
     try {
       await api.logout();
     } catch (error) {
-      // The session is an HttpOnly cookie only the server can end. Clearing
-      // the screen without it would look logged out and not be.
+      // Only the server can end the HttpOnly session; clearing the screen alone would not log out.
       toast(error.offline ? 'You’re offline, so you can’t log out yet. Try again once you’re connected.' : error.message);
       return;
     }
@@ -439,9 +387,7 @@ function wireActions() {
     toast('Logged out');
   });
 
-  // A new survey autosaves as a draft so a dropped tab mid-visit costs
-  // nothing. It is deliberately quiet: no navigation, no toast stealing
-  // attention while someone is still typing.
+  // A new survey autosaves quietly as a draft, so a dropped tab mid-visit costs nothing.
   document.addEventListener('autosave', (event) => {
     const form = event.target;
     const data = readSurveyForm(form);
@@ -484,16 +430,13 @@ function wireActions() {
 
   onAction('close-filters', () => qs('#app-filters')?.close());
 
-  // A field's ⓘ opens its How to fill panel.
   onAction('open-howto', ({ target }) => openHowTo(target.dataset.guide, target));
   onAction('close-howto', () => qs('#app-howto')?.close());
 
-  // The ? beside the survey form's title reopens the Survey guide.
   onAction('open-survey-guide', ({ target }) => openSurveyGuide(target));
   onAction('close-survey-guide', () => qs('#app-survey-guide')?.close());
 
-  // Best Match weights, from Edit criteria in the panel or on the Dashboard.
-  // The draft stays in the dialog's inputs; only Save touches the store.
+  // Weights: the draft stays in the dialog's inputs; only Save touches the store.
   onAction('open-criteria', () => openCriteria(store.bestMatchWeights()));
   onAction('close-criteria', () => qs('#app-criteria')?.close());
   onAction('criteria-step', ({ target, dataset }) => stepWeight(target.form, dataset.key, Number(dataset.step)));
@@ -517,8 +460,7 @@ function wireActions() {
     const intent = event.submitter?.dataset.intent ?? 'draft';
     const data = readSurveyForm(target);
 
-    // Update keeps whatever status the record already has, so an edited draft
-    // is held to draft rules rather than being forced to completeness.
+    // Update keeps the record's status, so an edited draft is held to draft rules.
     const existing = target.dataset.id ? store.findSurvey(target.dataset.id) : null;
     const mode =
       intent === 'publish' || (intent === 'update' && existing?.status === STATUS.PUBLISHED)
@@ -526,8 +468,7 @@ function wireActions() {
         : 'draft';
 
     const result = validateSurvey(data, { mode });
-    // Re-check a repaired field on blur from here on, but never before the
-    // user has actually tried to submit.
+    // Re-check repaired fields on blur, but only after a submit was tried.
     watchForRepair(target, () => validateSurvey(readSurveyForm(target), { mode }));
 
     if (!showErrors(target, result)) return;
@@ -551,7 +492,6 @@ function wireActions() {
 
     clearErrors(target);
 
-    /** Every media id the saved survey still points at. */
     const keptMedia = [
       ...data.room.photoIds,
       ...data.bathroom.photoIds,
@@ -561,8 +501,7 @@ function wireActions() {
 
     const editingId = target.dataset.id;
     if (editingId) {
-      // An autosaved draft is already a record, so publishing it promotes
-      // the same row rather than creating a second one.
+      // An autosaved draft is already a record, so publishing it promotes the same row.
       const intended = intent === 'publish' ? STATUS.PUBLISHED : undefined;
       store.updateSurvey(editingId, intended ? { ...data, status: intended } : data);
       toast(intent === 'publish' ? 'Published' : 'Survey updated');
@@ -577,8 +516,7 @@ function wireActions() {
       });
       toast(intent === 'publish' ? 'Published' : 'Saved as draft');
     }
-    // Photos dropped in the form are destroyed here, once the record that no
-    // longer lists them has actually been written.
+    // Dropped photos are destroyed only once the record without them is written.
     pruneSurveyMedia(editingId || target.dataset.surveyId, keptMedia).catch(() => null);
 
     teardownSurveyForm();
@@ -586,13 +524,7 @@ function wireActions() {
   }, 'submit');
 }
 
-/* --- Account --------------------------------------------------------------- */
-
-/**
- * Surveys recorded here before accounts existed are offered to the first
- * account that logs in. Left out, they are kept aside on this device rather
- * than deleted (storage.keepUnclaimed).
- */
+/** Pre-account surveys are offered to the first account; left out, they are kept aside, not deleted. */
 function claimSurveys(count) {
   const one = count === 1;
   return confirmDialog({
@@ -613,11 +545,7 @@ function sessionEnded() {
   toast('Your session has ended. Log in again to keep saving to your account.');
 }
 
-/**
- * Make an account the current one: its surveys become this device's working
- * copy, and changes start flowing to it. Resolves false if it did not work
- * out, in which case nobody is logged in.
- */
+/** Resolves false if it did not work out, in which case nobody is logged in. */
 async function signIn(user) {
   store.setUser(user);
   try {
@@ -627,14 +555,13 @@ async function signIn(user) {
     store.setUser(null);
     throw error;
   }
-  // Distances still measured in a straight line are walked, in the background.
+  // Distances still on a straight line are walked in the background.
   distanceRefresh.start();
-  // Photos left by forms abandoned before saving: this account's only.
+  // Photos left by abandoned forms: this account's only.
   sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id), user.id).catch(() => null);
   return true;
 }
 
-/** Log in or register: the browser's checks first, then the server's answer. */
 async function submitCredentials(form, { validate, call, label, busy, done = null }) {
   const credentials = readCredentials(form);
   watchForRepair(form, () => validate(readCredentials(form)));
@@ -666,19 +593,15 @@ async function submitCredentials(form, { validate, call, label, busy, done = nul
   }
 }
 
-/** At boot: is someone already logged in on this browser? */
 async function restoreSession() {
   try {
     const { user } = await api.me();
     await signIn(user);
   } catch (error) {
-    // 401 is the ordinary answer for nobody logged in. Anything else — no
-    // server, no connection — is worth saying on the login page.
+    // 401 is the ordinary logged-out answer; anything else is worth saying on the login page.
     if (error.status !== 401) serverProblem = error.message;
   }
 }
-
-/* --- Boot ---------------------------------------------------------------- */
 
 function notFound(path) {
   mount(
@@ -700,8 +623,7 @@ async function start() {
       path: route.path,
       name: route.name,
       render: (params) => {
-        // Every route but logging in and registering needs an account. A
-        // visitor sent to log in is taken on to where they were headed.
+        // Every route but log in and register needs an account; a visitor sent to log in returns after.
         const signedIn = Boolean(store.getState().user);
         if (!route.public && !signedIn) {
           returnTo = currentPath();
@@ -730,7 +652,6 @@ async function start() {
   startEventBridge();
   wireActions();
 
-  // On a phone these are sheets, dismissed by dragging their head down.
   enableSheetDismiss(qs('#app-filters'), '.filter-dialog__head');
   enableSheetDismiss(qs('#app-picker'), '.picker-dialog__head');
   enableSheetDismiss(qs('#app-howto'), '.howto__head');
@@ -740,17 +661,12 @@ async function start() {
   initSurveyGuide();
   initCriteriaDialog();
 
-  // iOS Safari has applied :active only where a touch listener exists on the
-  // element or an ancestor. Without this no-op, the pressed states in
-  // components.css would not show on an iPhone that still behaves that way.
+  // iOS Safari applies :active only with a touch listener on the element or an ancestor.
   document.addEventListener('touchstart', () => {}, { passive: true });
 
-  // Any store write re-renders the active route.
   store.subscribe(refresh);
 
-  // The session decides the first screen, so ask before routing. Sample
-  // surveys are no longer attached to a first run: an account starts with its
-  // own, and the orphan sweep now runs per account, in signIn().
+  // The session decides the first screen, so ask before routing.
   await restoreSession();
   renderAccount();
   startRouter();

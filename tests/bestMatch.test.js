@@ -53,8 +53,7 @@ describe('the weighted total', () => {
 
     const { scored } = computeBestMatch([best, worst]);
 
-    // price 100, facilities 18/24 = 75, cleanliness 100, location 100,
-    // distance 100, security 100.
+    // price 100, facilities 18/24 = 75, cleanliness 100, location 100, distance 100, security 100.
     const expected = Math.round((100 * 25 + 75 * 20 + 100 * 15 + 100 * 15 + 100 * 13 + 100 * 12) / 100);
     expect(expected).toBe(95);
     expect(scored[0].total).toBe(95);
@@ -212,8 +211,6 @@ describe('leaders', () => {
   });
 });
 
-// On narrow screens the breakdown stacks each criterion into a list, where a
-// bare figure cannot say which kos it belongs to.
 describe('the breakdown', () => {
   it('names the kos beside each score, and the weight beside the weight', () => {
     const surveys = [kos('Kos Pelangi'), kos('Casa Hijau', { room: { cleanliness: null } })];

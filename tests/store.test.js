@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { STORAGE_KEY, SCHEMA_VERSION } from '../src/storage.js';
 
-/**
- * The store reads storage once, at import. Each test therefore seeds
- * localStorage first and then imports a fresh copy of the module.
- */
+/** The store reads storage once, at import, so each test seeds first, then imports a fresh copy. */
 async function freshStore() {
   vi.resetModules();
   return import('../src/store.js');
@@ -224,8 +221,7 @@ describe('starring', () => {
 });
 
 describe('comparison candidates', () => {
-  // A new account starts with no surveys, and was offered only the one
-  // community kos starred on a first visit.
+  // A new account starts with no surveys, and was once offered only the one starred kos.
   it('are your published surveys and every community survey, by source, with the drafts counted', async () => {
     const store = await freshStore();
     const { surveys, communitySurveys } = store.getState();
@@ -237,8 +233,7 @@ describe('comparison candidates', () => {
     expect(store.comparableSurveys().map((s) => s.id)).toEqual([...own, ...community].map((s) => s.id));
   });
 
-  // The user's rule (2026-10-03): a draft is still being filled in, and only
-  // publishing says a survey is complete enough to compare.
+  // A draft is still being filled in; only publishing says a survey can be compared.
   it('leave drafts out, and refuse one asked for directly', async () => {
     const store = await freshStore();
     const draft = store.getState().surveys.find((s) => s.status === 'draft');

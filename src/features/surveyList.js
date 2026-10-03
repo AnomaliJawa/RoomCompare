@@ -5,13 +5,7 @@ import { noSurveysYet, noSearchResults } from '../components/emptyState.js';
 import { textField } from '../components/fields.js';
 import { mountThumbs } from '../components/thumbs.js';
 
-/**
- * Partial match on the kos name, ignoring case and accents.
- *
- * Someone who recorded "Kos Sejahtera" while typing on a phone keyboard may
- * well search for "sejahtera" in either form, and a search that misses a kos
- * the user knows they saved reads as data loss.
- */
+/** Matches ignoring case and accents, so a phone keyboard's spelling still finds the kos. */
 function searchKey(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -75,7 +69,6 @@ export function renderSurveyList() {
   `;
 }
 
-/** Fill in card thumbnails once their blobs load. */
 export function mountSurveyList(root) {
   let handle = null;
   mountThumbs(root).then((result) => {

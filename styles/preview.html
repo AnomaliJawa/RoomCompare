@@ -27,7 +27,7 @@
       .spec { color: var(--muted); font-size: var(--text-xs); margin-top: var(--space-2); }
       .brand { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
       .brand__art { display: flex; align-items: center; justify-content: center; gap: var(--space-4); min-height: 140px; padding: var(--space-4); border: 1px solid var(--rule); border-radius: var(--radius-md); background: var(--surface); }
-      /* A browser's dark tab strip, shown to judge the favicon there. Not a colour of the system. */
+      /* A dark browser tab strip, to judge the favicon there. Not a system colour. */
       .brand__art--tabs { flex-direction: column; gap: 0; padding: 0; overflow: hidden; }
       .brand__tab { display: flex; flex: 1; align-items: center; justify-content: center; gap: var(--space-4); width: 100%; }
       .brand__tab--dark { background: #202124; }
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      <!-- Brand ------------------------------------------------------------->
+      <!-- Brand -->
       <section class="section">
         <div class="section__head"><h2>Brand</h2><span class="meta">icons/logo.svg, as supplied</span></div>
         <div class="brand">
@@ -123,7 +123,7 @@
         </p>
       </section>
 
-      <!-- Colour ------------------------------------------------------------>
+      <!-- Colour -->
       <section class="section">
         <div class="section__head"><h2>Colour</h2><span class="meta">6 tokens + 2 semantic</span></div>
         <div class="swatches">
@@ -143,7 +143,7 @@
         </p>
       </section>
 
-      <!-- Type -------------------------------------------------------------->
+      <!-- Type -->
       <section class="section">
         <div class="section__head"><h2>Type</h2><span class="meta">Archivo &amp; Archivo Narrow</span></div>
         <div class="scale-row"><span class="scale-row__tag">39 / hero</span><span style="font-size: var(--text-2xl); font-weight: 600; letter-spacing: var(--tracking-tight)">Rp 1.350.000</span></div>
@@ -159,7 +159,7 @@
         </p>
       </section>
 
-      <!-- Numerals ---------------------------------------------------------->
+      <!-- Numerals -->
       <section class="section">
         <div class="section__head"><h2>Numerals</h2><span class="meta">tabular-nums, left-aligned</span></div>
         <div class="panel">
@@ -174,7 +174,7 @@
           label and text value in the interface. This is the one typographic statement the design makes.</p>
       </section>
 
-      <!-- Buttons ----------------------------------------------------------->
+      <!-- Buttons -->
       <section class="section">
         <div class="section__head"><h2>Actions</h2><span class="meta">radius 4px, no shadow</span></div>
         <div class="row">
@@ -188,9 +188,7 @@
         <p class="spec">An action keeps its name through the flow: Publish produces a toast that says Published.</p>
       </section>
 
-      <!-- Fields ------------------------------------------------------------
-           Rendered by the site's own field components (the script below), so
-           the guidance here cannot drift from the survey form. -->
+      <!-- Fields: rendered by the site's own components, so they cannot drift. -->
       <section class="section">
         <div class="section__head"><h2>Fields</h2><span class="meta">each says what it needs</span></div>
         <div class="panel stack" id="p-fields"></div>
@@ -205,7 +203,7 @@
         </p>
       </section>
 
-      <!-- Survey guidance --------------------------------------------------->
+      <!-- Survey guidance -->
       <section class="section">
         <div class="section__head"><h2>Survey guidance</h2><span class="meta">the form, not a manual</span></div>
         <div class="panel stack" id="p-guidance"></div>
@@ -222,7 +220,7 @@
         </p>
       </section>
 
-      <!-- Ledger ------------------------------------------------------------>
+      <!-- Ledger -->
       <section class="section">
         <div class="section__head"><h2>Comparison ledger</h2><span class="meta">the origin of the system</span></div>
         <div class="ledger-wrap">
@@ -292,7 +290,7 @@
         </p>
       </section>
 
-      <!-- Kos picker -------------------------------------------------------->
+      <!-- Kos picker -->
       <section class="section">
         <div class="section__head"><h2>Kos picker</h2><span class="meta">Add kos, by source</span></div>
         <div class="preview-dialogs">
@@ -305,7 +303,7 @@
         </p>
       </section>
 
-      <!-- States ------------------------------------------------------------>
+      <!-- States -->
       <section class="section">
         <div class="section__head"><h2>States</h2></div>
         <div class="grid-split">
@@ -344,7 +342,7 @@
         </div>
       </section>
 
-      <!-- Elevation --------------------------------------------------------->
+      <!-- Elevation -->
       <section class="section">
         <div class="section__head"><h2>Elevation</h2><span class="meta">the only shadow in the system</span></div>
         <div class="dialog" style="position: static">
@@ -358,8 +356,7 @@
       </section>
     </main>
 
-    <!-- Shown in flow here so it does not cover the page under review.
-         In the app the toast region is fixed to the bottom centre. -->
+    <!-- In flow here so it does not cover the page; in the app the toasts are fixed bottom centre. -->
     <div class="column" style="padding-top: 0">
       <section class="section">
         <div class="section__head"><h2>Feedback</h2><span class="meta">aria-live</span></div>

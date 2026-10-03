@@ -1,11 +1,4 @@
-/**
- * DOM and templating helpers.
- *
- * Every template in the prototype interpolated user input into innerHTML
- * unescaped, so a kos named `<img onerror=...>` broke the page. The `html`
- * tag below escapes interpolated values by default; anything already built
- * as markup has to be passed through `raw()` deliberately.
- */
+/** html escapes every interpolated value; markup must go through raw() deliberately. */
 
 const ESCAPE_MAP = {
   '&': '&amp;',
@@ -22,12 +15,7 @@ export function escapeHtml(value) {
 
 const RAW = Symbol('raw');
 
-/**
- * Markup that has already been escaped. `html` returns one of these so that
- * nesting a template inside another template composes instead of escaping —
- * the alternative made every nested call a silent bug that rendered tags as
- * visible text.
- */
+/** Nested html results compose instead of being escaped into visible text. */
 class SafeHtml {
   constructor(value) {
     this.value = value;
@@ -39,7 +27,6 @@ class SafeHtml {
   }
 }
 
-/** Mark an already-built string as trusted markup. */
 export function raw(value) {
   if (value instanceof SafeHtml) return value;
   return new SafeHtml(value === null || value === undefined ? '' : String(value));
@@ -57,10 +44,6 @@ function resolve(value) {
   return escapeHtml(value);
 }
 
-/**
- * Tagged template that escapes interpolated values. Nested `html` results and
- * anything passed through `raw()` are inserted as-is; arrays are joined.
- */
 export function html(strings, ...values) {
   let out = strings[0];
   for (let i = 0; i < values.length; i += 1) {
@@ -69,7 +52,6 @@ export function html(strings, ...values) {
   return new SafeHtml(out);
 }
 
-/** Render markup into a node, replacing its contents. */
 export function mount(node, markup) {
   node.innerHTML = String(markup);
   return node;
@@ -78,15 +60,11 @@ export function mount(node, markup) {
 export const qs = (selector, scope = document) => scope.querySelector(selector);
 export const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
-/**
- * Checked values of a named group, scoped to a container.
- * The prototype queried `document`, which would collide once two forms exist.
- */
+/** Scoped to the container, so two forms on a page cannot collide. */
 export function getCheckedValues(name, scope = document) {
   return qsa(`input[name="${name}"]:checked`, scope).map((input) => input.value);
 }
 
-/** Debounce, for search inputs. */
 export function debounce(fn, wait = 200) {
   let timer;
   return (...args) => {
@@ -95,7 +73,6 @@ export function debounce(fn, wait = 200) {
   };
 }
 
-/** Placeholder tile for a survey with no photos recorded. */
 export function photoPlaceholder(name) {
   const initial = String(name || '?').trim().charAt(0).toUpperCase() || '?';
   return html`<div class="thumb thumb--empty" aria-hidden="true"><span>${initial}</span></div>`;

@@ -2,17 +2,7 @@ import { html, raw, mount, qs, qsa } from '../utils/dom.js';
 import { BEST_MATCH_CRITERIA } from '../constants.js';
 import { checkWeights } from '../utils/weights.js';
 
-/**
- * Setting the Best Match weights: a row per criterion, each a whole
- * percentage with − and + beside it, and the total underneath. Save waits for
- * exactly 100%, so the numbers on screen are the numbers the score uses;
- * nothing is rescaled behind the user's back.
- *
- * The draft lives only in these inputs until Save. Close, Esc or a swipe
- * leave the saved weights as they were. The dialog sits outside #app-root
- * (#app-criteria) and refresh() leaves it alone, so a store change rebuilding
- * the view behind it cannot wipe the draft. main.js wires the actions.
- */
+/** Save waits for exactly 100%; the draft lives in the inputs, so refresh() never re-renders this. */
 
 const STEP = 5;
 
@@ -64,7 +54,6 @@ function row(criterion, value) {
   </li>`;
 }
 
-/** The dialog's content, on `weights`: the ones in use when it opens. */
 export function criteriaDialog(weights) {
   const check = checkWeights(weights);
   return html`
@@ -102,10 +91,7 @@ export function criteriaDialog(weights) {
 
 const input = (form, key) => qs(`input[name="${key}"]`, form);
 
-/**
- * The weights as typed. A blank field reads as NaN rather than 0, so it is
- * reported, not quietly counted as nothing.
- */
+/** A blank field reads as NaN, not 0, so it is reported rather than counted as nothing. */
 export function readWeights(form) {
   return Object.fromEntries(
     BEST_MATCH_CRITERIA.map(({ key }) => {
@@ -115,7 +101,6 @@ export function readWeights(form) {
   );
 }
 
-/** Bring the total, its message, Save and the invalid marks up to date. */
 export function updateCriteriaTotal(form) {
   const check = checkWeights(readWeights(form));
   const line = qs('[data-criteria-total]', form);
@@ -128,7 +113,6 @@ export function updateCriteriaTotal(form) {
   return check;
 }
 
-/** − or +: move one weight by `step`, never below 0 or above 100. */
 export function stepWeight(form, key, step) {
   const field = input(form, key);
   const current = Number.parseInt(field.value, 10);
@@ -136,13 +120,11 @@ export function stepWeight(form, key, step) {
   return updateCriteriaTotal(form);
 }
 
-/** Put a whole set in the inputs: Reset to default. It still needs Save. */
 export function fillWeights(form, weights) {
   for (const { key } of BEST_MATCH_CRITERIA) input(form, key).value = String(weights[key]);
   return updateCriteriaTotal(form);
 }
 
-/** Open the dialog on the weights in use. */
 export function openCriteria(weights) {
   const node = document.getElementById('app-criteria');
   if (!node) return false;
@@ -151,11 +133,7 @@ export function openCriteria(weights) {
   return true;
 }
 
-/**
- * Wire the dialog once, at startup. Closing returns focus to Edit criteria.
- * Saving rebuilt the view behind the dialog, so the button that opened it is
- * gone by then; its replacement takes focus instead.
- */
+/** A save rebuilt the view, so the opener's replacement takes focus when the dialog closes. */
 export function initCriteriaDialog() {
   const node = document.getElementById('app-criteria');
   if (!node) return;

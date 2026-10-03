@@ -3,19 +3,8 @@ import { getState } from './store.js';
 import { downscaleImage, acceptVideo, MediaError } from './utils/image.js';
 import { MAX_PHOTOS_PER_SECTION, SAMPLE_PHOTO_PREFIX } from './constants.js';
 
-/**
- * Photos stay on the device that took them; the server holds survey records
- * only. Each asset records the account it was added under, so cleaning up one
- * account's leftovers can never touch another's on a shared device.
- */
+/** Photos stay on their device; each records its account, so cleanup never touches another's. */
 const currentOwner = () => getState().user?.id ?? null;
-
-/**
- * Resize-then-store, the seam the uploader will sit on.
- *
- * Files are processed one at a time and reported individually: one unreadable
- * photo out of ten must not discard the other nine.
- */
 
 export const MAX_VIDEOS = 2;
 
@@ -23,10 +12,6 @@ function newId() {
   return `med-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/**
- * Store one image against a survey section.
- * Resolves { ok: true, record } or { ok: false, fileName, message }.
- */
 export async function addPhoto(file, { surveyId, section }) {
   try {
     const processed = await downscaleImage(file);
@@ -89,10 +74,6 @@ export async function addVideo(file, { surveyId }) {
   }
 }
 
-/**
- * Process a batch, stopping at the section limit. Returns the successes and
- * the failures separately so the uploader can show both.
- */
 export async function addPhotos(files, { surveyId, section, existingCount = 0 }) {
   const room = Math.max(0, MAX_PHOTOS_PER_SECTION - existingCount);
   const accepted = [...files].slice(0, room);
@@ -104,8 +85,7 @@ export async function addPhotos(files, { surveyId, section, existingCount = 0 })
 
   const results = [];
   for (const file of accepted) {
-    // Sequential on purpose: decoding several large images at once spikes
-    // memory on the phones this is meant to run on.
+    // Sequential on purpose: decoding several large images at once spikes memory on phones.
     results.push(await addPhoto(file, { surveyId, section }));
   }
 
@@ -116,7 +96,6 @@ export async function addPhotos(files, { surveyId, section, existingCount = 0 })
   };
 }
 
-/** Re-store records captured before a delete, so undo brings the photos back. */
 export async function restoreMedia(records) {
   if (!records?.length) return 0;
   let restored = 0;
@@ -126,18 +105,9 @@ export async function restoreMedia(records) {
   return restored;
 }
 
-/**
- * Delete media belonging to surveys that no longer exist.
- *
- * Photos are stored as soon as they are chosen, so a form abandoned without
- * saving — or a tab closed mid-survey — leaves files with nothing pointing at
- * them. Sweeping after each login keeps that from accumulating silently.
- */
+/** Photos are stored as chosen, so abandoned forms leave orphans; swept after each login. */
 export async function sweepOrphanedMedia(knownSurveyIds, ownerId) {
-  // Only this account's assets are candidates. Another account's photos on a
-  // shared device, and photos from before accounts existed, belong to surveys
-  // this account cannot see — they are not orphans, and they exist nowhere
-  // else.
+  // Only this account's assets: another account's photos on a shared device are not orphans.
   if (!ownerId) return 0;
   const known = new Set(knownSurveyIds);
   const orphans = (await db.listMediaMeta()).filter((asset) => asset.ownerId === ownerId && !known.has(asset.surveyId));
@@ -148,13 +118,7 @@ export async function sweepOrphanedMedia(knownSurveyIds, ownerId) {
   return orphans.length;
 }
 
-/**
- * Delete media belonging to a survey that its saved record no longer lists.
- *
- * Removal in the form is only an intent until the survey is saved, so this is
- * where a removed photo is actually destroyed — and only once the record that
- * dropped it has been written.
- */
+/** Removal in the form is an intent until save: files go only once the record is written. */
 export async function pruneSurveyMedia(surveyId, keepIds) {
   const keep = new Set(keepIds.filter(Boolean));
   const held = await db.getMediaForSurvey(surveyId);
@@ -171,13 +135,7 @@ export async function removeMedia(id) {
   return db.deleteMedia(id);
 }
 
-/** Records for a list of ids, in the order given, skipping any that are gone. */
-/**
- * Sample photos, fetched once per page from the app's own files and kept, so
- * a card and its gallery do not each download the same image: the server
- * sends no-store, so the browser's cache will not help. Only successes are
- * kept; a failed fetch is tried again next time.
- */
+/** Cached per page: the server sends no-store, so the browser's cache will not help. */
 const samples = new Map();
 
 function loadSample(id) {
@@ -198,11 +156,6 @@ function loadSample(id) {
   return samples.get(id);
 }
 
-/**
- * Records for the given ids, in the order given; ids with nothing behind them
- * are left out. Sample photo ids resolve to the images that ship with the
- * app, everything else to what this browser has stored.
- */
 export async function loadMedia(ids) {
   if (!ids?.length) return [];
   const isSample = (id) => id.startsWith(SAMPLE_PHOTO_PREFIX);
@@ -214,7 +167,6 @@ export async function loadMedia(ids) {
   return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
-/** Everything stored against a survey, whatever section it belongs to. */
 export async function loadSurveyMedia(surveyId) {
   return db.getMediaForSurvey(surveyId);
 }

@@ -1,29 +1,4 @@
-"""
-RoomCompare server: the app's own files, plus a small JSON API for accounts
-and survey records.
-
-Python's standard library only, so there is nothing to install. One SQLite
-file holds users, sessions and surveys: data/roomcompare.sqlite3, unless
---db or the ROOMCOMPARE_DB environment variable says otherwise.
-
-    python server.py [port] [--host HOST] [--db PATH]
-
-It replaces devserver.py and keeps what that did: every response says
-no-store. Plain http.server lets the browser keep serving a stale stylesheet
-or module after an edit, which looks exactly like a change that did not work.
-
-Photos are not sent here. They stay in the browser's IndexedDB on the device
-that took them; only survey records travel.
-
-On Vercel the same handler runs as a function (api/index.py), with its
-records in Upstash Redis instead of SQLite: a function's disk does not
-persist. See RedisBackend and app_from_env.
-
-http.server is not a hardened production server. Run as a process, this is
-sized for a usability study and a classroom demo: put it behind HTTPS with
-ROOMCOMPARE_SECURE_COOKIES=1, and key the login throttle on the forwarded
-client address, before it faces the open internet.
-"""
+"""The app's files plus a JSON API, standard library only: python server.py [port] [--host HOST] [--db PATH]."""
 
 import argparse
 import base64
@@ -56,16 +31,13 @@ DEFAULT_DB = ROOT / "data" / "roomcompare.sqlite3"
 SESSION_COOKIE = "rc_session"
 SESSION_DAYS = 30
 
-# OWASP's 2023 figure for PBKDF2-HMAC-SHA256. Each hash records its own count,
-# so raising this later does not lock anyone out.
+# OWASP's 2023 figure for PBKDF2-HMAC-SHA256; each hash records its own count.
 DEFAULT_ITERATIONS = 600_000
 
 # A survey record is a few kilobytes; photos never travel through here.
 MAX_BODY = 1_000_000
 MAX_SURVEY_BYTES = 256_000
-# A refused request's body is still read, and thrown away, up to this size:
-# see Handler.discard_body. It must exceed MAX_BODY, or a body refused for
-# its size would never be read; past it, reading is not worth the time.
+# Refused bodies are read and discarded up to this size; it must exceed MAX_BODY.
 MAX_DISCARD = 2 * MAX_BODY
 
 NAME_MAX = 60
@@ -78,8 +50,7 @@ SURVEY_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$")
 LOGIN_LIMIT = 10
 LOGIN_WINDOW_SECONDS = 15 * 60
 
-# Only the app's own files are served. Everything else in the project — the
-# database, this file, the tests, git metadata — is not for the browser.
+# Only the app's own files are served: never the database, this file, the tests or .git.
 STATIC_FILES = {"/", "/index.html", "/favicon.ico", "/site.webmanifest"}
 STATIC_PREFIXES = ("/src/", "/styles/", "/icons/", "/seed-photos/", "/design/")
 
@@ -126,8 +97,7 @@ def b64(raw):
 
 
 def token_digest(token):
-    # Only a hash of the session token is stored: a copied database does not
-    # hand out working sessions.
+    # Only a hash of the session token is stored, so a copied database hands out no sessions.
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
@@ -158,9 +128,7 @@ class ApiError(Exception):
         self.errors = errors
 
 
-# --- Validation ---------------------------------------------------------------
-# The same rules and wording as src/utils/validate.js. The browser checks
-# first, so these messages are only seen when something bypasses it.
+# --- Validation: the same rules and wording as src/utils/validate.js ---
 
 
 def check_email(email, errors):
@@ -201,15 +169,11 @@ def first_error(errors):
     return next(iter(errors.values()))
 
 
-# --- Storage ------------------------------------------------------------------
+# --- Storage ---
 
 
 class Store:
-    """SQLite, one short-lived connection per request.
-
-    The server handles each request on its own thread, and a sqlite3
-    connection must not be shared between threads.
-    """
+    """One short-lived connection per request: a sqlite3 connection must not be shared between threads."""
 
     def __init__(self, path):
         self.path = str(path)
@@ -312,19 +276,7 @@ class SQLiteBackend:
 
 
 class RedisBackend:
-    """The same records in Redis, for hosts whose disk does not persist.
-
-    On Vercel a function's files are read-only apart from a scratch folder
-    that is wiped between runs and not shared between copies, so a SQLite file
-    there would lose every account. `send` runs a batch of Redis commands and
-    returns their results in order: UpstashTransport in production, an
-    in-memory stand-in in the tests.
-
-    rc:email:<email>     -> user id      (SET NX: one account per email)
-    rc:user:<id>         -> user JSON, with the password hash
-    rc:session:<hash>    -> user id      (expires with the session)
-    rc:surveys:<user id> -> hash of survey id -> {created_at, updated_at, survey}
-    """
+    """The same records in Redis, for hosts whose disk does not persist (Vercel)."""
 
     def __init__(self, send):
         self.send = send
@@ -403,13 +355,7 @@ class UpstashTransport:
 
 
 class RedisThrottle:
-    """The login throttle, kept in Redis.
-
-    A Vercel app runs as many copies at once, each with its own memory, so a
-    count held in one would not stop attempts spread across the others. The
-    window is fixed from the first failure rather than sliding: close enough
-    for its purpose.
-    """
+    """Kept in Redis: Vercel runs many copies at once, each with its own memory."""
 
     def __init__(self, send, limit, window):
         self.send = send
@@ -429,10 +375,7 @@ class RedisThrottle:
 
 
 class LoginThrottle:
-    """Refuses further logins after too many failures for one address and email.
-
-    Held in memory: a restart forgets it, which is fine at this scale.
-    """
+    """Refuses logins after too many failures per address and email; in memory, so a restart forgets."""
 
     def __init__(self, limit, window):
         self.limit = limit
@@ -465,18 +408,12 @@ class App:
         self.iterations = iterations
         self.secure_cookies = secure_cookies
         self.throttle = throttle
-        # Checked against when the email is unknown, so a wrong address takes
-        # as long to refuse as a wrong password and does not reveal which
-        # emails have accounts.
+        # Checked against for unknown emails, so timing does not reveal which emails have accounts.
         self.decoy_hash = hash_password(secrets.token_hex(16), iterations)
 
 
 def app_from_env():
-    """The app as Vercel runs it: Redis for storage, HTTPS-only cookies.
-
-    Connecting Upstash Redis to the project sets the URL and token, as
-    UPSTASH_REDIS_REST_* or KV_REST_API_* depending on the prefix chosen.
-    """
+    """The app as Vercel runs it: Redis storage, HTTPS-only cookies."""
     url = os.environ.get("UPSTASH_REDIS_REST_URL") or os.environ.get("KV_REST_API_URL")
     token = os.environ.get("UPSTASH_REDIS_REST_TOKEN") or os.environ.get("KV_REST_API_TOKEN")
     if not url or not token:
@@ -486,7 +423,7 @@ def app_from_env():
     return App(RedisBackend(send), iterations, True, RedisThrottle(send, LOGIN_LIMIT, LOGIN_WINDOW_SECONDS))
 
 
-# --- HTTP ---------------------------------------------------------------------
+# --- HTTP ---
 
 
 def clean_path(raw_path):
@@ -507,16 +444,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def app(self):
         return self.server.app
 
-    # --- Static files ---------------------------------------------------------
+    # --- Static files ---
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
         self.send_header("X-Content-Type-Options", "nosniff")
-        # Not "same-origin": OpenStreetMap's tile and Nominatim policies refuse
-        # browser requests that arrive without a Referer, and the map would
-        # stop loading. This is the browser default, stated explicitly.
+        # Not same-origin: OSM tiles, Nominatim and the router need a Referer.
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("X-Frame-Options", "DENY")
         super().end_headers()
@@ -550,14 +485,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.api("DELETE", clean_path(self.path))
 
     def log_message(self, fmt, *args):
-        # Quieter than a line per asset, but never swallow problems. A 401 is
-        # not one: it is how every logged-out visit begins. Request bodies are
-        # never logged: they hold passwords.
+        # Errors only, never 401 (every logged-out visit) and never request bodies (passwords).
         message = fmt % args
         if re.search(r'" (?!401 )[45]\d\d ', message):
             super().log_message("%s", message)
 
-    # --- API plumbing -----------------------------------------------------------
+    # --- API plumbing ---
 
     def api(self, method, path):
         self.body_read = False
@@ -600,11 +533,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         raise ApiError(HTTPStatus.NOT_FOUND, "That is not something this server does.")
 
     def refuse_cross_site(self):
-        """Writes must come from this site's own pages.
-
-        The session cookie is SameSite=Lax and writes only accept JSON, which a
-        plain cross-site form cannot send. This is a third check on top.
-        """
+        """Writes must come from this site's own pages: a third check beside SameSite=Lax and JSON only."""
         origin = self.headers.get("Origin")
         if origin is None:
             return
@@ -618,9 +547,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             length = -1
-        # A negative length is no more readable than one that is not a number,
-        # and would get past MAX_BODY: rfile.read(-1) reads until the client
-        # stops sending, however much that is.
+        # A negative length would get past MAX_BODY: rfile.read(-1) reads until the client stops.
         if length < 0:
             raise ApiError(HTTPStatus.BAD_REQUEST, "That request could not be read.")
         if length > MAX_BODY:
@@ -636,16 +563,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return body
 
     def discard_body(self):
-        """Read a refused request's body before answering, and throw it away.
-
-        Closing a connection while request bytes are unread, or before they
-        arrive, ends it with a reset instead of a clean close. On Windows the
-        reset destroys whatever of the reply the client has not read yet, so
-        it sees WinError 10053 instead of the refusal it was sent. A body
-        over MAX_DISCARD, or with a length that makes no sense, is not read,
-        at the risk of that reset; the connection is closed, so that the body
-        is never taken for the next request.
-        """
+        """Unread request bytes turn the close into a reset, which on Windows loses the reply (WinError 10053)."""
         if self.body_read:
             return
         try:
@@ -669,7 +587,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if body:
             self.wfile.write(body)
 
-    # --- Sessions ---------------------------------------------------------------
+    # --- Sessions ---
 
     def session_token(self):
         try:
@@ -681,8 +599,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def cookie(self, value, max_age):
         parts = [f"{SESSION_COOKIE}={value}", "Path=/", "HttpOnly", "SameSite=Lax", f"Max-Age={max_age}"]
-        # Secure is set whenever the page arrived over HTTPS. Plain http on
-        # localhost has to work without it.
+        # Secure whenever the page arrived over HTTPS; plain http on localhost must work without it.
         if self.app.secure_cookies or self.headers.get("X-Forwarded-Proto") == "https":
             parts.append("Secure")
         return "; ".join(parts)
@@ -709,7 +626,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise ApiError(HTTPStatus.UNAUTHORIZED, "Log in to continue.")
         return user
 
-    # --- Accounts ---------------------------------------------------------------
+    # --- Accounts ---
 
     def register(self):
         errors, name, email, password = check_registration(self.read_json())
@@ -736,8 +653,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         matched = verify_password(password, row["password_hash"] if row else self.app.decoy_hash)
         if row is None or not matched:
             self.app.throttle.fail(key)
-            # One message for both cases: which half was wrong is not the
-            # server's to say.
+            # One message for both cases: which half was wrong is not the server's to say.
             raise ApiError(HTTPStatus.UNAUTHORIZED, "Email or password is incorrect.")
         cookie = self.start_session(row["id"])
         self.app.throttle.reset(key)
@@ -749,10 +665,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.app.backend.end_session(token_digest(token))
         self.send_json(HTTPStatus.NO_CONTENT, cookie=self.cookie("", 0))
 
-    # --- Surveys ----------------------------------------------------------------
-    # Records are stored as the app sends them. Validation belongs to the app,
-    # which knows a draft from a published survey; the server only makes sure
-    # each account sees and changes nothing but its own.
+    # --- Surveys: stored as sent; the app validates, the server only scopes them to the account ---
 
     def list_surveys(self, user):
         self.send_json(HTTPStatus.OK, {"surveys": self.app.backend.list_surveys(user["id"])})
@@ -770,27 +683,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_json(HTTPStatus.NO_CONTENT)
 
     def delete_survey(self, user, survey_id):
-        # Deleting what is already gone succeeds: a retried delete after a
-        # dropped connection must not look like a failure.
+        # Deleting what is gone succeeds, so a retried delete does not look like a failure.
         self.app.backend.delete_survey(user["id"], survey_id)
         self.send_json(HTTPStatus.NO_CONTENT)
 
 
 class Server(http.server.ThreadingHTTPServer):
-    # Threading matters: a browser opens several connections at once for the
-    # module graph, and a single-threaded server serialises them into a hang.
+    # Threaded: a browser opens several connections for the module graph; one thread would hang.
     daemon_threads = True
     allow_reuse_address = True
 
 
 class DualStackServer(Server):
-    """Listens on IPv6 and IPv4 at once.
-
-    On Windows "localhost" resolves to ::1 first. A server listening on IPv4
-    alone makes every request to it wait for that attempt to fail — about two
-    seconds per request from Python, a few hundred milliseconds in a browser.
-    `python -m http.server` avoids it the same way.
-    """
+    """Listens on IPv6 and IPv4: Windows resolves localhost to ::1 first, else each request stalls."""
 
     address_family = socket.AF_INET6
 
@@ -803,15 +708,14 @@ class DualStackServer(Server):
 
 
 def create_server(host="", port=5173, db_path=None, *, iterations=None, secure_cookies=None, login_limit=LOGIN_LIMIT, root=ROOT):
-    """Build the server without starting it; the tests start it on port 0."""
+    """Built without starting; the tests start it on port 0."""
     db_path = db_path or os.environ.get("ROOMCOMPARE_DB") or DEFAULT_DB
     iterations = iterations or int(os.environ.get("ROOMCOMPARE_PBKDF2_ITERATIONS", DEFAULT_ITERATIONS))
     if secure_cookies is None:
         secure_cookies = os.environ.get("ROOMCOMPARE_SECURE_COOKIES") == "1"
     app = App(SQLiteBackend(db_path), iterations, secure_cookies, LoginThrottle(login_limit, LOGIN_WINDOW_SECONDS))
     handler = functools.partial(Handler, directory=str(root))
-    # Every interface by default, both address families, so "localhost" is
-    # fast and a phone on the same network can still reach the app.
+    # Every interface and both families, so localhost is fast and a phone on the network can connect.
     if host in ("", "::") and socket.has_ipv6:
         httpd = DualStackServer(("::", port), handler)
     else:
@@ -823,8 +727,7 @@ def create_server(host="", port=5173, db_path=None, *, iterations=None, secure_c
 def main(argv=None):
     parser = argparse.ArgumentParser(description="RoomCompare: the app and its API.")
     parser.add_argument("port", nargs="?", type=int, default=5173)
-    # Every interface by default, as devserver.py did, so a phone on the same
-    # network can open the app for testing.
+    # Every interface by default, so a phone on the same network can open the app.
     parser.add_argument("--host", default="")
     parser.add_argument("--db", default=None, help="SQLite file (default: data/roomcompare.sqlite3)")
     args = parser.parse_args(argv)

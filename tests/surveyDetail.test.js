@@ -48,8 +48,7 @@ describe('photos and videos on the survey page', () => {
     expect([...panel.querySelectorAll('.media-group__title')].map((t) => t.textContent)).toEqual([
       'Room', 'Bathroom', 'Shared facilities', 'Videos',
     ]);
-    // The same galleries the sections held, so loading, the lightbox and
-    // "not on this device" work as before.
+    // The same galleries the sections held, so loading, the lightbox and "not on this device" work.
     const galleries = [...panel.querySelectorAll('[data-gallery]')].map((g) => [g.dataset.gallery, g.dataset.kind, g.dataset.ids]);
     expect(galleries).toEqual([['room', 'photo', 'p1,p2'], ['shared', 'photo', 'p3'], ['video', 'video', 'v1']]);
     // An empty group still says so: nothing recorded is not the same as hidden.
@@ -223,7 +222,7 @@ describe('the star on a community survey page', () => {
 describe('Add to compare on the survey page', () => {
   const addButton = (host) => host.querySelector('.page-head__actions [data-action="toggle-compare"]');
 
-  // The user's rule (2026-10-03): only published surveys can be compared.
+  // Only published surveys can be compared.
   it('is not offered on a draft', async () => {
     const { store, renderSurveyDetail } = await load();
     store.addSurvey(survey());

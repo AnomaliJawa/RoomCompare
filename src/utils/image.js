@@ -1,20 +1,10 @@
-/**
- * Client-side image downscaling, applied before anything reaches storage.
- *
- * A survey can carry forty photos and a current phone camera produces files
- * of several megabytes each. Stored untouched they would fill the origin's
- * allowance and make every gallery render slowly, so images are resized to a
- * sensible viewing size on the way in. The original file is never kept: the
- * survey needs a usable record of what the room looked like, not an archival
- * master.
- */
+/** Images are downscaled before storage; the original is never kept. */
 
 export const MAX_EDGE = 1600;
 export const JPEG_QUALITY = 0.82;
 export const MAX_SOURCE_BYTES = 10 * 1024 * 1024; // per image, before resizing
 export const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 
-/** Thrown for one file so a batch can continue past it. */
 export class MediaError extends Error {
   constructor(message, { fileName = '', code = 'failed' } = {}) {
     super(message);
@@ -35,11 +25,7 @@ function scaledSize(width, height, maxEdge) {
   };
 }
 
-/**
- * Decode to a bitmap. `createImageBitmap` applies EXIF orientation, so photos
- * taken in portrait are not stored rotated; the fallback path relies on the
- * browser auto-orienting an <img>, which current versions do.
- */
+/** createImageBitmap applies EXIF orientation, so portraits are not stored rotated. */
 async function decode(file) {
   if (typeof createImageBitmap === 'function') {
     try {
@@ -49,7 +35,6 @@ async function decode(file) {
       try {
         return await createImageBitmap(file);
       } catch {
-        /* fall through to the <img> path */
       }
     }
   }
@@ -80,10 +65,6 @@ function toBlob(canvas, type, quality) {
   });
 }
 
-/**
- * Resize one image file.
- * Returns { blob, width, height, mimeType, byteSize } ready to store.
- */
 export async function downscaleImage(file, { maxEdge = MAX_EDGE, quality = JPEG_QUALITY } = {}) {
   if (!file || !file.type?.startsWith('image/')) {
     throw new MediaError('Only image files can be added as photos.', {
@@ -112,8 +93,7 @@ export async function downscaleImage(file, { maxEdge = MAX_EDGE, quality = JPEG_
   canvas.height = target.height;
 
   const context = canvas.getContext('2d');
-  // JPEG has no alpha channel, so transparent pixels would otherwise composite
-  // to black. Painting white first keeps a transparent PNG looking right.
+  // JPEG has no alpha, so transparency is painted white rather than black.
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.drawImage(source, 0, 0, canvas.width, canvas.height);
@@ -122,8 +102,7 @@ export async function downscaleImage(file, { maxEdge = MAX_EDGE, quality = JPEG_
 
   const blob = await toBlob(canvas, 'image/jpeg', quality);
 
-  // An already-small, well-compressed file can come out larger after
-  // re-encoding. Keep whichever is smaller, as long as it needed no resizing.
+  // Re-encoding can grow a small file; keep the smaller when no resize was needed.
   if (!target.scaled && blob.size >= file.size) {
     return {
       blob: file,
@@ -160,7 +139,6 @@ export function acceptVideo(file) {
   return { blob: file, mimeType: file.type, byteSize: file.size, width: null, height: null };
 }
 
-/** Human-readable size for the storage notice and per-file feedback. */
 export function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return '';
   if (bytes < 1024) return `${bytes} B`;

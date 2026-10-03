@@ -4,25 +4,11 @@ import { nothingSelected, needsOneMore } from '../components/emptyState.js';
 import { incompleteDataBanner } from '../components/banner.js';
 import { compareBar } from '../components/compareBar.js';
 import { comparisonTable } from '../components/comparisonTable.js';
-// The only line coupling the comparison to the optional score. Delete this
-// import and the mount below to remove the feature entirely.
+// The only line coupling the comparison to Best Match: delete it and the mount to remove it.
 import { bestMatchPanel } from './bestMatch.js';
 import { MIN_COMPARE } from '../constants.js';
 
-/**
- * The comparison.
- *
- * Selection and the comparison itself are separate steps, as the requirement
- * describes: kos go into the bar, and Compare opens the table. Once it is
- * open, adding or removing updates it in place rather than sending the user
- * back to press Compare again after swapping one kos out.
- *
- * The picker opens in a dialog from Add kos in the compare bar rather than
- * sitting in a column beside the table, so the comparison gets the column's
- * full width — the same move the community filters made, for the same
- * reason. The dialog lives outside #app-root (see main.js) because this view
- * is rebuilt on every store change and would close it mid-selection.
- */
+/** The picker dialog lives outside #app-root: this view is rebuilt on every store change. */
 
 export function renderCompare() {
   const { compareShown } = getState();
@@ -68,11 +54,7 @@ export function renderCompare() {
   `;
 }
 
-/**
- * The one orchestrated moment in the interface: the columns resolve as the
- * comparison opens, so it reads as something arriving rather than the page
- * merely being different. Reduced motion skips it entirely.
- */
+/** The columns resolve as the comparison opens; reduced motion skips it. */
 export function mountCompare(root) {
   const table = qs('[data-reveal]', root);
   if (!table) return null;

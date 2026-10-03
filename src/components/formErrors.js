@@ -1,18 +1,7 @@
 import { html, qs, qsa, mount } from '../utils/dom.js';
 import { FIELD_SECTION } from '../utils/validate.js';
 
-/**
- * Show validation results on a form that is already on screen.
- *
- * Errors are written into the existing DOM rather than produced by
- * re-rendering: the form holds map instances, uploaded thumbnails, focus and
- * caret position, and rebuilding it to show a message would throw all of that
- * away — which is a worse outcome than the error being reported.
- *
- * Each message is tied to its control with aria-describedby, and each numbered
- * section shows how many problems it holds, so a long form can be repaired
- * without hunting.
- */
+/** Errors are written into the existing DOM: re-rendering would lose maps, photos, focus and caret. */
 
 const ERROR_CLASS = 'field__error';
 const ERROR_MARK = 'data-generated-error';
@@ -21,10 +10,7 @@ function errorId(field) {
   return `error-${field}`;
 }
 
-/**
- * The control a message should point at, and that focus should land on.
- * Never a field's ⓘ: it explains the field, it is not where the answer goes.
- */
+/** Never a field's ⓘ: it explains the field, it is not where the answer goes. */
 function controlFor(node, field) {
   return (
     qs(`#f-${field}`, node) ??
@@ -82,18 +68,12 @@ function attach(form, field, message) {
   return control;
 }
 
-/**
- * Apply a validation result. Returns true when the form was clean.
- * On failure the first problem is focused and scrolled to.
- */
 export function showErrors(form, result) {
   clearErrors(form);
   if (result.ok) return true;
 
   Object.entries(result.errors).forEach(([field, message]) => attach(form, field, message));
 
-  // Per-section counts, so a collapsed or scrolled-past section still says it
-  // needs attention.
   Object.entries(result.sectionCounts).forEach(([section, count]) => {
     const badge = qs(`[data-section="${section}"] [data-section-errors]`, form);
     if (!badge) return;
@@ -126,11 +106,7 @@ export function showErrors(form, result) {
   return false;
 }
 
-/**
- * After a failed submit, re-check that field when the user leaves it, so a
- * fixed problem stops being reported without waiting for another submit.
- * Validating from the first keystroke would nag someone mid-typing.
- */
+/** After a failed submit, a fixed field is re-checked on blur; never mid-typing. */
 export function watchForRepair(form, validateNow) {
   if (form.dataset.watchingRepairs === 'true') return;
   form.dataset.watchingRepairs = 'true';
@@ -143,7 +119,6 @@ export function watchForRepair(form, validateNow) {
     const result = validateNow();
     if (result.errors[field]) return;
 
-    // This one is fixed; leave the rest reported as they are.
     node.removeAttribute('data-invalid');
     qs(`#${CSS.escape(errorId(field))}`, node)?.remove();
     const control = controlFor(node, field);

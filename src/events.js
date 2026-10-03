@@ -1,11 +1,4 @@
-/**
- * Delegated event bridge.
- *
- * One listener per event type on the document, dispatching on `data-action`.
- * This is the prototype's pattern (script.js:581) kept deliberately: it
- * survives re-renders without rebinding, which matters when a view replaces
- * its own markup on every store change.
- */
+/** One delegated listener per event type, so handlers survive re-renders. */
 
 const clickHandlers = new Map();
 const inputHandlers = new Map();
@@ -19,7 +12,6 @@ const registries = {
   submit: submitHandlers,
 };
 
-/** Register a handler for `data-action="name"`. */
 export function onAction(name, handler, type = 'click') {
   const registry = registries[type];
   if (!registry) throw new Error(`Unsupported delegated event type: ${type}`);

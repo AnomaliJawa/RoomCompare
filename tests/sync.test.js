@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// The real store and storage, against jsdom's localStorage; only the network
-// is replaced.
+// The real store and storage, against jsdom's localStorage; only the network is replaced.
 vi.mock('../src/api.js', () => {
   class ApiError extends Error {
     constructor(status, message, errors = null) {
