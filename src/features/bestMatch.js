@@ -4,7 +4,7 @@ import { BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../cons
 import { DEFAULT_WEIGHTS, isDefault } from '../utils/weights.js';
 import { bestMatchWeights } from '../store.js';
 
-/** Optional and detachable: it imports nothing from the comparison, which imports nothing from here. */
+/** Imports nothing from the comparison; compare.js passes its totals to the table. */
 
 /** 1 is the floor, so (v-1)/3: a "Poor" rating must not read as a quarter mark. */
 function fromLikert(value) {
@@ -90,6 +90,19 @@ export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
   };
 }
 
+const joinList = (items) =>
+  items.length === 1 ? items[0] : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
+/** For the comparison: each kos's total (null where an input is missing), whether it leads, and what is missing. */
+export function bestMatchScores(surveys, weights = bestMatchWeights()) {
+  const { scored, leaders } = computeBestMatch(surveys, weights);
+  return scored.map((item) => ({
+    total: item.total,
+    leader: leaders.includes(item.survey.id),
+    missing: item.missing.length ? joinList(item.missing) : null,
+  }));
+}
+
 /** Names each figure on narrow screens; aria-hidden, as the column header names the cell. */
 function cellLabel(name) {
   return html`<span class="ledger__cell-label" aria-hidden="true"><span class="bestmatch__cell-name">${name}</span>:</span>`;
@@ -104,11 +117,7 @@ function partCell(value, kosName) {
 
 function scoreRow(item, leaders) {
   if (item.total === null) {
-    const list =
-      item.missing.length === 1
-        ? item.missing[0]
-        : `${item.missing.slice(0, -1).join(', ')} and ${item.missing[item.missing.length - 1]}`;
-    return html`<span class="unrecorded">Score unavailable — ${list} not recorded</span>`;
+    return html`<span class="unrecorded">Score unavailable — ${joinList(item.missing)} not recorded</span>`;
   }
   const isLeader = leaders.includes(item.survey.id);
   return html`<span class="bestmatch__score${isLeader ? ' bestmatch__score--leader' : ''}">

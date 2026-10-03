@@ -1,5 +1,6 @@
 import { html, raw } from '../utils/dom.js';
 import { LIKERT } from '../constants.js';
+import { numberToCurrency } from '../utils/format.js';
 
 /** Every control has a real <label>, errors are tied by aria-describedby, groups are fieldsets. */
 
@@ -124,7 +125,87 @@ export function textField({
   `;
 }
 
-export function currencyField({ name, label, value = '', hint = '', error = '', action = '', id = `f-${name}`, guide = null }) {
+const CHEVRON_ICON =
+  '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" ' +
+  'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5.5 8 4.5 4.5L14.5 8"/></svg>';
+
+/** One field that takes a typed number or one picked from its list (an ARIA combobox); combobox.js wires it. */
+export function comboField({ name, label, value = '', values, unit, id = `f-${name}`, guide = null }) {
+  const described = describedBy(id, { guide });
+  const listId = `${id}-list`;
+  const typed = value === '' || value == null ? '' : String(value);
+  return html`
+    <div class="field" data-field="${name}" data-invalid="false">
+      ${fieldLabel(id, label, guide)}
+      <div class="field__group combo" data-combo>
+        <input
+          class="field__control numeric"
+          id="${id}"
+          name="${name}"
+          type="text"
+          inputmode="decimal"
+          value="${typed}"
+          autocomplete="off"
+          role="combobox"
+          aria-autocomplete="none"
+          aria-expanded="false"
+          aria-controls="${listId}"
+          ${described ? raw(`aria-describedby="${described}"`) : ''}
+        />
+        <button
+          class="combo__toggle"
+          type="button"
+          tabindex="-1"
+          aria-label="Show ${label} options"
+          aria-controls="${listId}"
+          aria-expanded="false"
+          data-combo-toggle
+        >${raw(CHEVRON_ICON)}</button>
+        <ul class="combo__list" id="${listId}" role="listbox" aria-label="${label}" hidden>
+          ${values.map(
+            (choice) => html`<li
+              class="combo__option"
+              id="${listId}-${choice}"
+              role="option"
+              data-value="${choice}"
+              aria-selected="${typed !== '' && Number(typed) === choice ? 'true' : 'false'}"
+            >${choice} ${unit}</li>`,
+          )}
+        </ul>
+      </div>
+      ${raw(support(id, { guide, value }))}
+    </div>
+  `;
+}
+
+/** `slider`: { max, step } adds an unnamed range under the field; the typed field stays the value read. */
+function currencySlider(id, label, value, { max, step }) {
+  const amount = value === '' || value == null || !Number.isFinite(Number(value)) ? null : Number(value);
+  return html`<input
+      class="field__slider"
+      type="range"
+      min="0"
+      max="${max}"
+      step="${step}"
+      value="${Math.min(amount ?? 0, max)}"
+      aria-label="${label}"
+      aria-valuetext="${numberToCurrency(amount)}"
+      data-slider-for="${id}"
+    />
+    <div class="field__scale" aria-hidden="true"><span>${numberToCurrency(0)}</span><span>${numberToCurrency(max)}</span></div>`;
+}
+
+export function currencyField({
+  name,
+  label,
+  value = '',
+  hint = '',
+  error = '',
+  action = '',
+  id = `f-${name}`,
+  guide = null,
+  slider = null,
+}) {
   const described = describedBy(id, { hint, error, guide });
   return html`
     <div class="field" data-field="${name}" data-invalid="${error ? 'true' : 'false'}">
@@ -143,6 +224,7 @@ export function currencyField({ name, label, value = '', hint = '', error = '', 
           ${action ? raw(`data-action="${action}"`) : ''}
         />
       </div>
+      ${slider ? currencySlider(id, label, value, slider) : ''}
       ${raw(support(id, { hint, error, guide }))}
     </div>
   `;

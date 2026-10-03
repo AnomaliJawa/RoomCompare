@@ -126,6 +126,7 @@ export function mapPickerField({
 
       <input type="hidden" name="${name}Lat" value="${pinned ? point.lat : ''}" data-lat />
       <input type="hidden" name="${name}Lng" value="${pinned ? point.lng : ''}" data-lng />
+      <input type="hidden" name="${name}" value="${point?.label ?? ''}" data-label />
     </div>
   `;
 }
@@ -228,15 +229,10 @@ function mountOne(node, L, onChange) {
     }, readout);
   });
 
-  wireAddressSearch(node, (point, result) => {
+  wireAddressSearch(node, (point) => {
     publish(point, { moveMap: false });
     place(point);
     map.setView([point.lat, point.lng], 17);
-    const labelField = document.querySelector(`#f-${node.dataset.mappicker}`);
-    if (labelField && !labelField.value.trim()) {
-      labelField.value = shortLabel(result.displayName);
-      labelField.dispatchEvent(new Event('input', { bubbles: true }));
-    }
   });
 
   // The container is sized by CSS after mount, so Leaflet needs a nudge.
@@ -271,10 +267,15 @@ function wireAddressSearch(node, onFound) {
     button.disabled = false;
 
     switch (result.status) {
-      case GEOCODE_STATUS.OK:
+      case GEOCODE_STATUS.OK: {
         status.textContent = `Found ${result.displayName}`;
         onFound({ lat: result.lat, lng: result.lng }, result);
+        // The lookup names the area: the form has no field to type it in.
+        const label = qs('[data-label]', node);
+        label.value = shortLabel(result.displayName);
+        label.dispatchEvent(new Event('input', { bubbles: true }));
         break;
+      }
       case GEOCODE_STATUS.NOT_FOUND:
         status.textContent = 'No match for that address. Try a nearby landmark, or tap the map.';
         break;

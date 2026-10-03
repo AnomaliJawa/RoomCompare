@@ -106,6 +106,39 @@ describe('the comparison, one section per category', () => {
     ]);
   });
 
+  const scores = [
+    { total: 65, leader: false, missing: null },
+    { total: null, leader: false, missing: 'security and monthly rent' },
+    { total: 80, leader: true, missing: null },
+  ];
+
+  it('opens with a Best Match score section above Kos information when given scores', () => {
+    const scored = render(comparisonTable(three, { scores }));
+    const titles = [...scored.querySelectorAll('section.ledger-section h2')].map((h) => h.textContent.trim());
+    expect(titles.slice(0, 2)).toEqual(['Best Match score', 'Kos information']);
+    const cells = [...scored.querySelector('section.ledger-section tbody tr').querySelectorAll('td')];
+    expect(cells.map((td) => td.querySelector('.ledger__cell-value').textContent.trim())).toEqual([
+      '65',
+      'Score unavailable — security and monthly rent not recorded',
+      '80',
+    ]);
+    expect(cells.map((td) => td.classList.contains('ledger__best'))).toEqual([false, false, true]);
+    expect(cells[1].querySelector('.unrecorded')).not.toBeNull();
+  });
+
+  it('has no score section without scores', () => {
+    expect(host.textContent).not.toContain('Best Match score');
+  });
+
+  it('keeps the score in its section: the kos names carry none', () => {
+    const scored = render(comparisonTable(three, { scores }));
+    const headers = [...scored.querySelectorAll('.ledger__kos')].map((n) => n.textContent.trim());
+    expect(new Set(headers)).toEqual(new Set(names));
+    const firstRow = scored.querySelector('section.ledger-section tbody tr');
+    expect(firstRow.querySelector('th').textContent.trim()).toBe('Score');
+    expect([...firstRow.querySelectorAll('.ledger__cell-label')].map((n) => n.textContent.trim())).toEqual(names);
+  });
+
   it('leaves removing a kos to the compare bar: the table carries no Remove', () => {
     expect(host.querySelectorAll('[data-action="remove-compare"]')).toHaveLength(0);
   });
@@ -140,6 +173,38 @@ describe('the compare bar', () => {
     const host = render(compareBar(three, { shown: true }));
     const names = [...host.querySelectorAll('.compare-chip__name')];
     expect(names.map((n) => n.getAttribute('title'))).toEqual(three.map((s) => s.kos.name));
+  });
+
+  it('makes every slot a button: an empty one adds a kos, a filled one changes its kos', () => {
+    const host = render(compareBar(ownSurveys.slice(0, 1), { shown: false }));
+    const picks = [...host.querySelectorAll('.compare-chip__pick')];
+    expect(picks).toHaveLength(MAX_COMPARE);
+    expect(picks.map((b) => [b.dataset.action, b.dataset.slot])).toEqual([
+      ['change-compare', '0'],
+      ['open-picker', '1'],
+      ['open-picker', '2'],
+    ]);
+    expect(picks[0].dataset.id).toBe(ownSurveys[0].id);
+    expect(picks[0].getAttribute('aria-label')).toBe(`Change ${ownSurveys[0].kos.name}`);
+    expect(picks[1].getAttribute('aria-label')).toBe('Add kos 2');
+    for (const pick of picks) expect(pick.getAttribute('aria-haspopup')).toBe('dialog');
+  });
+
+  it('shows Add, Change and Remove as icons, named for screen readers and in a tooltip', () => {
+    const host = render(compareBar(ownSurveys.slice(0, 1), { shown: false }));
+    const [filled, empty] = host.querySelectorAll('.compare-chip');
+    expect(filled.textContent.trim()).toBe(ownSurveys[0].kos.name);
+    expect(empty.textContent.trim()).toBe('Kos 2');
+    const icons = [
+      filled.querySelector('.compare-chip__hint'),
+      filled.querySelector('.compare-chip__remove'),
+      empty.querySelector('.compare-chip__hint'),
+    ];
+    expect(icons.map((node) => node.getAttribute('title'))).toEqual(['Change', 'Remove', 'Add']);
+    for (const node of icons) expect(node.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(filled.querySelector('.compare-chip__remove').getAttribute('aria-label')).toBe(
+      `Remove ${ownSurveys[0].kos.name} from the comparison`,
+    );
   });
 });
 
@@ -222,6 +287,38 @@ describe('the kos picker dialog', () => {
     const host = render(candidatePickerDialog(candidates, []));
     expect(host.querySelectorAll('[data-action="close-picker"]')).toHaveLength(2);
   });
+
+  describe('opened from a filled slot', () => {
+    const [current, other] = candidates.own;
+    const third = candidates.community[0];
+    const host = render(candidatePickerDialog(candidates, [current.id, other.id], { replacing: current }));
+    const buttonFor = (id) => host.querySelector(`.listing [data-id="${id}"]`);
+
+    it('says which kos it changes', () => {
+      expect(text(host.querySelector('#picker-dialog-title'))).toBe('Change kos');
+      expect(text(host.querySelector('.picker-dialog__body > .meta'))).toBe(
+        `Choose a kos to compare in place of ${current.kos.name}, or remove it.`,
+      );
+    });
+
+    it('swaps in any kos not already compared, and holds the rest', () => {
+      expect(text(buttonFor(current.id))).toBe('Current');
+      expect(buttonFor(current.id).disabled).toBe(true);
+      expect(text(buttonFor(other.id))).toBe('Selected');
+      expect(buttonFor(other.id).disabled).toBe(true);
+      expect(text(buttonFor(third.id))).toBe('Choose');
+      expect(buttonFor(third.id).dataset.action).toBe('replace-compare');
+      expect(host.querySelector('[data-action="toggle-compare"]')).toBeNull();
+    });
+
+    it('removes the kos, or leaves it be, from its foot', () => {
+      const foot = host.querySelector('.picker-dialog__foot');
+      const remove = foot.querySelector('[data-action="remove-compare"]');
+      expect(text(remove)).toBe(`Remove ${current.kos.name}`);
+      expect(remove.dataset.id).toBe(current.id);
+      expect(text(foot.querySelector('[data-action="close-picker"]'))).toBe('Cancel');
+    });
+  });
 });
 
 describe('the compare page', () => {
@@ -237,12 +334,11 @@ describe('the compare page', () => {
     return render(renderCompare());
   }
 
-  it('puts Add kos in the compare bar instead of a picker beside the table', async () => {
+  it('picks kos from the slots, with no Add kos button and no picker beside the table', async () => {
     const host = await renderWith(3, true);
-    const buttons = [...host.querySelectorAll('[data-action="open-picker"]')];
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0].textContent.trim()).toBe('Add kos');
-    expect(buttons[0].closest('.compare-bar__actions')).not.toBeNull();
+    expect(host.querySelectorAll('.compare-bar [data-action="change-compare"]')).toHaveLength(3);
+    expect(host.querySelector('[data-action="open-picker"]')).toBeNull();
+    expect(host.querySelector('.compare-bar__actions').textContent).not.toContain('Add kos');
     expect(host.querySelector('.compare-layout')).toBeNull();
     expect(host.querySelector('[data-action="toggle-compare"]')).toBeNull();
   });
@@ -254,15 +350,30 @@ describe('the compare page', () => {
     for (const button of removes) expect(button.closest('.compare-chip')).not.toBeNull();
   });
 
-  it('keeps Compare last, as the primary action, while choosing', async () => {
+  it('leaves Compare as the one action while choosing', async () => {
     const host = await renderWith(2, false);
     const actions = [...host.querySelectorAll('.compare-bar__actions .btn')].map((b) => b.dataset.action);
-    expect(actions).toEqual(['open-picker', 'show-comparison']);
+    expect(actions).toEqual(['show-comparison']);
   });
 
-  it('keeps Add kos reachable before anything is selected', async () => {
+  it('scores each kos in the score section as the Best Match panel does', async () => {
+    const host = await renderWith(3, true);
+    const { computeBestMatch } = await import('../src/features/bestMatch.js');
+    const store = await import('../src/store.js');
+    const selected = store.selectedForCompare();
+    const totals = computeBestMatch(selected, store.bestMatchWeights()).scored.map((item) => item.total);
+    const section = host.querySelector('section.ledger-section');
+    expect(section.querySelector('h2').textContent.trim()).toBe('Best Match score');
+    const values = [...section.querySelectorAll('td .ledger__cell-value')].map((v) => v.textContent.trim());
+    totals.forEach((total, i) => {
+      if (total !== null) expect(values[i]).toBe(String(total));
+      else expect(values[i]).toMatch(/^Score unavailable — .+ not recorded$/);
+    });
+  });
+
+  it('points to the empty slots before anything is selected', async () => {
     const host = await renderWith(0, false);
-    expect(host.querySelector('.compare-bar [data-action="open-picker"]')).not.toBeNull();
-    expect(host.textContent).toContain('Use Add kos');
+    expect(host.querySelectorAll('.compare-bar [data-action="open-picker"]')).toHaveLength(MAX_COMPARE);
+    expect(host.textContent).toContain('Choose an empty slot above to pick');
   });
 });

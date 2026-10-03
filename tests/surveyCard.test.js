@@ -37,14 +37,28 @@ describe('a community survey card', () => {
     expect(off.getAttribute('aria-pressed')).toBe('false');
     expect(on.getAttribute('aria-pressed')).toBe('true');
   });
+
+  it('has a like button carrying its count, named for the kos', () => {
+    const likeOf = (options) =>
+      render(surveyCard(community, { variant: 'community', ...options })).querySelector('[data-action="toggle-like"]');
+    const off = likeOf({ likes: 24 });
+    const on = likeOf({ liked: true, likes: 25 });
+    expect(off.dataset.id).toBe('com-test');
+    expect([off.getAttribute('aria-pressed'), on.getAttribute('aria-pressed')]).toEqual(['false', 'true']);
+    expect(off.querySelector('.like__count').textContent).toBe('24');
+    expect(off.textContent.replace(/\s+/g, ' ').trim()).toBe('Like Kos Kartika, 24 likes');
+    expect(likeOf({ likes: 1 }).textContent.replace(/\s+/g, ' ').trim()).toBe('Like Kos Kartika, 1 like');
+    expect(off.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
+  });
 });
 
 describe('your own survey card', () => {
   const own = { ...community, id: 'svy-test', ownerId: 'me', status: 'draft' };
 
-  it('has no star and names no one', () => {
+  it('has no star or like and names no one', () => {
     const card = render(surveyCard(own));
     expect(starOf(card)).toBeNull();
+    expect(card.querySelector('[data-action="toggle-like"]')).toBeNull();
     expect(card.querySelector('.survey-card__meta .meta').textContent.trim()).toBe('Ketawanggede, Malang');
   });
 

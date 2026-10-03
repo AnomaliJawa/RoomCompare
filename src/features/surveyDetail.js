@@ -1,12 +1,13 @@
 import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatKosDistance } from '../utils/format.js';
-import { findSurvey, isOwnSurvey, isStarred, getState, canCompare } from '../store.js';
+import { findSurvey, isOwnSurvey, isStarred, isLiked, likeCount, getState, canCompare } from '../store.js';
 import { notFound } from '../components/emptyState.js';
 import { galleryField, mountGalleries } from '../components/photoGallery.js';
 import { starButton } from '../components/starButton.js';
+import { likeButton } from '../components/likeButton.js';
 import { breadcrumbs } from '../components/breadcrumbs.js';
 import { editLink, deleteButton } from '../components/surveyActions.js';
-import { formatCoordinate } from '../utils/geo.js';
+import { formatCoordinate, isValidPoint } from '../utils/geo.js';
 import {
   ROOM_FACILITIES,
   BATHROOM_FACILITIES,
@@ -39,6 +40,15 @@ function contactValue(phone) {
   if (!phone) return null;
   const href = phone.replace(/[^+0-9]/g, '');
   return href ? html`<a href="tel:${href}">${phone}</a>` : html`${phone}`;
+}
+
+/** Google Maps' documented search URL: on a phone it opens the Maps app at the pin. */
+function mapsLink(point) {
+  if (!isValidPoint(point)) return null;
+  const query = encodeURIComponent(`${Number(point.lat)},${Number(point.lng)}`);
+  const shown = formatCoordinate(point);
+  return html`<a href="https://www.google.com/maps/search/?api=1&amp;query=${query}" target="_blank" rel="noopener"
+    aria-label="${shown}, open in Google Maps">${shown}</a>`;
 }
 
 /** Every facility is listed, present or absent: "No AC" is information. */
@@ -161,7 +171,10 @@ export function renderSurveyDetail({ id }) {
 
   const actions = own
     ? html`${editLink(survey)} ${deleteButton(survey)}`
-    : starButton(survey, { starred: isStarred(survey.id) });
+    : html`${starButton(survey, { starred: isStarred(survey.id) })} ${likeButton(survey, {
+        liked: isLiked(survey.id),
+        count: likeCount(survey.id),
+      })}`;
 
   // The breadcrumbs sit above the head, so its buttons centre on the name; a draft has no Add to compare.
   return html`
@@ -206,10 +219,9 @@ export function renderSurveyDetail({ id }) {
         'kos',
         html`<dl class="defn-list">
           ${raw(definition('Type', kosTypeLabel(survey.kos.type)))}
-          ${raw(definition('Location', survey.kos.kosLocation?.label))}
           ${raw(definition('Address', survey.kos.kosLocation?.address))}
-          ${raw(definition('Pinned at', survey.kos.kosLocation?.lat == null ? null : formatCoordinate(survey.kos.kosLocation)))}
-          ${raw(definition('Campus', survey.kos.campusLocation?.label))}
+          ${raw(definition('Pinned at', mapsLink(survey.kos.kosLocation)))}
+          ${raw(definition('Campus', survey.kos.campusLocation?.address || survey.kos.campusLocation?.label))}
           ${raw(definition('Distance to campus', survey.kos.distanceKm == null ? null : formatKosDistance(survey.kos)))}
           ${raw(definition('Monthly rent', numberToCurrency(survey.kos.rent)))}
           ${raw(definition('Owner or security phone', contactValue(survey.kos.contactPhone)))}

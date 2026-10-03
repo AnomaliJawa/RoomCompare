@@ -132,6 +132,28 @@ export function saveWeights(userId, weights) {
   }
 }
 
+/** Likes too are filed per account, so a shared phone's next user starts with none. */
+const likesKey = (userId) => `${STORAGE_KEY}:likes:${userId}`;
+
+export function loadLikes(userId) {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(likesKey(userId)) ?? '[]');
+    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLikes(userId, ids) {
+  if (!isAvailable()) return SAVE_RESULT.UNAVAILABLE;
+  try {
+    window.localStorage.setItem(likesKey(userId), JSON.stringify(ids));
+    return SAVE_RESULT.OK;
+  } catch (error) {
+    return isQuotaError(error) ? SAVE_RESULT.QUOTA : SAVE_RESULT.FAILED;
+  }
+}
+
 /** Declined pre-account surveys are kept aside, never deleted. */
 export function keepUnclaimed(surveys) {
   try {

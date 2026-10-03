@@ -121,9 +121,11 @@ describe('room dimensions', () => {
     expect(publish({ room: { lengthM: null, widthM: null } }).ok).toBe(true);
   });
 
-  it('are rejected outside the plausible range', () => {
-    expect(publish({ room: { lengthM: LIMITS.ROOM_MAX_M + 1 } }).errors.lengthM).toBeTruthy();
-    expect(publish({ room: { widthM: 0.05 } }).errors.widthM).toBeTruthy();
+  it("are rejected outside 1–10 m (the user's range, 2026-10-03)", () => {
+    expect([LIMITS.ROOM_MIN_M, LIMITS.ROOM_MAX_M]).toEqual([1, 10]);
+    expect(publish({ room: { lengthM: 10.5 } }).errors.lengthM).toBe('Enter a size between 1 and 10 metres.');
+    expect(publish({ room: { widthM: 0.5 } }).errors.widthM).toBeTruthy();
+    expect(draft({ room: { widthM: 12 } }).errors.widthM).toBeTruthy();
   });
 
   it('accept the boundaries', () => {

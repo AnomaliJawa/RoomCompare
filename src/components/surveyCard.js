@@ -2,6 +2,7 @@ import { html, raw, photoPlaceholder } from '../utils/dom.js';
 import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import { STATUS, STATUS_LABELS, kosTypeLabel } from '../constants.js';
 import { starButton } from './starButton.js';
+import { likeButton } from './likeButton.js';
 import { editLink, deleteButton } from './surveyActions.js';
 
 /** Filled by mountThumbs once the blob loads: the record only carries ids. */
@@ -49,7 +50,7 @@ function fact(label, value) {
   `;
 }
 
-export function surveyCard(survey, { variant = 'own', starred = false, inCompare = false } = {}) {
+export function surveyCard(survey, { variant = 'own', starred = false, inCompare = false, liked = false, likes = 0 } = {}) {
   const isCommunity = variant === 'community';
   const href = isCommunity ? `#/community/${survey.id}` : `#/surveys/${survey.id}`;
 
@@ -70,6 +71,7 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
           data-id="${survey.id}"
         >${inCompare ? 'In comparison' : 'Add to compare'}</button>
         ${starButton(survey, { starred, small: true })}
+        ${likeButton(survey, { liked, count: likes, small: true })}
       `
     : html`
         <a class="btn btn--secondary btn--small" href="${href}">View</a>

@@ -149,8 +149,8 @@ export function renderDashboard() {
           >Edit</button>
         </div>
         <p class="meta">
-          How much each criterion counts in the optional score under a comparison.
-          The comparison itself is never scored.
+          How much each criterion counts in each kos's Best Match score when you
+          compare.
           ${isDefault(weights) ? 'These are the defaults.' : 'These are your own.'}
         </p>
         <ul class="stack" style="margin-top: var(--space-4)">

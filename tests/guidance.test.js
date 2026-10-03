@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { FIELD_GUIDE, SECTION_INTROS, RUBRICS, rubricText } from '../src/content/guidance.js';
 import { validateSurvey, LIMITS } from '../src/utils/validate.js';
-import { LIKERT, MAX_PHOTOS_PER_SECTION } from '../src/constants.js';
+import { LIKERT, MAX_PHOTOS_PER_SECTION, RENT_SLIDER, ROOM_SIDE_CHOICES } from '../src/constants.js';
 import { MAX_VIDEOS } from '../src/media.js';
 import { MAX_SOURCE_BYTES, MAX_VIDEO_BYTES } from '../src/utils/image.js';
 
 const FIELDS = [
-  'name', 'rent', 'type', 'contactPhone', 'kosLocation', 'kosLocationName', 'campusLocationName', 'campusLocation', 'distance',
+  'name', 'rent', 'type', 'contactPhone', 'kosLocation', 'campusLocation', 'distance',
   'lengthM', 'widthM', 'roomFacility', 'cleanliness', 'internet', 'roomPhotos',
   'bathroomFacility', 'bathroomPhotos',
   'sharedFacility', 'sharedPhotos',
@@ -23,7 +23,7 @@ const empty = {
 const MB = 1024 * 1024;
 
 describe('the guidance copy', () => {
-  it('covers all 23 fields of the form, each but the distance with a short helper line', () => {
+  it('covers all 21 fields of the form, each but the distance with a short helper line', () => {
     expect(Object.keys(FIELD_GUIDE)).toEqual(FIELDS);
     for (const [key, guide] of Object.entries(FIELD_GUIDE)) {
       expect(guide.label, key).toBeTruthy();
@@ -62,8 +62,12 @@ describe('the guidance copy', () => {
     expect(FIELD_GUIDE.notes.counter).toBe(LIMITS.NOTES_MAX);
     expect(FIELD_GUIDE.notes.helper).toContain(`Max ${LIMITS.NOTES_MAX.toLocaleString('en-US')} characters`);
     expect(FIELD_GUIDE.rent.helper).toContain(`Rp${LIMITS.RENT_MAX.toLocaleString('id-ID')}`);
+    expect(FIELD_GUIDE.rent.helper).toContain(`Rp${RENT_SLIDER.MAX.toLocaleString('id-ID')}`);
+    expect(FIELD_GUIDE.rent.panel.what).toContain(`Rp${RENT_SLIDER.MAX.toLocaleString('id-ID')}`);
+    const [first, last] = [ROOM_SIDE_CHOICES[0], ROOM_SIDE_CHOICES[ROOM_SIDE_CHOICES.length - 1]];
     for (const key of ['lengthM', 'widthM']) {
       expect(FIELD_GUIDE[key].helper).toContain(`${LIMITS.ROOM_MIN_M}–${LIMITS.ROOM_MAX_M}`);
+      expect(FIELD_GUIDE[key].panel.rules).toContain(`from ${first} to ${last}`);
     }
     for (const key of ['roomPhotos', 'bathroomPhotos', 'sharedPhotos']) {
       expect(FIELD_GUIDE[key].helper).toBe(`Up to ${MAX_PHOTOS_PER_SECTION} photos, max ${MAX_SOURCE_BYTES / MB} MB each.`);

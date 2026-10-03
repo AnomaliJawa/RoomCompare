@@ -21,6 +21,8 @@ const state = {
   surveys: seeded ? structuredClone(ownSurveys) : boot.data.surveys,
   communitySurveys: structuredClone(communitySurveys),
   starredIds: seeded ? ['com-kartika'] : boot.data.starredIds,
+  /** The viewer's own likes of community kos, loaded with the account. */
+  likedIds: [],
   /** Read through bestMatchWeights(), which never hands back an invalid set. */
   bestMatchWeights: null,
   compareSelection: [],
@@ -99,8 +101,9 @@ export function clearStorageNotice() {
 
 export function setUser(user) {
   state.user = user;
-  // Each account's weights wait on this device for its next login here.
+  // Each account's weights and likes wait on this device for its next login here.
   state.bestMatchWeights = user ? storage.loadWeights(user.id) : null;
+  state.likedIds = user ? storage.loadLikes(user.id) : [];
   notify();
 }
 
@@ -129,6 +132,7 @@ export function adoptSurveys(surveys, ownerId) {
 export function forgetAccount() {
   state.user = null;
   state.bestMatchWeights = null;
+  state.likedIds = [];
   state.surveys = [];
   state.ownerId = null;
   state.compareSelection = [];
@@ -161,6 +165,17 @@ export function isOwnSurvey(id) {
 
 export function isStarred(id) {
   return state.starredIds.includes(id);
+}
+
+export function isLiked(id) {
+  return state.likedIds.includes(id);
+}
+
+/** Community kos only: the sample count, plus 1 for the viewer's own like. */
+export function likeCount(id) {
+  const survey = state.communitySurveys.find((item) => item.id === id);
+  if (!survey) return null;
+  return (survey.likes ?? 0) + (isLiked(id) ? 1 : 0);
 }
 
 /** Community surveys, and own ones once published: drafts are not comparable. */
@@ -249,6 +264,15 @@ export function toggleStar(id) {
   commit();
 }
 
+/** Only a community kos can be liked: your own surveys are shared with no one. */
+export function toggleLike(id) {
+  if (!state.user || !state.communitySurveys.some((survey) => survey.id === id)) return false;
+  state.likedIds = state.likedIds.includes(id) ? state.likedIds.filter((item) => item !== id) : [...state.likedIds, id];
+  storage.saveLikes(state.user.id, state.likedIds);
+  notify();
+  return true;
+}
+
 /** A set equal to the defaults is saved as null, so it follows the defaults if they change. */
 export function setBestMatchWeights(weights) {
   if (!state.user) return { ok: false, kept: false };
@@ -271,6 +295,15 @@ export function toggleCompare(id) {
   if (!canCompare(id)) return false;
   if (state.compareSelection.length >= MAX_COMPARE) return false;
   state.compareSelection = [...state.compareSelection, id];
+  notify();
+  return true;
+}
+
+/** In place, so the other kos keep their columns; false when the new one cannot be compared or is already in. */
+export function replaceInCompare(oldId, newId) {
+  if (!state.compareSelection.includes(oldId) || state.compareSelection.includes(newId)) return false;
+  if (!canCompare(newId)) return false;
+  state.compareSelection = state.compareSelection.map((id) => (id === oldId ? newId : id));
   notify();
   return true;
 }
