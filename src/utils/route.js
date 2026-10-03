@@ -9,9 +9,11 @@ import { distanceBetween, isValidPoint } from './geo.js';
  * no API key and no billing account, and answers browsers on any origin.
  *
  * Its usage policy asks for at most one request a second, no heavy use, and
- * the OpenStreetMap attribution with a link to fix the map, which the survey
- * form shows under the distance. Requests are therefore kept apart here,
- * whoever makes them, and a pair of pins is only ever routed once a session.
+ * the OpenStreetMap attribution with a link to fix the map. The survey form
+ * shows the attribution under the distance. The "Fix the map" link beside it
+ * was removed at the user's request (2026-10-03), told the policy asks for
+ * it. Requests are kept apart here, whoever makes them, and a pair of pins is
+ * only ever routed once a session.
  *
  * The distance is the route along roads and paths plus the short walk from
  * each pin to the nearest of them, so a pin on a doorstep set back from the

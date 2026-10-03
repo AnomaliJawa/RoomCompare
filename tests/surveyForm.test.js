@@ -140,15 +140,13 @@ describe('guidance on the survey form', () => {
     expect(page.querySelector('#f-distanceKm').value).toBe('1,8 km (straight\u00a0line)');
   });
 
-  // The routing service's usage policy asks for both.
-  it('credits OpenStreetMap for the route, with a way to fix the map', async () => {
+  // OpenStreetMap's licence asks for its attribution wherever its data is used.
+  it('credits OpenStreetMap for the route', async () => {
     const { renderSurveyForm } = await load();
     const credit = show(renderSurveyForm()).querySelector('#f-distanceKm').closest('.field').querySelector('.field__credit');
-    expect(text(credit)).toMatch(/^Route data © OpenStreetMap contributors/);
-    const link = credit.querySelector('a');
-    expect([text(link), link.getAttribute('href'), link.getAttribute('rel')]).toEqual([
-      'Fix the map', 'https://www.openstreetmap.org/fixthemap', 'noopener',
-    ]);
+    expect(text(credit)).toBe('Route data © OpenStreetMap contributors');
+    // "Fix the map" was taken out at the user's request (2026-10-03).
+    expect(credit.querySelector('a')).toBeNull();
   });
 });
 
