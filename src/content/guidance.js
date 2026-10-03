@@ -13,10 +13,11 @@
  * survey tip. The concept gives each field's panel as one paragraph; it is
  * split into those parts here, with no facts added.
  *
- * Two lines differ from the concept on purpose:
+ * Where this differs from the concept, on purpose:
  * - Distance to campus says walking where the concept says road, since the
  *   route is measured on foot (utils/route.js, the user's request,
- *   2026-10-03), and its rules add the straight-line fallback.
+ *   2026-10-03), and its rules add the straight-line fallback. It has no
+ *   helper line under the field, also at the user's request.
  * - Monthly rent's helper states its limit, as the PRD's helper-text
  *   requirement asks of every limited field.
  */
@@ -147,9 +148,10 @@ export const FIELD_GUIDE = {
       rules: 'Optional. Without it, no distance is calculated.',
     },
   },
+  // The one field with no helper line: it was removed at the user's request
+  // (2026-10-03). Its panel still says what the distance is.
   distance: {
     label: 'Distance to campus',
-    helper: 'Walking distance along the road from the kos pin to the campus pin.',
     panel: {
       what: 'Walking distance along the road from the kos pin to the campus pin.',
       find: 'It fills in once both pins are set. To change it, move one of the pins.',

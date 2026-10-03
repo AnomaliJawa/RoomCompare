@@ -23,10 +23,15 @@ const empty = {
 const MB = 1024 * 1024;
 
 describe('the guidance copy', () => {
-  it('covers all 23 fields of the form, each with a short helper line', () => {
+  it('covers all 23 fields of the form, each but the distance with a short helper line', () => {
     expect(Object.keys(FIELD_GUIDE)).toEqual(FIELDS);
     for (const [key, guide] of Object.entries(FIELD_GUIDE)) {
       expect(guide.label, key).toBeTruthy();
+      // Removed at the user's request (2026-10-03); its panel says it all.
+      if (key === 'distance') {
+        expect(guide.helper).toBeUndefined();
+        continue;
+      }
       expect(guide.helper, key).toBeTruthy();
       expect(guide.helper, key).not.toMatch(/\n/);
       expect(guide.helper.length, key).toBeLessThanOrEqual(70);
@@ -69,8 +74,8 @@ describe('the guidance copy', () => {
   });
 
   it('describes the distance the app measures, walking along the road, and its fallback', () => {
-    expect(FIELD_GUIDE.distance.helper).toMatch(/walking distance along the road/i);
-    expect(FIELD_GUIDE.distance.helper).not.toMatch(/straight/i);
+    expect(FIELD_GUIDE.distance.panel.what).toMatch(/^Walking distance along the road/);
+    expect(FIELD_GUIDE.distance.panel.what).not.toMatch(/straight/i);
     expect(FIELD_GUIDE.distance.panel.rules).toMatch(/straight line is shown instead and marked/);
   });
 });

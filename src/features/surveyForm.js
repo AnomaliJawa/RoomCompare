@@ -217,8 +217,7 @@ export function renderSurveyForm({ id } = {}) {
             </div>
             <input class="field__control numeric" id="f-distanceKm" name="distanceKm" type="text"
               value="${kos.distanceKm == null ? '' : formatKosDistance(kos)}" readonly
-              placeholder="${DISTANCE_PLACEHOLDER}" aria-describedby="f-distanceKm-hint f-distanceKm-status" />
-            <span class="field__hint" id="f-distanceKm-hint">${guide('distance').helper}</span>
+              placeholder="${DISTANCE_PLACEHOLDER}" aria-describedby="f-distanceKm-status" />
             <span class="field__hint" id="f-distanceKm-status" data-distance-status role="status" aria-live="polite"></span>
             <span class="field__credit">Route data © OpenStreetMap contributors</span>
           </div>
