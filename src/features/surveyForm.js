@@ -220,10 +220,7 @@ export function renderSurveyForm({ id } = {}) {
               placeholder="${DISTANCE_PLACEHOLDER}" aria-describedby="f-distanceKm-hint f-distanceKm-status" />
             <span class="field__hint" id="f-distanceKm-hint">${guide('distance').helper}</span>
             <span class="field__hint" id="f-distanceKm-status" data-distance-status role="status" aria-live="polite"></span>
-            <span class="field__credit">
-              Route data © OpenStreetMap contributors ·
-              <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Fix the map</a>
-            </span>
+            <span class="field__credit">Route data © OpenStreetMap contributors</span>
           </div>
         `,
       )}

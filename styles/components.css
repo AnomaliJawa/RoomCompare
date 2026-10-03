@@ -230,19 +230,13 @@
 /* Why a distance is only a straight line, when it is one. Empty otherwise. */
 [data-distance-status]:empty { display: none; }
 
-/* The walking route's credit, which the routing service's usage policy asks
-   for: OpenStreetMap's attribution and a way to fix the map. It sits under
-   the distance it explains, as quiet as the helper above it. */
+/* The walking route's credit: OpenStreetMap's attribution, which its licence
+   asks for wherever its data is used. It sits under the distance it explains,
+   as quiet as the helper above it. */
 .field__credit {
   color: var(--muted);
   font-size: var(--text-xs);
 }
-
-/* On a phone the line wraps; the link goes to the next line whole rather than
-   splitting into two pieces, each half a tap target. */
-.field__credit a { white-space: nowrap; }
-
-.field__credit a:active { color: var(--accent-press); }
 
 /* --- Field guidance (the survey form) ------------------------------------
    Every survey field says what it needs before it is filled in: a helper
@@ -2656,16 +2650,14 @@ a.listing__title::after {
   .field__info,
   .page-head__help,
   .auth__alternate a,
-  .breadcrumbs a,
-  .field__credit a { position: relative; }
+  .breadcrumbs a { position: relative; }
 
   .btn--small::after,
   .compare-chip__remove::after,
   .field__info::after,
   .page-head__help::after,
   .auth__alternate a::after,
-  .breadcrumbs a::after,
-  .field__credit a::after {
+  .breadcrumbs a::after {
     content: "";
     position: absolute;
     top: 50%;
