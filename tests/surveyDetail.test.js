@@ -111,6 +111,15 @@ describe('the breadcrumbs on the survey page', () => {
   });
 });
 
+describe('a community survey page', () => {
+  it('says who shared it, which the card leaves out', async () => {
+    const { store, renderSurveyDetail } = await load();
+    const { id, kos, ownerName } = store.getState().communitySurveys[0];
+    const lede = render(renderSurveyDetail({ id })).querySelector('.page-head__lede');
+    expect(lede.textContent.trim()).toBe(`${kos.kosLocation.label} · Shared by ${ownerName}`);
+  });
+});
+
 describe('the facility checklists on the survey page', () => {
   it('mark what is there ✓ and what is not ✗, saying which to a screen reader', async () => {
     const { store, renderSurveyDetail } = await load();

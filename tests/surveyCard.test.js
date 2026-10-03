@@ -19,9 +19,10 @@ const community = {
 const starOf = (host) => host.querySelector('[data-action="toggle-star"]');
 
 describe('a community survey card', () => {
-  it('says who shared it', () => {
+  it('gives the location without naming who shared it, which its page says', () => {
     const card = render(surveyCard(community, { variant: 'community' }));
-    expect(card.querySelector('.survey-card__meta .meta').textContent.trim()).toBe('Ketawanggede, Malang · Shared by Rahma');
+    expect(card.querySelector('.survey-card__meta .meta').textContent.trim()).toBe('Ketawanggede, Malang');
+    expect(card.textContent).not.toMatch(/Shared by|Rahma/);
   });
 
   it('stars with an icon, its state carried by aria-pressed rather than words', () => {

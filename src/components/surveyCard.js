@@ -71,9 +71,10 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
   const isCommunity = variant === 'community';
   const href = isCommunity ? `#/community/${survey.id}` : `#/surveys/${survey.id}`;
 
-  const meta = isCommunity
-    ? html`<span class="meta">${survey.kos.kosLocation?.label} · Shared by ${survey.ownerName}</span>`
-    : html`<span class="meta">${survey.kos.kosLocation?.label}</span>`;
+  // The location only, on both lists. A community card no longer names who
+  // shared the survey (removed at the user's request, 2026-10-03); its own
+  // page still says "Shared by …".
+  const meta = html`<span class="meta">${survey.kos.kosLocation?.label}</span>`;
 
   const badge = isCommunity
     ? html`<span class="meta">${kosTypeLabel(survey.kos.type)}</span>`
