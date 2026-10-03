@@ -1,4 +1,4 @@
-import { STATUS } from '../constants.js';
+import { STATUS, DISTANCE_BASIS } from '../constants.js';
 import { withSamplePhotos } from './samplePhotos.js';
 
 /**
@@ -9,8 +9,11 @@ import { withSamplePhotos } from './samplePhotos.js';
  * Photos come from the sample set that ships with the app, added by
  * withSamplePhotos (see samplePhotos.js).
  *
- * `distanceKm` is derived from the two coordinates whenever either changes and
- * then persisted, so comparison does not recompute it on every render.
+ * `distanceKm` is the walking route between the two pins, measured whenever
+ * either changes and then persisted with how it was measured
+ * (`distanceBasis`), so comparison does not recompute it on every render. The
+ * samples' were measured on 2026-10-03 with the routing service the form uses
+ * (utils/route.js); the community samples' too.
  */
 
 const CAMPUS = { lat: -7.9526, lng: 112.6148, label: 'Universitas Brawijaya' };
@@ -28,7 +31,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-3456-7890',
       kosLocation: { lat: -7.9391, lng: 112.6167, label: 'Lowokwaru, Malang', address: 'Jalan Melati 9, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.8,
+      distanceKm: 4.3,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1500000,
     },
     room: {
@@ -68,7 +72,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-5566-7788',
       kosLocation: { lat: -7.9333, lng: 112.6, label: 'Tlogomas, Malang', address: 'Jalan Tlogo Hijau 3, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 2.3,
+      distanceKm: 4.5,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1350000,
     },
     room: {
@@ -113,7 +118,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-2211-9090',
       kosLocation: { lat: -7.9425, lng: 112.6069, label: 'Dinoyo, Malang', address: 'Jalan Arwana 15, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.6,
+      distanceKm: 2.8,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1700000,
     },
     room: {
@@ -151,7 +157,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-3344-5566',
       kosLocation: { lat: -7.9553, lng: 112.6142, label: 'Sumbersari, Malang', address: 'Jalan Bumi Asri 2, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 2.8,
+      distanceKm: 0.5,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1250000,
     },
     room: {
@@ -189,7 +196,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-9900-1122',
       kosLocation: { lat: -7.9458, lng: 112.6211, label: 'Lowokwaru, Malang', address: 'Jalan Pelangi 4, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.9,
+      distanceKm: 3.1,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1400000,
     },
     room: {
@@ -221,7 +229,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-7788-4455',
       kosLocation: { lat: -7.9349, lng: 112.6088, label: 'Tlogomas, Malang', address: 'Jalan Teratai, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 2.4,
+      distanceKm: 3.7,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1150000,
     },
     room: {
@@ -253,7 +262,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-6070-8090',
       kosLocation: { lat: -7.9575, lng: 112.6183, label: 'Sumbersari, Malang', address: 'Jalan Kenanga 12, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 1.1,
+      distanceKm: 1.0,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 1850000,
     },
     room: {
@@ -309,7 +319,8 @@ export const ownSurveys = withSamplePhotos([
       contactPhone: '0810-2345-6789',
       kosLocation: { lat: -7.9268, lng: 112.6301, label: 'Blimbing, Malang', address: 'Jalan Cempaka Dua, Malang' },
       campusLocation: CAMPUS,
-      distanceKm: 3.6,
+      distanceKm: 5.8,
+      distanceBasis: DISTANCE_BASIS.WALKING,
       rent: 900000,
     },
     room: {

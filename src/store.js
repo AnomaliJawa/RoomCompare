@@ -1,6 +1,6 @@
 import { ownSurveys } from './seed/ownSurveys.js';
 import { communitySurveys } from './seed/communitySurveys.js';
-import { MAX_COMPARE, MIN_COMPARE } from './constants.js';
+import { MAX_COMPARE, MIN_COMPARE, DISTANCE_BASIS } from './constants.js';
 import { checkWeights, effectiveWeights, isDefault } from './utils/weights.js';
 import * as storage from './storage.js';
 import * as db from './db.js';
@@ -280,6 +280,24 @@ export function updateSurvey(id, changes) {
     ...state.surveys[index],
     ...changes,
     updatedAt: new Date().toISOString(),
+  };
+  commit();
+  return state.surveys[index];
+}
+
+/**
+ * Replace a survey's distance with the walking route measured for its pins
+ * (distanceRefresh.js). Not an edit, so updatedAt stays: the dashboard orders
+ * visits by it, and must not reshuffle while old distances are brought up to
+ * date in the background.
+ */
+export function setWalkingDistance(id, km) {
+  const index = state.surveys.findIndex((survey) => survey.id === id);
+  if (index < 0) return null;
+  const survey = state.surveys[index];
+  state.surveys[index] = {
+    ...survey,
+    kos: { ...survey.kos, distanceKm: km, distanceBasis: DISTANCE_BASIS.WALKING },
   };
   commit();
   return state.surveys[index];

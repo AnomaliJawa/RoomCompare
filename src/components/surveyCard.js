@@ -1,5 +1,5 @@
 import { html, raw, photoPlaceholder } from '../utils/dom.js';
-import { numberToCurrency, formatDistance } from '../utils/format.js';
+import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import { STATUS, STATUS_LABELS, kosTypeLabel } from '../constants.js';
 import { starButton } from './starButton.js';
 import { editLink, deleteButton } from './surveyActions.js';
@@ -110,7 +110,7 @@ export function surveyCard(survey, { variant = 'own', starred = false, inCompare
         </div>
         <div class="survey-card__facts">
           ${fact('Rent', numberToCurrency(survey.kos.rent))}
-          ${fact('To campus', formatDistance(survey.kos.distanceKm))}
+          ${fact('To campus', formatKosDistance(survey.kos))}
         </div>
         <div class="survey-card__actions">${actions}</div>
       </div>

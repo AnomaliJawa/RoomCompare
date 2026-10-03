@@ -11,6 +11,7 @@ import { STATUS, MAX_COMPARE } from './constants.js';
 import * as store from './store.js';
 import * as api from './api.js';
 import * as sync from './sync.js';
+import * as distanceRefresh from './distanceRefresh.js';
 import { renderLogin, renderRegister, readCredentials } from './features/auth.js';
 
 import { renderDashboard } from './features/dashboard.js';
@@ -427,6 +428,7 @@ function wireActions() {
       return;
     }
     sync.stop();
+    distanceRefresh.stop();
     store.forgetAccount();
     closeMobileNav();
     navigate('/login');
@@ -601,6 +603,7 @@ function claimSurveys(count) {
 }
 
 function sessionEnded() {
+  distanceRefresh.stop();
   store.setUser(null);
   navigate('/login');
   toast('Your session has ended. Log in again to keep saving to your account.');
@@ -620,6 +623,8 @@ async function signIn(user) {
     store.setUser(null);
     throw error;
   }
+  // Distances still measured in a straight line are walked, in the background.
+  distanceRefresh.start();
   // Photos left by forms abandoned before saving: this account's only.
   sweepOrphanedMedia(store.getState().surveys.map((survey) => survey.id), user.id).catch(() => null);
   return true;

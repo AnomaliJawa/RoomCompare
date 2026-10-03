@@ -68,9 +68,10 @@ describe('the guidance copy', () => {
     expect(FIELD_GUIDE.videos.helper).toBe(`Up to ${MAX_VIDEOS} videos, max ${MAX_VIDEO_BYTES / MB} MB each.`);
   });
 
-  it('describes the distance the app measures, a straight line between the pins', () => {
-    expect(FIELD_GUIDE.distance.helper).toMatch(/straight-line/i);
-    expect(FIELD_GUIDE.distance.helper).not.toMatch(/road/i);
+  it('describes the distance the app measures, walking along the road, and its fallback', () => {
+    expect(FIELD_GUIDE.distance.helper).toMatch(/walking distance along the road/i);
+    expect(FIELD_GUIDE.distance.helper).not.toMatch(/straight/i);
+    expect(FIELD_GUIDE.distance.panel.rules).toMatch(/straight line is shown instead and marked/);
   });
 });
 

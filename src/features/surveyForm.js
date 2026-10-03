@@ -3,8 +3,8 @@ import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
 import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
 import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
-import { distanceBetween } from '../utils/geo.js';
-import { formatDistance } from '../utils/format.js';
+import { distanceFor, rememberWalkingKm, ROUTE_STATUS } from '../utils/route.js';
+import { formatKosDistance } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
 import { surveyGuideButton, maybeShowSurveyGuide } from '../components/surveyGuide.js';
 import {
@@ -23,6 +23,7 @@ import {
   SHARED_FACILITIES,
   SURROUNDINGS,
   MAX_PHOTOS_PER_SECTION,
+  DISTANCE_BASIS,
 } from '../constants.js';
 import { SECTION_INTROS, FIELD_GUIDE, rubricText } from '../content/guidance.js';
 
@@ -30,6 +31,20 @@ import { SECTION_INTROS, FIELD_GUIDE, rubricText } from '../content/guidance.js'
 function guide(key) {
   return { key, ...FIELD_GUIDE[key] };
 }
+
+const DISTANCE_PLACEHOLDER = 'Fills in once both pins are set';
+
+/**
+ * Why the distance shown is a straight line, when it is one. Only a route the
+ * service could not be reached for is replaced later by itself; a pair of
+ * pins with no walking route between them needs a pin moved.
+ */
+const DISTANCE_NOTES = {
+  [ROUTE_STATUS.UNAVAILABLE]:
+    'The walking route can’t be reached right now, so this is the straight line. It’s replaced once the route can be measured.',
+  [ROUTE_STATUS.NO_ROUTE]:
+    'No walking route was found between the pins, so this is the straight line. Check that both pins are on or beside a road.',
+};
 
 /** A 1–4 field with its helper and the description of the saved level. */
 function scoreField(name, legend, value) {
@@ -201,9 +216,14 @@ export function renderSurveyForm({ id } = {}) {
               ${infoButton(guide('distance'))}
             </div>
             <input class="field__control numeric" id="f-distanceKm" name="distanceKm" type="text"
-              value="${kos.distanceKm == null ? '' : formatDistance(kos.distanceKm)}" readonly
-              placeholder="Fills in once both pins are set" aria-describedby="f-distanceKm-hint" />
+              value="${kos.distanceKm == null ? '' : formatKosDistance(kos)}" readonly
+              placeholder="${DISTANCE_PLACEHOLDER}" aria-describedby="f-distanceKm-hint f-distanceKm-status" />
             <span class="field__hint" id="f-distanceKm-hint">${guide('distance').helper}</span>
+            <span class="field__hint" id="f-distanceKm-status" data-distance-status role="status" aria-live="polite"></span>
+            <span class="field__credit">
+              Route data © OpenStreetMap contributors ·
+              <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">Fix the map</a>
+            </span>
           </div>
         `,
       )}
@@ -339,13 +359,24 @@ export function mountSurveyForm(root) {
   uploaderHandle?.destroy();
   uploaderHandle = mountUploaders(form, { surveyId: form.dataset.surveyId, onChange: markDirty });
 
+  // A survey saved with a walking distance keeps it for the same pins without
+  // asking the routing service again — and, offline, without falling back to
+  // the straight line.
+  const saved = form.dataset.id ? findSurvey(form.dataset.id) : null;
+  if (saved?.kos?.distanceBasis === DISTANCE_BASIS.WALKING) {
+    rememberWalkingKm(saved.kos.kosLocation, saved.kos.campusLocation, saved.kos.distanceKm);
+  }
+
   mapHandle?.destroy();
   mountMapPickers(form, {
-    onDistance: (km, { initial = false } = {}) => {
+    onDistance: ({ km, basis, status }, { initial = false } = {}) => {
       const field = qs('#f-distanceKm', form);
       if (!field) return;
-      // Display only: readSurveyForm recomputes the distance from the pins.
-      field.value = km == null ? '' : formatDistance(km);
+      // Display only: readSurveyForm works the distance out again from the pins.
+      field.value = km == null ? '' : formatKosDistance({ distanceKm: km, distanceBasis: basis });
+      field.placeholder = status === 'routing' ? 'Measuring the walking route…' : DISTANCE_PLACEHOLDER;
+      const note = qs('[data-distance-status]', form);
+      if (note) note.textContent = DISTANCE_NOTES[status] ?? '';
       // A pin move fires no input event, so it is marked here — but not the
       // first reading of pins that were already saved.
       if (!initial) markDirty();
@@ -467,6 +498,7 @@ export function readSurveyForm(form) {
   const rentInput = qs('#f-rent', form);
   const kosPoint = place('kosLocation');
   const campusPoint = place('campusLocation');
+  const distance = distanceFor(kosPoint, campusPoint);
 
   return {
     kos: {
@@ -478,10 +510,13 @@ export function readSurveyForm(form) {
       contactPhone: text('contactPhone') || null,
       kosLocation: kosPoint,
       campusLocation: campusPoint,
-      // Recomputed from the two pins rather than read back from the display
-      // field. Derived data stored beside its inputs can drift from them; this
-      // way the saved distance can never disagree with the saved pins.
-      distanceKm: distanceBetween(kosPoint, campusPoint),
+      // Worked out again from the two pins rather than read back from the
+      // display field: the walking route measured for exactly these pins, or
+      // the straight line when no route could be had, saying which. Derived
+      // data stored beside its inputs can drift from them; this way the saved
+      // distance can never belong to other pins than the saved ones.
+      distanceKm: distance.km,
+      distanceBasis: distance.basis,
       rent: rentInput?.dataset.value ? Number(rentInput.dataset.value) : null,
     },
     room: {

@@ -39,6 +39,7 @@ const saved = {
     kosLocation: { lat: -7.95, lng: 112.61, label: 'Lowokwaru, Malang' },
     campusLocation: { lat: -7.952, lng: 112.614, label: 'Universitas Brawijaya' },
     distanceKm: 1.8,
+    distanceBasis: 'walking',
     rent: 1_250_000,
   },
   room: { lengthM: 3, widthM: 4, facilities: [], cleanliness: 4, internet: null, photoIds: [] },
@@ -129,6 +130,44 @@ describe('guidance on the survey form', () => {
     const distance = show(renderSurveyForm()).querySelector('#f-distanceKm');
     expect(distance.value).toBe('');
     expect(distance.placeholder).toBe('Fills in once both pins are set');
+  });
+
+  it('marks a distance saved as a straight line, as every older survey is', async () => {
+    const { store, renderSurveyForm } = await load();
+    const { distanceBasis, ...older } = saved.kos;
+    store.addSurvey({ ...saved, kos: older });
+    const page = show(renderSurveyForm({ id: 'svy-scored' }));
+    expect(page.querySelector('#f-distanceKm').value).toBe('1,8 km (straight\u00a0line)');
+  });
+
+  // The routing service's usage policy asks for both.
+  it('credits OpenStreetMap for the route, with a way to fix the map', async () => {
+    const { renderSurveyForm } = await load();
+    const credit = show(renderSurveyForm()).querySelector('#f-distanceKm').closest('.field').querySelector('.field__credit');
+    expect(text(credit)).toMatch(/^Route data © OpenStreetMap contributors/);
+    const link = credit.querySelector('a');
+    expect([text(link), link.getAttribute('href'), link.getAttribute('rel')]).toEqual([
+      'Fix the map', 'https://www.openstreetmap.org/fixthemap', 'noopener',
+    ]);
+  });
+});
+
+describe('the distance a survey is saved with', () => {
+  it('is the straight line, saying so, until a walking route is known for its pins', async () => {
+    const { store, renderSurveyForm, readSurveyForm } = await load();
+    store.addSurvey(saved);
+    const form = show(renderSurveyForm({ id: 'svy-scored' })).querySelector('#survey-form');
+    expect(readSurveyForm(form).kos).toMatchObject({ distanceKm: 0.5, distanceBasis: 'straight' });
+
+    const { rememberWalkingKm } = await import('../src/utils/route.js');
+    rememberWalkingKm(saved.kos.kosLocation, saved.kos.campusLocation, 1.8);
+    expect(readSurveyForm(form).kos).toMatchObject({ distanceKm: 1.8, distanceBasis: 'walking' });
+  });
+
+  it('is nothing at all without both pins', async () => {
+    const { renderSurveyForm, readSurveyForm } = await load();
+    const form = show(renderSurveyForm()).querySelector('#survey-form');
+    expect(readSurveyForm(form).kos).toMatchObject({ distanceKm: null, distanceBasis: null });
   });
 });
 

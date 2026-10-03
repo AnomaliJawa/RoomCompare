@@ -1,3 +1,5 @@
+import { DISTANCE_BASIS } from '../constants.js';
+
 /**
  * Formatting helpers.
  *
@@ -70,4 +72,25 @@ export function formatDistance(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 'Not recorded';
   return `${n.toFixed(1).replace('.', ',')} km`;
+}
+
+/**
+ * Whether a kos's distance is only the straight line between its pins: the
+ * walking route could not be had when it was saved, or it was saved before
+ * distances were walked. A record without a basis predates the field.
+ */
+export function isStraightLineDistance(kos) {
+  return Number.isFinite(kos?.distanceKm) && kos.distanceBasis !== DISTANCE_BASIS.WALKING;
+}
+
+/**
+ * A kos's distance to campus, as every list, page and table shows it. Walking
+ * is the measure, so only the exception is marked: a straight line passed off
+ * as a walk would flatter that kos beside the others. The mark's two words
+ * are joined, so a narrow card wraps it whole onto the next line rather than
+ * splitting it.
+ */
+export function formatKosDistance(kos) {
+  const text = formatDistance(kos?.distanceKm);
+  return isStraightLineDistance(kos) ? `${text} (straight\u00a0line)` : text;
 }

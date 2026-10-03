@@ -18,6 +18,17 @@ export const STATUS_LABELS = {
   [STATUS.PUBLISHED]: 'Published',
 };
 
+/**
+ * How a survey's distance to campus was measured, saved beside it as
+ * `kos.distanceBasis`. Walking, along the road, since 2026-10-03. A straight
+ * line is the fallback when no route could be had, and what every distance
+ * saved before then is, so a record without the field reads as straight.
+ */
+export const DISTANCE_BASIS = {
+  WALKING: 'walking',
+  STRAIGHT: 'straight',
+};
+
 export const KOS_TYPES = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },

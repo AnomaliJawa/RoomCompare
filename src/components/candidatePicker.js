@@ -1,5 +1,5 @@
 import { html, raw } from '../utils/dom.js';
-import { numberToCurrency, formatDistance } from '../utils/format.js';
+import { numberToCurrency, formatKosDistance } from '../utils/format.js';
 import { MAX_COMPARE } from '../constants.js';
 
 /**
@@ -22,7 +22,7 @@ function candidateList(candidates, selection) {
             <span class="listing__title">${survey.kos.name}</span>
             <p class="meta">
               ${survey.kos.kosLocation?.label ?? 'Location not recorded'} ·
-              ${numberToCurrency(survey.kos.rent)} · ${formatDistance(survey.kos.distanceKm)}
+              ${numberToCurrency(survey.kos.rent)} · ${formatKosDistance(survey.kos)}
             </p>
           </div>
           <button

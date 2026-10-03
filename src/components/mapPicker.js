@@ -2,6 +2,8 @@ import { html, raw, qs, qsa } from '../utils/dom.js';
 import { infoButton } from './fields.js';
 import { DEFAULT_CENTER, distanceBetween, formatCoordinate, isValidPoint } from '../utils/geo.js';
 import { geocodeAddress, shortLabel, GEOCODE_STATUS } from '../utils/geocode.js';
+import { walkingDistance, knownWalkingKm, ROUTE_STATUS } from '../utils/route.js';
+import { DISTANCE_BASIS } from '../constants.js';
 
 /**
  * Pin a place on a map.
@@ -22,6 +24,22 @@ import { geocodeAddress, shortLabel, GEOCODE_STATUS } from '../utils/geocode.js'
 const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
 const LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
 const LOAD_TIMEOUT_MS = 6000;
+const SETTLE_MS = 500;
+
+/** Resolves true after a short pause, or false if the signal is aborted first. */
+function settle(signal) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(!signal.aborted), SETTLE_MS);
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        resolve(false);
+      },
+      { once: true },
+    );
+  });
+}
 
 let leafletPromise = null;
 
@@ -328,6 +346,13 @@ function requestPosition(onPoint, readout) {
 /**
  * Mount every picker in a form and keep the derived distance in step.
  * Returns a handle so the maps can be torn down when the view changes.
+ *
+ * The distance is the walking route between the two pins (utils/route.js).
+ * `onDistance` hears `{ km, basis, status }`: first `status: 'routing'` with
+ * no km while a route is fetched, then the walking distance, or — when there
+ * is no route to be had — the straight line, with the route's status saying
+ * why. Only the latest pins count: moving a pin abandons the route still
+ * being fetched for the old ones.
  */
 export async function mountMapPickers(root, { onDistance } = {}) {
   const nodes = qsa('[data-mappicker]', root);
@@ -342,13 +367,40 @@ export async function mountMapPickers(root, { onDistance } = {}) {
     });
   }
 
-  const recalculate = ({ initial = false } = {}) => {
+  let routing = null;
+
+  const recalculate = async ({ initial = false } = {}) => {
     const read = (name) => {
       const node = qs(`[data-mappicker="${name}"]`, root);
       if (!node) return null;
       return { lat: qs('[data-lat]', node).value, lng: qs('[data-lng]', node).value };
     };
-    onDistance?.(distanceBetween(read('kosLocation'), read('campusLocation')), { initial });
+    const kos = read('kosLocation');
+    const campus = read('campusLocation');
+
+    routing?.abort();
+    const straight = distanceBetween(kos, campus);
+    if (straight === null) {
+      onDistance?.({ km: null, basis: null, status: ROUTE_STATUS.MISSING }, { initial });
+      return;
+    }
+
+    const controller = new AbortController();
+    routing = controller;
+    if (knownWalkingKm(kos, campus) === undefined) {
+      onDistance?.({ km: null, basis: null, status: 'routing' }, { initial });
+      // Typed coordinates change with every keystroke: wait for a pause, so
+      // only the finished pin is routed rather than each digit on the way.
+      if (!initial && !(await settle(controller.signal))) return;
+    }
+    const result = await walkingDistance(kos, campus, { signal: controller.signal });
+    if (controller.signal.aborted) return;
+    onDistance?.(
+      result.status === ROUTE_STATUS.OK
+        ? { km: result.km, basis: DISTANCE_BASIS.WALKING, status: result.status }
+        : { km: straight, basis: DISTANCE_BASIS.STRAIGHT, status: result.status },
+      { initial },
+    );
   };
 
   const handles = nodes.map((node) => mountOne(node, L, () => recalculate()));
@@ -359,6 +411,9 @@ export async function mountMapPickers(root, { onDistance } = {}) {
 
   return {
     mapAvailable: Boolean(L),
-    destroy: () => handles.forEach((handle) => handle.destroy()),
+    destroy: () => {
+      routing?.abort();
+      handles.forEach((handle) => handle.destroy());
+    },
   };
 }

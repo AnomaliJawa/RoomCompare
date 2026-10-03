@@ -8,6 +8,7 @@ import {
   formatRent,
   numberToCurrency,
   formatDistance,
+  formatKosDistance,
 } from '../src/utils/format.js';
 
 describe('groupDigits', () => {
@@ -108,5 +109,22 @@ describe('formatDistance', () => {
     expect(formatDistance(null)).toBe('Not recorded');
     expect(formatDistance(undefined)).toBe('Not recorded');
     expect(formatDistance(NaN)).toBe('Not recorded');
+  });
+});
+
+describe('formatKosDistance', () => {
+  it('gives a walking distance as it is', () => {
+    expect(formatKosDistance({ distanceKm: 4.3, distanceBasis: 'walking' })).toBe('4,3 km');
+  });
+
+  it('marks a straight line, whether a fallback or saved before distances were walked', () => {
+    expect(formatKosDistance({ distanceKm: 1.5, distanceBasis: 'straight' })).toBe('1,5 km (straight\u00a0line)');
+    expect(formatKosDistance({ distanceKm: 1.8 })).toBe('1,8 km (straight\u00a0line)');
+  });
+
+  it('reads "Not recorded", unmarked, when there is no distance', () => {
+    expect(formatKosDistance({ distanceKm: null })).toBe('Not recorded');
+    expect(formatKosDistance({ distanceKm: null, distanceBasis: 'straight' })).toBe('Not recorded');
+    expect(formatKosDistance(undefined)).toBe('Not recorded');
   });
 });
