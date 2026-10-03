@@ -55,14 +55,20 @@ beforeEach(() => {
 });
 
 describe('guidance on the survey form', () => {
-  it('introduces every section, and puts a helper line under each of the 23 fields', async () => {
+  it('introduces every section, and puts a helper line under each field but the distance', async () => {
     const { renderSurveyForm, SECTION_INTROS, FIELD_GUIDE } = await load();
     const page = show(renderSurveyForm());
 
     expect([...page.querySelectorAll('.form-section__guide')].map(text)).toEqual(Object.values(SECTION_INTROS));
 
     const helpers = [...page.querySelectorAll('.field__hint, .uploader__drop-hint')].map(text).filter(Boolean);
-    expect(helpers.sort()).toEqual(Object.values(FIELD_GUIDE).map((guide) => guide.helper).sort());
+    expect(helpers.sort()).toEqual(Object.values(FIELD_GUIDE).map((guide) => guide.helper).filter(Boolean).sort());
+    expect(helpers).toHaveLength(22);
+    // Removed at the user's request (2026-10-03): only the status line, empty
+    // until a route cannot be had, describes the distance.
+    const distance = page.querySelector('#f-distanceKm');
+    expect(distance.getAttribute('aria-describedby')).toBe('f-distanceKm-status');
+    expect(text(distance.closest('.field').querySelector('.field__hint'))).toBe('');
   });
 
   it('names each field by its label alone, with no required badges', async () => {
