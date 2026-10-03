@@ -207,11 +207,22 @@ describe('the star on a community survey page', () => {
     expect(star().getAttribute('aria-pressed')).not.toBe(before.getAttribute('aria-pressed'));
   });
 
+  it('sits beside a like button whose count follows your like', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.setUser({ id: 'user-ana', email: 'ana@example.test', name: 'Ana' });
+    const { id, likes } = store.getState().communitySurveys[0];
+    const like = () => render(renderSurveyDetail({ id })).querySelector('.page-head__actions [data-action="toggle-like"]');
+    expect([like().getAttribute('aria-pressed'), like().querySelector('.like__count').textContent]).toEqual(['false', String(likes)]);
+    store.toggleLike(id);
+    expect([like().getAttribute('aria-pressed'), like().querySelector('.like__count').textContent]).toEqual(['true', String(likes + 1)]);
+  });
+
   it('is not on your own survey, which has Edit and Delete as named icons', async () => {
     const { store, renderSurveyDetail } = await load();
     store.addSurvey(survey());
     const actions = render(renderSurveyDetail({ id: 'svy-media' })).querySelector('.page-head__actions');
     expect(actions.querySelector('[data-action="toggle-star"]')).toBeNull();
+    expect(actions.querySelector('[data-action="toggle-like"]')).toBeNull();
     const edit = actions.querySelector('a[href="#/surveys/svy-media/edit"]');
     const remove = actions.querySelector('[data-action="ask-delete"]');
     expect([edit.getAttribute('aria-label'), edit.textContent.trim()]).toEqual(['Edit Kos Media', '']);
@@ -235,5 +246,44 @@ describe('Add to compare on the survey page', () => {
     expect(addButton(render(renderSurveyDetail({ id: 'svy-media' }))).textContent.trim()).toBe('Add to compare');
     const { id } = store.getState().communitySurveys[0];
     expect(addButton(render(renderSurveyDetail({ id })))).not.toBeNull();
+  });
+});
+
+describe('Kos information on the survey page', () => {
+  it('matches the form: no Location or Campus rows, with the area still under the name', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const host = render(renderSurveyDetail({ id: 'svy-media' }));
+    const kosInfo = [...host.querySelectorAll('section.section')].find((s) => s.querySelector('h2').textContent.trim() === 'Kos information');
+    expect([...kosInfo.querySelectorAll('.defn__label')].map((l) => l.textContent.trim())).toEqual([
+      'Type', 'Address', 'Pinned at', 'Campus', 'Distance to campus', 'Monthly rent', 'Owner or security phone',
+    ]);
+    expect(host.querySelector('.page-head__lede').textContent.trim()).toBe('Lowokwaru, Malang');
+  });
+
+  const rowOf = (host, label) =>
+    [...host.querySelectorAll('.defn')].find((row) => row.querySelector('.defn__label').textContent.trim() === label);
+
+  it('opens the pin in Google Maps, in a new tab', async () => {
+    const { store, renderSurveyDetail } = await load();
+    store.addSurvey(survey());
+    const link = rowOf(render(renderSurveyDetail({ id: 'svy-media' })), 'Pinned at').querySelector('a');
+    expect(link.textContent.trim()).toBe('-7.940000, 112.620000');
+    expect(link.getAttribute('href')).toBe('https://www.google.com/maps/search/?api=1&query=-7.94%2C112.62');
+    expect([link.getAttribute('target'), link.getAttribute('rel')]).toEqual(['_blank', 'noopener']);
+    expect(link.getAttribute('aria-label')).toBe('-7.940000, 112.620000, open in Google Maps');
+  });
+
+  it('names the campus as typed, or as the lookup found it, so the distance says where to', async () => {
+    const { store, renderSurveyDetail } = await load();
+    const campus = (campusLocation) => {
+      store.addSurvey({ ...survey(), id: 'svy-campus', kos: { ...survey().kos, campusLocation } });
+      const value = rowOf(render(renderSurveyDetail({ id: 'svy-campus' })), 'Campus').querySelector('.defn__value');
+      store.deleteSurvey('svy-campus');
+      return value.textContent.trim();
+    };
+    expect(campus({ lat: -7.95, lng: 112.61, label: 'Universitas Brawijaya, Ketawanggede', address: 'Universitas Brawijaya' })).toBe('Universitas Brawijaya');
+    expect(campus({ lat: -7.95, lng: 112.61, label: 'Universitas Brawijaya', address: null })).toBe('Universitas Brawijaya');
+    expect(campus(null)).toBe('Not recorded');
   });
 });

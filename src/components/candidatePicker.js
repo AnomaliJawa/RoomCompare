@@ -4,15 +4,36 @@ import { MAX_COMPARE } from '../constants.js';
 
 /** Own published surveys and every community survey; drafts are left out and counted. */
 
-function candidateList(candidates, selection) {
-  const full = selection.length >= MAX_COMPARE;
+function addButton(survey, selection) {
+  const picked = selection.includes(survey.id);
+  const blocked = !picked && selection.length >= MAX_COMPARE;
+  return html`<button
+    class="btn ${picked ? 'btn--primary' : 'btn--secondary'} btn--small"
+    type="button"
+    data-action="toggle-compare"
+    data-id="${survey.id}"
+    ${blocked ? raw('disabled') : ''}
+  >${picked ? 'Selected' : blocked ? `Maximum of ${MAX_COMPARE}` : 'Add'}</button>`;
+}
 
+/** Changing a kos swaps it in its slot, so the others keep their places. */
+function changeButton(survey, selection, replacing) {
+  if (survey.id === replacing.id) {
+    return html`<button class="btn btn--primary btn--small" type="button" data-id="${survey.id}" disabled>Current</button>`;
+  }
+  if (selection.includes(survey.id)) {
+    return html`<button class="btn btn--secondary btn--small" type="button" data-id="${survey.id}" disabled>Selected</button>`;
+  }
+  return html`<button class="btn btn--secondary btn--small" type="button" data-action="replace-compare" data-id="${survey.id}">
+    Choose
+  </button>`;
+}
+
+function candidateList(candidates, selection, replacing) {
   return html`
     <ul class="stack">
-      ${candidates.map((survey) => {
-        const picked = selection.includes(survey.id);
-        const blocked = !picked && full;
-        return html`<li class="listing">
+      ${candidates.map(
+        (survey) => html`<li class="listing">
           <div>
             <span class="listing__title">${survey.kos.name}</span>
             <p class="meta">
@@ -20,24 +41,18 @@ function candidateList(candidates, selection) {
               ${numberToCurrency(survey.kos.rent)} · ${formatKosDistance(survey.kos)}
             </p>
           </div>
-          <button
-            class="btn ${picked ? 'btn--primary' : 'btn--secondary'} btn--small"
-            type="button"
-            data-action="toggle-compare"
-            data-id="${survey.id}"
-            ${blocked ? raw('disabled') : ''}
-          >${picked ? 'Selected' : blocked ? `Maximum of ${MAX_COMPARE}` : 'Add'}</button>
-        </li>`;
-      })}
+          ${replacing ? changeButton(survey, selection, replacing) : addButton(survey, selection)}
+        </li>`,
+      )}
     </ul>
   `;
 }
 
-function candidateGroup({ id, title, candidates, selection, empty, note = null }) {
+function candidateGroup({ id, title, candidates, selection, replacing, empty, note = null }) {
   return html`
     <section class="picker-group" aria-labelledby="${id}">
       <h3 class="picker-group__title" id="${id}">${title}</h3>
-      ${candidates.length ? html`${note ?? ''}${candidateList(candidates, selection)}` : empty}
+      ${candidates.length ? html`${note ?? ''}${candidateList(candidates, selection, replacing)}` : empty}
     </section>
   `;
 }
@@ -57,21 +72,25 @@ function ownEmpty(drafts) {
       </div>`;
 }
 
-export function candidatePickerDialog({ own, community, drafts = 0 }, selection) {
+/** `replacing`: the kos a filled slot was opened for; the picker then changes or removes it. */
+export function candidatePickerDialog({ own, community, drafts = 0 }, selection, { replacing = null } = {}) {
   return html`
     <div class="picker-dialog">
       <div class="picker-dialog__head">
-        <h2 class="dialog__title" id="picker-dialog-title">Add kos</h2>
+        <h2 class="dialog__title" id="picker-dialog-title">${replacing ? 'Change kos' : 'Add kos'}</h2>
         <button class="btn btn--quiet btn--small" type="button" data-action="close-picker">Close</button>
       </div>
 
       <div class="picker-dialog__body">
-        <p class="meta">Your published surveys and the community’s. Up to ${MAX_COMPARE} at once.</p>
+        <p class="meta">${replacing
+          ? `Choose a kos to compare in place of ${replacing.kos.name}, or remove it.`
+          : `Your published surveys and the community’s. Up to ${MAX_COMPARE} at once.`}</p>
         ${candidateGroup({
           id: 'picker-own',
           title: 'My surveys',
           candidates: own,
           selection,
+          replacing,
           note: drafts
             ? html`<p class="meta picker-group__note">${draftCount(drafts)} listed. Publish a survey to compare it.</p>`
             : null,
@@ -82,14 +101,22 @@ export function candidatePickerDialog({ own, community, drafts = 0 }, selection)
           title: 'Community',
           candidates: community,
           selection,
+          replacing,
           empty: html`<p class="meta">No community surveys to show right now.</p>`,
         })}
       </div>
 
-      <div class="picker-dialog__foot">
-        <p class="meta" role="status" aria-live="polite">${selection.length} of ${MAX_COMPARE} selected.</p>
-        <button class="btn btn--primary" type="button" data-action="close-picker">Done</button>
-      </div>
+      ${replacing
+        ? html`<div class="picker-dialog__foot">
+            <button class="btn btn--danger" type="button" data-action="remove-compare" data-id="${replacing.id}">
+              Remove ${replacing.kos.name}
+            </button>
+            <button class="btn btn--secondary" type="button" data-action="close-picker">Cancel</button>
+          </div>`
+        : html`<div class="picker-dialog__foot">
+            <p class="meta" role="status" aria-live="polite">${selection.length} of ${MAX_COMPARE} selected.</p>
+            <button class="btn btn--primary" type="button" data-action="close-picker">Done</button>
+          </div>`}
     </div>
   `;
 }

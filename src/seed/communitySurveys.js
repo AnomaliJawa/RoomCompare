@@ -3,6 +3,8 @@ import { withSamplePhotos } from './samplePhotos.js';
 
 /** Static community data: never persisted, so it cannot be corrupted or use the quota. */
 
+// `likes` is a sample count from the fictional community; the viewer's own like adds 1 (store.likeCount).
+
 const CAMPUS = { lat: -7.9526, lng: 112.6148, label: 'Universitas Brawijaya' };
 
 export const communitySurveys = withSamplePhotos([
@@ -10,6 +12,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-kartika',
     ownerId: 'user-rahma',
     ownerName: 'Rahma',
+    likes: 24,
     status: STATUS.PUBLISHED,
     createdAt: '2026-07-19T11:00:00.000Z',
     updatedAt: '2026-07-19T11:00:00.000Z',
@@ -47,6 +50,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-pondok-biru',
     ownerId: 'user-dimas',
     ownerName: 'Dimas',
+    likes: 9,
     status: STATUS.PUBLISHED,
     createdAt: '2026-07-28T15:30:00.000Z',
     updatedAt: '2026-07-28T15:30:00.000Z',
@@ -81,6 +85,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-griya-asri',
     ownerId: 'user-sari',
     ownerName: 'Sari',
+    likes: 17,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-03T09:45:00.000Z',
     updatedAt: '2026-08-03T09:45:00.000Z',
@@ -124,6 +129,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-wisma-cempaka',
     ownerId: 'user-bagus',
     ownerName: 'Bagus',
+    likes: 6,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-09T18:10:00.000Z',
     updatedAt: '2026-08-09T18:10:00.000Z',
@@ -158,6 +164,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-mawar',
     ownerId: 'user-intan',
     ownerName: 'Intan',
+    likes: 13,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-12T08:20:00.000Z',
     updatedAt: '2026-08-12T08:20:00.000Z',
@@ -188,6 +195,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-tirta',
     ownerId: 'user-yoga',
     ownerName: 'Yoga',
+    likes: 4,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-15T14:05:00.000Z',
     updatedAt: '2026-08-15T14:05:00.000Z',
@@ -218,6 +226,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-anggrek',
     ownerId: 'user-putri',
     ownerName: 'Putri',
+    likes: 11,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-18T09:30:00.000Z',
     updatedAt: '2026-08-18T09:30:00.000Z',
@@ -248,6 +257,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-bagas',
     ownerId: 'user-fajar',
     ownerName: 'Fajar',
+    likes: 7,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-21T17:45:00.000Z',
     updatedAt: '2026-08-21T17:45:00.000Z',
@@ -278,6 +288,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-harmoni',
     ownerId: 'user-nadia',
     ownerName: 'Nadia',
+    likes: 15,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-25T11:15:00.000Z',
     updatedAt: '2026-08-25T11:15:00.000Z',
@@ -308,6 +319,7 @@ export const communitySurveys = withSamplePhotos([
     id: 'com-cendana',
     ownerId: 'user-aldi',
     ownerName: 'Aldi',
+    likes: 3,
     status: STATUS.PUBLISHED,
     createdAt: '2026-08-29T13:00:00.000Z',
     updatedAt: '2026-08-29T13:00:00.000Z',

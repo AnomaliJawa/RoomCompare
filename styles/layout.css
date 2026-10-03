@@ -310,6 +310,7 @@ body[data-auth="pending"] .nav__actions { display: none; }
   }
 
   .page-head__actions > * { flex: 1; }
-  /* An icon button keeps its square; stretched, its icon would float. */
-  .page-head__actions > .btn--icon { flex: none; }
+  /* Icon buttons and the like keep their size; stretched, the icon would float. */
+  .page-head__actions > .btn--icon,
+  .page-head__actions > .like { flex: none; }
 }

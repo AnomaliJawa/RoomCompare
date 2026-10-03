@@ -138,5 +138,11 @@ export const MAX_COMPARE = 3;
 export const MIN_COMPARE = 2;
 export const MAX_PHOTOS_PER_SECTION = 10;
 
+/** The rent slider's reach (the user's choice); the typed field still takes up to validate.js's RENT_MAX. */
+export const RENT_SLIDER = { MAX: 10_000_000, STEP: 50_000 };
+
+/** Whole metres in the room length and width lists (the user's choice); typing takes validate.js's range. */
+export const ROOM_SIDE_CHOICES = Array.from({ length: 10 }, (_, index) => index + 1);
+
 /** A photo id with this prefix names a file in seed-photos/, not a stored blob. */
 export const SAMPLE_PHOTO_PREFIX = 'seed:';

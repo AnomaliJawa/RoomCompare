@@ -6,8 +6,8 @@ import { KOS_TYPES } from '../constants.js';
 export const LIMITS = {
   NAME_MAX: 80,
   RENT_MAX: 100_000_000,
-  ROOM_MIN_M: 0.1,
-  ROOM_MAX_M: 20,
+  ROOM_MIN_M: 1,
+  ROOM_MAX_M: 10,
   NOTES_MAX: 1000,
   LIKERT_MIN: 1,
   LIKERT_MAX: 4,

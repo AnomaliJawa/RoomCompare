@@ -63,7 +63,7 @@ describe('guidance on the survey form', () => {
 
     const helpers = [...page.querySelectorAll('.field__hint, .uploader__drop-hint')].map(text).filter(Boolean);
     expect(helpers.sort()).toEqual(Object.values(FIELD_GUIDE).map((guide) => guide.helper).filter(Boolean).sort());
-    expect(helpers).toHaveLength(22);
+    expect(helpers).toHaveLength(20);
     // Removed at the user's request: only the status line describes the distance.
     const distance = page.querySelector('#f-distanceKm');
     expect(distance.getAttribute('aria-describedby')).toBe('f-distanceKm-status');
@@ -155,6 +155,38 @@ describe('guidance on the survey form', () => {
   });
 });
 
+describe('the area a kos and its campus are in', () => {
+  const read = (form) => {
+    const { kosLocation, campusLocation } = readSurveyForm(form).kos;
+    return [kosLocation?.label, campusLocation?.label];
+  };
+  let readSurveyForm;
+
+  it('has no field to type it in', async () => {
+    const { renderSurveyForm } = await load();
+    const page = show(renderSurveyForm());
+    expect(page.querySelector('#f-kosLocation')).toBeNull();
+    expect(page.querySelector('#f-campusLocation')).toBeNull();
+    expect(page.textContent).not.toMatch(/Kos location name|Campus name/);
+  });
+
+  it('keeps the area of a saved survey through an edit', async () => {
+    const loaded = await load();
+    ({ readSurveyForm } = loaded);
+    loaded.store.addSurvey(saved);
+    const form = show(loaded.renderSurveyForm({ id: 'svy-scored' })).querySelector('#survey-form');
+    expect(read(form)).toEqual(['Lowokwaru, Malang', 'Universitas Brawijaya']);
+  });
+
+  it('falls back to the typed address when nothing was looked up', async () => {
+    const loaded = await load();
+    ({ readSurveyForm } = loaded);
+    const form = show(loaded.renderSurveyForm()).querySelector('#survey-form');
+    type(form.querySelector('#kosLocation-address'), 'Jl. Sumbersari 12, Malang');
+    expect(readSurveyForm(form).kos.kosLocation).toMatchObject({ label: 'Jl. Sumbersari 12, Malang', address: 'Jl. Sumbersari 12, Malang' });
+  });
+});
+
 describe('the distance a survey is saved with', () => {
   it('is the straight line, saying so, until a walking route is known for its pins', async () => {
     const { store, renderSurveyForm, readSurveyForm } = await load();
@@ -198,6 +230,140 @@ describe('the owner or security phone', () => {
     store.addSurvey({ ...saved, kos: { ...saved.kos, contactPhone: '0899-1122-3344' } });
     const page = show(renderSurveyForm({ id: 'svy-scored' }));
     expect(page.querySelector('#f-contactPhone').value).toBe('0899-1122-3344');
+  });
+});
+
+describe('the monthly rent', () => {
+  async function rentForm(id) {
+    const loaded = await load();
+    if (id) loaded.store.addSurvey(saved);
+    const form = show(loaded.renderSurveyForm(id ? { id } : undefined)).querySelector('#survey-form');
+    loaded.attachRent(form);
+    const field = form.querySelector('#f-rent');
+    const slider = form.querySelector('[data-slider-for="f-rent"]');
+    return { ...loaded, form, field, slider };
+  }
+
+  it('has a slider from Rp 0 to Rp 10.000.000 under the typed field, read by nothing', async () => {
+    const { form, field, slider, readSurveyForm } = await rentForm();
+    expect([slider.type, slider.min, slider.max, slider.step]).toEqual(['range', '0', '10000000', '50000']);
+    expect(slider.getAttribute('aria-label')).toBe('Monthly rent');
+    expect(slider.name).toBe('');
+    expect(slider.closest('[data-field]')).toBe(field.closest('[data-field]'));
+    expect([...form.querySelectorAll('.field__scale span')].map(text)).toEqual(['Rp 0', 'Rp 10.000.000']);
+    expect(readSurveyForm(form).kos.rent).toBeNull();
+  });
+
+  it('types the amount the slider is moved to', async () => {
+    const { form, field, slider, readSurveyForm } = await rentForm();
+    type(slider, '1500000');
+    expect(field.value).toBe('1.500.000');
+    expect(readSurveyForm(form).kos.rent).toBe(1_500_000);
+    expect(slider.getAttribute('aria-valuetext')).toBe('Rp 1.500.000');
+  });
+
+  it('follows a typed amount, resting at its end past Rp 10.000.000 while the field keeps the figure', async () => {
+    const { form, field, slider, readSurveyForm } = await rentForm();
+    type(field, '2500000');
+    expect(slider.value).toBe('2500000');
+    type(field, '15000000');
+    expect(slider.value).toBe('10000000');
+    expect(field.value).toBe('15.000.000');
+    expect(readSurveyForm(form).kos.rent).toBe(15_000_000);
+    expect(slider.getAttribute('aria-valuetext')).toBe('Rp 15.000.000');
+  });
+
+  it('opens a saved survey with the slider at its rent', async () => {
+    const { slider } = await rentForm('svy-scored');
+    expect(slider.value).toBe('1250000');
+    expect(slider.getAttribute('aria-valuetext')).toBe('Rp 1.250.000');
+  });
+});
+
+describe('the room length and width', () => {
+  async function sizeForm(id) {
+    const loaded = await load();
+    if (id) loaded.store.addSurvey(saved);
+    const form = show(loaded.renderSurveyForm(id ? { id } : undefined)).querySelector('#survey-form');
+    const { mountComboboxes } = await import('../src/components/combobox.js');
+    mountComboboxes(form);
+    const field = (key) => form.querySelector(`#f-${key}`);
+    const list = (key) => form.querySelector(`#f-${key}-list`);
+    const toggle = (key) => field(key).closest('[data-combo]').querySelector('[data-combo-toggle]');
+    const selected = (key) => [...list(key).querySelectorAll('[aria-selected="true"]')].map((o) => o.dataset.value);
+    const key = (control, name, init = {}) =>
+      control.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true, ...init }));
+    return { ...loaded, form, field, list, toggle, selected, key };
+  }
+
+  it('is one field each, with a 1–10 m list it opens, and no second control to read', async () => {
+    const { form, field, list, toggle, readSurveyForm } = await sizeForm();
+    for (const name of ['lengthM', 'widthM']) {
+      const input = field(name);
+      expect([input.type, input.inputMode, input.getAttribute('role'), input.name]).toEqual(['text', 'decimal', 'combobox', name]);
+      expect(input.getAttribute('aria-controls')).toBe(list(name).id);
+      expect(input.getAttribute('aria-expanded')).toBe('false');
+      expect(list(name).hidden).toBe(true);
+      expect([...list(name).querySelectorAll('[role="option"]')].map(text)).toEqual(
+        Array.from({ length: 10 }, (_, index) => `${index + 1} m`),
+      );
+      expect(toggle(name).tabIndex).toBe(-1);
+    }
+    expect(form.querySelector('select')).toBeNull();
+    expect(readSurveyForm(form).room).toMatchObject({ lengthM: null, widthM: null });
+  });
+
+  it('opens from the chevron, and types the metres picked', async () => {
+    const { form, field, list, toggle, selected, readSurveyForm } = await sizeForm();
+    const heard = [];
+    form.addEventListener('input', () => heard.push('input'));
+    form.addEventListener('change', () => heard.push('change'));
+    toggle('lengthM').click();
+    expect(list('lengthM').hidden).toBe(false);
+    expect(field('lengthM').getAttribute('aria-expanded')).toBe('true');
+    list('lengthM').querySelector('[data-value="3"]').click();
+    expect(field('lengthM').value).toBe('3');
+    expect(list('lengthM').hidden).toBe(true);
+    expect(selected('lengthM')).toEqual(['3']);
+    expect(heard).toEqual(['input', 'change']);
+    expect(readSurveyForm(form).room.lengthM).toBe(3);
+  });
+
+  it('takes a typed size the list does not hold, like the number field it replaced', async () => {
+    const { form, field, selected, readSurveyForm } = await sizeForm();
+    type(field('widthM'), '4');
+    expect(selected('widthM')).toEqual(['4']);
+    type(field('widthM'), '3,5');
+    expect(field('widthM').value).toBe('3.5');
+    expect(selected('widthM')).toEqual([]);
+    type(field('widthM'), '9.5m');
+    expect(field('widthM').value).toBe('9.5');
+    expect(readSurveyForm(form).room.widthM).toBe(9.5);
+  });
+
+  it('works from the keyboard: ↓ opens on the current size, Enter picks, Escape leaves it be', async () => {
+    const { field, list, key } = await sizeForm();
+    const input = field('lengthM');
+    type(input, '5');
+    key(input, 'ArrowDown');
+    expect(list('lengthM').hidden).toBe(false);
+    expect(input.getAttribute('aria-activedescendant')).toBe('f-lengthM-list-5');
+    key(input, 'ArrowDown');
+    expect(input.getAttribute('aria-activedescendant')).toBe('f-lengthM-list-6');
+    key(input, 'Escape');
+    expect(list('lengthM').hidden).toBe(true);
+    expect(input.value).toBe('5');
+    key(input, 'ArrowDown');
+    key(input, 'ArrowUp');
+    key(input, 'Enter');
+    expect(input.value).toBe('4');
+    expect(list('lengthM').hidden).toBe(true);
+  });
+
+  it('opens a saved survey with its sizes shown and marked in the lists', async () => {
+    const { field, selected } = await sizeForm('svy-scored');
+    expect([field('lengthM').value, field('widthM').value]).toEqual(['3', '4']);
+    expect([selected('lengthM'), selected('widthM')]).toEqual([['3'], ['4']]);
   });
 });
 

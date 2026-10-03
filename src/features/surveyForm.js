@@ -1,14 +1,16 @@
 import { html, raw, qs, qsa, getCheckedValues } from '../utils/dom.js';
 import { findSurvey, isOwnSurvey } from '../store.js';
 import { attachCurrencyInput } from '../components/currencyInput.js';
+import { mountComboboxes } from '../components/combobox.js';
 import { uploaderField, mountUploaders } from '../components/mediaUploader.js';
 import { mapPickerField, mountMapPickers } from '../components/mapPicker.js';
 import { distanceFor, rememberWalkingKm, ROUTE_STATUS } from '../utils/route.js';
-import { formatKosDistance } from '../utils/format.js';
+import { formatKosDistance, numberToCurrency } from '../utils/format.js';
 import { notFound } from '../components/emptyState.js';
 import { surveyGuideButton, maybeShowSurveyGuide } from '../components/surveyGuide.js';
 import {
   textField,
+  comboField,
   currencyField,
   textareaField,
   checkboxGroup,
@@ -24,6 +26,8 @@ import {
   SURROUNDINGS,
   MAX_PHOTOS_PER_SECTION,
   DISTANCE_BASIS,
+  RENT_SLIDER,
+  ROOM_SIDE_CHOICES,
 } from '../constants.js';
 import { SECTION_INTROS, FIELD_GUIDE, rubricText } from '../content/guidance.js';
 
@@ -46,6 +50,7 @@ function scoreField(name, legend, value) {
 }
 
 let currencyHandle = null;
+let comboHandle = null;
 let uploaderHandle = null;
 let mapHandle = null;
 let autosaveTimer = null;
@@ -129,7 +134,13 @@ export function renderSurveyForm({ id } = {}) {
         html`
           <div class="form-grid">
             ${textField({ name: 'name', label: 'Kos name', value: kos.name, placeholder: 'e.g. Kos Melati Residence', guide: guide('name') })}
-            ${currencyField({ name: 'rent', label: 'Monthly rent', value: kos.rent ?? '', guide: guide('rent') })}
+            ${currencyField({
+              name: 'rent',
+              label: 'Monthly rent',
+              value: kos.rent ?? '',
+              guide: guide('rent'),
+              slider: { max: RENT_SLIDER.MAX, step: RENT_SLIDER.STEP },
+            })}
           </div>
           ${radioGroup({ name: 'type', legend: 'Kos type', value: kos.type, options: KOS_TYPES, guide: guide('type') })}
           ${textField({
@@ -142,24 +153,6 @@ export function renderSurveyForm({ id } = {}) {
             placeholder: 'e.g. 0812-3456-7890',
             guide: guide('contactPhone'),
           })}
-          <div class="form-grid">
-            ${textField({
-              name: 'kosLocation',
-              field: 'kosLocationName',
-              label: 'Kos location name',
-              value: kos.kosLocation?.label,
-              placeholder: 'e.g. Lowokwaru, Malang',
-              guide: guide('kosLocationName'),
-            })}
-            ${textField({
-              name: 'campusLocation',
-              field: 'campusLocationName',
-              label: 'Campus name',
-              value: kos.campusLocation?.label,
-              placeholder: 'e.g. Universitas Brawijaya',
-              guide: guide('campusLocationName'),
-            })}
-          </div>
           <div class="map-pair">
             ${mapPickerField({
               name: 'kosLocation',
@@ -198,8 +191,22 @@ export function renderSurveyForm({ id } = {}) {
         SECTION_INTROS.room,
         html`
           <div class="form-grid">
-            ${textField({ name: 'lengthM', label: 'Room length (m)', value: room.lengthM, type: 'number', numeric: true, guide: guide('lengthM') })}
-            ${textField({ name: 'widthM', label: 'Room width (m)', value: room.widthM, type: 'number', numeric: true, guide: guide('widthM') })}
+            ${comboField({
+              name: 'lengthM',
+              label: 'Room length (m)',
+              value: room.lengthM,
+              values: ROOM_SIDE_CHOICES,
+              unit: 'm',
+              guide: guide('lengthM'),
+            })}
+            ${comboField({
+              name: 'widthM',
+              label: 'Room width (m)',
+              value: room.widthM,
+              values: ROOM_SIDE_CHOICES,
+              unit: 'm',
+              guide: guide('widthM'),
+            })}
           </div>
           ${checkboxGroup({
             name: 'roomFacility',
@@ -309,15 +316,32 @@ export function renderSurveyForm({ id } = {}) {
   `;
 }
 
+/** Past the slider's end the thumb rests there; the field and the spoken value keep the real figure. */
+function showRentOnSlider(slider, value) {
+  if (!slider) return;
+  slider.value = String(Math.min(value ?? 0, Number(slider.max)));
+  slider.setAttribute('aria-valuetext', numberToCurrency(value));
+}
+
+/** The typed field is the value read; the slider types into it and follows it. */
+export function attachRent(form) {
+  const rent = qs('#f-rent', form);
+  if (!rent) return null;
+  const slider = qs('[data-slider-for="f-rent"]', form);
+  const handle = attachCurrencyInput(rent, { onChange: (value) => showRentOnSlider(slider, value) });
+  // Bubbles to the form as an input event, so autosave and the dirty check see it like typing.
+  slider?.addEventListener('input', () => handle.setValue(slider.value));
+  return handle;
+}
+
 export function mountSurveyForm(root) {
   const form = qs('#survey-form', root);
   if (!form) return;
 
-  const rent = qs('#f-rent', form);
-  if (rent) {
-    currencyHandle?.destroy();
-    currencyHandle = attachCurrencyInput(rent);
-  }
+  currencyHandle?.destroy();
+  currencyHandle = attachRent(form);
+  comboHandle?.destroy();
+  comboHandle = mountComboboxes(form);
 
   uploaderHandle?.destroy();
   uploaderHandle = mountUploaders(form, { surveyId: form.dataset.surveyId, onChange: markDirty });
@@ -394,6 +418,8 @@ export function teardownSurveyForm() {
   mapHandle = null;
   uploaderHandle?.destroy();
   uploaderHandle = null;
+  comboHandle?.destroy();
+  comboHandle = null;
   dirty = false;
 }
 

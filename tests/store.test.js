@@ -156,6 +156,26 @@ describe('comparison selection', () => {
     store.toggleCompare(store.getState().surveys[0].id);
     expect(stored().compareSelection).toBeUndefined();
   });
+
+  it('changes a kos in its own slot, so the others keep their columns', async () => {
+    const store = await freshStore();
+    const ids = published(store).slice(0, 4);
+    ids.slice(0, 3).forEach((id) => store.toggleCompare(id));
+    store.showComparison();
+    expect(store.replaceInCompare(ids[1], ids[3])).toBe(true);
+    expect(store.getState().compareSelection).toEqual([ids[0], ids[3], ids[2]]);
+    expect(store.getState().compareShown).toBe(true);
+  });
+
+  it('refuses a change to a kos already in, or to a draft', async () => {
+    const store = await freshStore();
+    const ids = published(store).slice(0, 2);
+    ids.forEach((id) => store.toggleCompare(id));
+    const draft = store.getState().surveys.find((s) => s.status === 'draft');
+    expect(store.replaceInCompare(ids[0], ids[1])).toBe(false);
+    expect(store.replaceInCompare(ids[0], draft.id)).toBe(false);
+    expect(store.getState().compareSelection).toEqual(ids);
+  });
 });
 
 describe('undoing Start over', () => {
@@ -281,6 +301,51 @@ describe('subscribers', () => {
     off();
     store.setSearch('');
     expect(seen).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('likes', () => {
+  const ana = { id: 'user-ana', email: 'ana@example.test', name: 'Ana' };
+  const budi = { id: 'user-budi', email: 'budi@example.test', name: 'Budi' };
+  const key = (user) => `${STORAGE_KEY}:likes:${user.id}`;
+
+  it('count a community kos’s sample likes, plus one for your own', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    const kartika = store.getState().communitySurveys.find((s) => s.id === 'com-kartika');
+    expect(store.likeCount('com-kartika')).toBe(kartika.likes);
+    expect(store.toggleLike('com-kartika')).toBe(true);
+    expect(store.isLiked('com-kartika')).toBe(true);
+    expect(store.likeCount('com-kartika')).toBe(kartika.likes + 1);
+    store.toggleLike('com-kartika');
+    expect(store.likeCount('com-kartika')).toBe(kartika.likes);
+  });
+
+  it('give every community kos a sample count, and none to your own surveys', async () => {
+    const store = await freshStore();
+    store.setUser(ana);
+    for (const survey of store.getState().communitySurveys) expect(Number.isInteger(survey.likes)).toBe(true);
+    const own = store.getState().surveys[0].id;
+    expect(store.toggleLike(own)).toBe(false);
+    expect(store.likeCount(own)).toBeNull();
+  });
+
+  it('need an account, and are kept on this device under it', async () => {
+    const store = await freshStore();
+    expect(store.toggleLike('com-kartika')).toBe(false);
+    store.setUser(ana);
+    store.toggleLike('com-kartika');
+    expect(JSON.parse(localStorage.getItem(key(ana)))).toEqual(['com-kartika']);
+    expect(stored().likedIds).toBeUndefined();
+
+    store.forgetAccount();
+    expect(store.isLiked('com-kartika')).toBe(false);
+    store.setUser(budi);
+    expect(store.isLiked('com-kartika')).toBe(false);
+
+    const nextVisit = await freshStore();
+    nextVisit.setUser(ana);
+    expect(nextVisit.isLiked('com-kartika')).toBe(true);
   });
 });
 

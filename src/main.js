@@ -36,7 +36,7 @@ import {
   initCriteriaDialog,
   readWeights,
   updateCriteriaTotal,
-  stepWeight,
+  slideWeight,
   fillWeights,
 } from './components/criteriaDialog.js';
 import { DEFAULT_WEIGHTS } from './utils/weights.js';
@@ -94,9 +94,16 @@ function refresh() {
   const params = currentRoute().params;
   // An opened panel stays open across rebuilds, or saving weights would shut Best Match.
   const kept = qsa('details[data-keep-open][open]', root()).map((node) => node.dataset.keepOpen);
+  // A rebuild drops focus; a toggled like, star or compare button gets it back, found by action and id.
+  const focused = root().contains(document.activeElement) ? document.activeElement : null;
+  const refocus =
+    focused?.dataset.action && focused.dataset.id
+      ? `[data-action="${CSS.escape(focused.dataset.action)}"][data-id="${CSS.escape(focused.dataset.id)}"]`
+      : null;
   releaseView();
   mount(root(), active.render(params));
   for (const key of kept) qs(`details[data-keep-open="${key}"]`, root())?.setAttribute('open', '');
+  if (refocus) qs(refocus, root())?.focus({ preventScroll: true });
   viewHandle = active.mount?.(root()) ?? null;
   syncNav(active.nav);
   renderStorageNotice();
@@ -146,6 +153,22 @@ function renderFilterDialog() {
   mount(node, filterDialogContent(communityFilters, { total: communitySurveys.length, showing }));
 }
 
+/** The kos being changed rides on the dialog, not in module state, so every rebuild keeps the mode. */
+function pickerContent(node) {
+  const id = node.dataset.replacing;
+  const replacing = id && store.getState().compareSelection.includes(id) ? store.findSurvey(id) : null;
+  return candidatePickerDialog(store.compareCandidates(), store.getState().compareSelection, { replacing });
+}
+
+function openPicker({ replacing, slot }) {
+  const node = qs('#app-picker');
+  if (!node) return;
+  node.dataset.replacing = replacing ?? '';
+  node.dataset.slot = slot ?? '';
+  mount(node, pickerContent(node));
+  node.showModal();
+}
+
 /** Rebuilt under the pointer: focus and scroll go back to the kos just toggled (Safari never focused it). */
 function renderPickerDialog() {
   const node = qs('#app-picker');
@@ -153,7 +176,7 @@ function renderPickerDialog() {
   const active = node.contains(document.activeElement) ? document.activeElement : null;
   const id = active?.dataset.id;
   const scrolled = qs('.picker-dialog__body', node)?.scrollTop ?? 0;
-  mount(node, candidatePickerDialog(store.compareCandidates(), store.getState().compareSelection));
+  mount(node, pickerContent(node));
   const body = qs('.picker-dialog__body', node);
   if (body) body.scrollTop = scrolled;
   if (!active) return;
@@ -261,6 +284,9 @@ function wireActions() {
     toast(store.isStarred(dataset.id) ? `${survey.kos.name} starred` : `${survey.kos.name} unstarred`);
   });
 
+  // No toast: the filled heart and the count already say so.
+  onAction('toggle-like', ({ dataset }) => store.toggleLike(dataset.id));
+
   onAction('toggle-compare', ({ dataset }) => {
     const survey = store.findSurvey(dataset.id);
     const added = store.toggleCompare(dataset.id);
@@ -280,17 +306,24 @@ function wireActions() {
 
   onAction('remove-compare', ({ dataset }) => {
     store.removeFromCompare(dataset.id);
+    const picker = qs('#app-picker');
+    if (picker?.open && picker.dataset.replacing === dataset.id) picker.close();
+  });
+
+  onAction('replace-compare', ({ dataset }) => {
+    const picker = qs('#app-picker');
+    if (picker?.dataset.replacing && store.replaceInCompare(picker.dataset.replacing, dataset.id)) picker.close();
   });
 
   onAction('show-comparison', () => store.showComparison());
 
-  // Undoable rather than confirmed: a slipped tap beside Add kos must not cost a shortlist.
+  // Undoable rather than confirmed: a slipped tap must not cost a shortlist.
   onAction('clear-compare', () => {
     const { compareSelection, compareShown } = store.getState();
     pendingCompareUndo = { selection: [...compareSelection], shown: compareShown };
     store.clearCompare();
-    // Start over is gone with the table, so focus moves to Add kos.
-    qs('[data-action="open-picker"]')?.focus();
+    // Start over is gone with the table, so focus moves to the first slot.
+    qs('.compare-bar [data-slot="0"]')?.focus();
     toast('Comparison cleared', {
       action: { name: 'undo-clear-compare', label: 'Undo' },
       onExpire: () => {
@@ -308,17 +341,16 @@ function wireActions() {
     toast('Comparison restored');
   });
 
-  onAction('open-picker', () => {
-    const node = qs('#app-picker');
-    if (!node) return;
-    mount(node, candidatePickerDialog(store.compareCandidates(), store.getState().compareSelection));
-    node.showModal();
-  });
+  onAction('open-picker', ({ dataset }) => openPicker({ slot: dataset.slot }));
+
+  onAction('change-compare', ({ dataset }) => openPicker({ replacing: dataset.id, slot: dataset.slot }));
 
   onAction('close-picker', () => qs('#app-picker')?.close());
 
-  // Add kos is rebuilt with the view, so focus goes to the current button, not the old node.
-  qs('#app-picker')?.addEventListener('close', () => qs('[data-action="open-picker"]')?.focus());
+  // The bar is rebuilt with the view, so focus goes to the current slot, not the old node.
+  qs('#app-picker')?.addEventListener('close', ({ target }) => {
+    qs(`.compare-bar [data-slot="${target.dataset.slot || 0}"]`)?.focus();
+  });
 
   onAction('cancel-form', async () => {
     if (isFormDirty()) {
@@ -439,7 +471,7 @@ function wireActions() {
   // Weights: the draft stays in the dialog's inputs; only Save touches the store.
   onAction('open-criteria', () => openCriteria(store.bestMatchWeights()));
   onAction('close-criteria', () => qs('#app-criteria')?.close());
-  onAction('criteria-step', ({ target, dataset }) => stepWeight(target.form, dataset.key, Number(dataset.step)));
+  onAction('criteria-slide', ({ target }) => slideWeight(target.form, target.dataset.key), 'input');
   onAction('criteria-input', ({ target }) => updateCriteriaTotal(target.form), 'input');
   onAction('criteria-reset', ({ target }) => fillWeights(target.form, DEFAULT_WEIGHTS));
   onAction(

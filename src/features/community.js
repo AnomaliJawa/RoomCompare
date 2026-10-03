@@ -1,5 +1,5 @@
 import { html, raw } from '../utils/dom.js';
-import { getState } from '../store.js';
+import { getState, isLiked, likeCount } from '../store.js';
 import { surveyCard } from '../components/surveyCard.js';
 import { noFilterResults } from '../components/emptyState.js';
 import { filterBar } from '../components/filterPanel.js';
@@ -40,6 +40,8 @@ export function renderCommunity() {
                 variant: 'community',
                 starred: starredIds.includes(survey.id),
                 inCompare: compareSelection.includes(survey.id),
+                liked: isLiked(survey.id),
+                likes: likeCount(survey.id),
               }),
             )
             .join(''),

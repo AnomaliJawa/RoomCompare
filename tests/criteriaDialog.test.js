@@ -3,7 +3,7 @@ import {
   criteriaDialog,
   readWeights,
   updateCriteriaTotal,
-  stepWeight,
+  slideWeight,
   fillWeights,
   openCriteria,
   initCriteriaDialog,
@@ -29,6 +29,12 @@ beforeEach(() => {
 const dialog = () => document.getElementById('app-criteria');
 const form = () => dialog().querySelector('form');
 const field = (key) => form().querySelector(`input[name="${key}"]`);
+const slider = (key) => form().querySelector(`.weight__slider[data-key="${key}"]`);
+
+function slide(key, value) {
+  slider(key).value = value;
+  return slideWeight(form(), key);
+}
 const total = () => form().querySelector('[data-criteria-total]');
 const save = () => form().querySelector('[data-criteria-save]');
 const text = (node) => node.textContent.replace(/\s+/g, ' ').trim();
@@ -47,7 +53,7 @@ describe('the criteria dialog', () => {
     const rows = [...form().querySelectorAll('.criteria-row')];
     expect(rows).toHaveLength(BEST_MATCH_CRITERIA.length);
     BEST_MATCH_CRITERIA.forEach((criterion, index) => {
-      const input = rows[index].querySelector('input');
+      const input = rows[index].querySelector('input[type="number"]');
       expect(input.value).toBe(String(custom[criterion.key]));
       expect(text(rows[index].querySelector(`label[for="${input.id}"]`))).toBe(criterion.label);
       expect(text(document.getElementById(input.getAttribute('aria-describedby')))).toBe(criterion.description);
@@ -93,31 +99,45 @@ describe('the criteria dialog', () => {
     expect(field('distance').getAttribute('aria-invalid')).toBe('false');
   });
 
-  it('moves a weight by 5 with − and +, never below 0 or above 100', () => {
-    openCriteria(DEFAULT_WEIGHTS);
-    stepWeight(form(), 'security', -5);
-    expect(field('security').value).toBe('7');
-    stepWeight(form(), 'security', -5);
-    stepWeight(form(), 'security', -5);
-    expect(field('security').value).toBe('0');
-
-    type('price', '98');
-    stepWeight(form(), 'price', 5);
-    expect(field('price').value).toBe('100');
-    expect(text(total())).toBe(`Total ${100 + 75 - 12}% · ${75 - 12}% over`);
+  it('gives each weight a slider from 0 to 100 beside the field, starting where the field does', () => {
+    openCriteria(custom);
+    for (const { key, label } of BEST_MATCH_CRITERIA) {
+      const range = slider(key);
+      expect([range.type, range.min, range.max, range.step]).toEqual(['range', '0', '100', '1']);
+      expect(range.value).toBe(String(custom[key]));
+      expect(text(document.getElementById(range.getAttribute('aria-labelledby')))).toBe(label);
+      expect(range.getAttribute('aria-describedby')).toBe(field(key).getAttribute('aria-describedby'));
+      // Unnamed, so the typed field stays the one value read.
+      expect(range.name).toBe('');
+    }
+    expect(form().querySelector('.stepper__step')).toBeNull();
   });
 
-  it('labels − and + with the criterion they change', () => {
+  it('types what the slider is moved to, and totals it', () => {
     openCriteria(DEFAULT_WEIGHTS);
-    const steps = [...form().querySelectorAll('.criteria-row')][0].querySelectorAll('.stepper__step');
-    expect([...steps].map((button) => button.getAttribute('aria-label'))).toEqual(['Decrease Price', 'Increase Price']);
-    expect([...steps].every((button) => button.type === 'button')).toBe(true);
+    expect(slide('security', '2').ok).toBe(false);
+    expect(field('security').value).toBe('2');
+    expect(text(total())).toBe('Total 90% · 10% left to share');
+    slide('price', '35');
+    expect(text(total())).toBe('Total 100%');
+    expect(save().disabled).toBe(false);
+  });
+
+  it('moves the slider to a typed weight, and leaves it be for one it cannot show', () => {
+    openCriteria(DEFAULT_WEIGHTS);
+    type('distance', '40');
+    expect(slider('distance').value).toBe('40');
+    for (const value of ['', '101', '12.5']) {
+      type('distance', value);
+      expect(slider('distance').value).toBe('40');
+    }
   });
 
   it('puts the defaults back on Reset, which still leaves saving to Save', () => {
     openCriteria(custom);
     fillWeights(form(), DEFAULT_WEIGHTS);
     expect(readWeights(form())).toEqual(DEFAULT_WEIGHTS);
+    expect(slider('price').value).toBe(String(DEFAULT_WEIGHTS.price));
     expect(text(total())).toBe('Total 100%');
     // Reset is an ordinary button: it does not submit the form.
     expect(form().querySelector('[data-action="criteria-reset"]').type).toBe('button');

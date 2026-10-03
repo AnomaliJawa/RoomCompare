@@ -4,8 +4,6 @@ import { checkWeights } from '../utils/weights.js';
 
 /** Save waits for exactly 100%; the draft lives in the inputs, so refresh() never re-renders this. */
 
-const STEP = 5;
-
 function totalMessage({ total, invalid }) {
   if (invalid.length) return 'Each weight is a whole number from 0 to 100.';
   if (total < 100) return `Total ${total}% · ${100 - total}% left to share`;
@@ -13,22 +11,14 @@ function totalMessage({ total, invalid }) {
   return 'Total 100%';
 }
 
+/** The slider has no name: the typed field is the value read, and the slider follows it. */
 function row(criterion, value) {
   const id = `weight-${criterion.key}`;
   return html`<li class="criteria-row">
-    <label class="criteria-row__label" for="${id}">${criterion.label}</label>
-    <p class="criteria-row__hint" id="${id}-hint">${criterion.description}</p>
-    <div class="stepper">
-      <button
-        class="btn btn--secondary stepper__step"
-        type="button"
-        data-action="criteria-step"
-        data-key="${criterion.key}"
-        data-step="${-STEP}"
-        aria-label="Decrease ${criterion.label}"
-      >−</button>
+    <label class="criteria-row__label" id="${id}-label" for="${id}">${criterion.label}</label>
+    <div class="weight">
       <input
-        class="field__control stepper__input"
+        class="field__control weight__input"
         id="${id}"
         name="${criterion.key}"
         type="number"
@@ -41,16 +31,21 @@ function row(criterion, value) {
         aria-invalid="false"
         data-action="criteria-input"
       />
-      <span class="stepper__unit" aria-hidden="true">%</span>
-      <button
-        class="btn btn--secondary stepper__step"
-        type="button"
-        data-action="criteria-step"
-        data-key="${criterion.key}"
-        data-step="${STEP}"
-        aria-label="Increase ${criterion.label}"
-      >+</button>
+      <span class="weight__unit" aria-hidden="true">%</span>
     </div>
+    <input
+      class="weight__slider"
+      type="range"
+      min="0"
+      max="100"
+      step="1"
+      value="${value}"
+      aria-labelledby="${id}-label"
+      aria-describedby="${id}-hint"
+      data-action="criteria-slide"
+      data-key="${criterion.key}"
+    />
+    <p class="criteria-row__hint" id="${id}-hint">${criterion.description}</p>
   </li>`;
 }
 
@@ -65,7 +60,7 @@ export function criteriaDialog(weights) {
 
       <div class="criteria-dialog__body">
         <p class="meta">
-          How much each criterion counts in the optional score under a comparison.
+          How much each criterion counts in each kos's Best Match score.
           The total must be 100%; 0% leaves a criterion out.
         </p>
         <ul class="criteria-list">
@@ -91,6 +86,8 @@ export function criteriaDialog(weights) {
 
 const input = (form, key) => qs(`input[name="${key}"]`, form);
 
+const slider = (form, key) => qs(`.weight__slider[data-key="${key}"]`, form);
+
 /** A blank field reads as NaN, not 0, so it is reported rather than counted as nothing. */
 export function readWeights(form) {
   return Object.fromEntries(
@@ -101,22 +98,24 @@ export function readWeights(form) {
   );
 }
 
+/** A slider moves only to a valid typed weight; a blank or 101 leaves it where it was. */
 export function updateCriteriaTotal(form) {
-  const check = checkWeights(readWeights(form));
+  const weights = readWeights(form);
+  const check = checkWeights(weights);
   const line = qs('[data-criteria-total]', form);
   line.textContent = totalMessage(check);
   line.classList.toggle('criteria-dialog__total--off', !check.ok);
   qs('[data-criteria-save]', form).disabled = !check.ok;
-  for (const field of qsa('.stepper__input', form)) {
-    field.setAttribute('aria-invalid', String(check.invalid.includes(field.name)));
+  for (const field of qsa('.weight__input', form)) {
+    const invalid = check.invalid.includes(field.name);
+    field.setAttribute('aria-invalid', String(invalid));
+    if (!invalid) slider(form, field.name).value = String(weights[field.name]);
   }
   return check;
 }
 
-export function stepWeight(form, key, step) {
-  const field = input(form, key);
-  const current = Number.parseInt(field.value, 10);
-  field.value = String(Math.min(100, Math.max(0, (Number.isFinite(current) ? current : 0) + step)));
+export function slideWeight(form, key) {
+  input(form, key).value = slider(form, key).value;
   return updateCriteriaTotal(form);
 }
 

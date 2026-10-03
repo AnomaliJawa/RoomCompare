@@ -4,8 +4,8 @@ import { nothingSelected, needsOneMore } from '../components/emptyState.js';
 import { incompleteDataBanner } from '../components/banner.js';
 import { compareBar } from '../components/compareBar.js';
 import { comparisonTable } from '../components/comparisonTable.js';
-// The only line coupling the comparison to Best Match: delete it and the mount to remove it.
-import { bestMatchPanel } from './bestMatch.js';
+// Best Match feeds the panel under the table and the score section atop it (the user's request).
+import { bestMatchPanel, bestMatchScores } from './bestMatch.js';
 import { MIN_COMPARE } from '../constants.js';
 
 /** The picker dialog lives outside #app-root: this view is rebuilt on every store change. */
@@ -34,7 +34,7 @@ export function renderCompare() {
   } else {
     const incomplete = selected.filter((s) => s.room.internet == null || s.additional.security == null);
     const notice = incomplete.length ? incompleteDataBanner(incomplete.map((s) => s.kos.name)) : '';
-    result = html`${notice}${comparisonTable(selected)}${bestMatchPanel(selected)}`;
+    result = html`${notice}${comparisonTable(selected, { scores: bestMatchScores(selected) })}${bestMatchPanel(selected)}`;
   }
 
   return html`
@@ -42,8 +42,8 @@ export function renderCompare() {
       <div class="page-head__text">
         <h1>Compare kos</h1>
         <p class="page-head__lede">
-          The same criteria for every kos, in the same order. Nothing is scored
-          and nothing is hidden — the decision stays yours.
+          The same criteria for every kos, in the same order. Nothing is hidden,
+          and the decision stays yours.
         </p>
       </div>
     </div>

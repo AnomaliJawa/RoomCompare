@@ -20,13 +20,14 @@ export const PANEL_PARTS = [
 const PHOTO_HELPER = 'Up to 10 photos, max 10 MB each.';
 const PHOTO_RULES = 'Optional. Up to 10 photos, max 10 MB each.';
 const PHOTO_FIND = 'Take them on site, following the suggested shots below.';
-const SIZE_HELPER = 'In meters, 0.1–20. Use a dot for decimals.';
+const SIZE_HELPER = 'In meters, 1–10. Pick from the list or type one, e.g. 2.5.';
 
 const ROOM_SIZE_PANEL = {
   what: 'The floor size of the room, in meters.',
   find: 'Measure the floor wall to wall with a tape measure, or ask the owner.',
-  example: 'A 3 × 4 m room: length 3, width 4. Use a dot for part of a meter, e.g. 2.5.',
-  rules: 'Optional. 0.1–20 m, with a dot for decimals.',
+  example:
+    'A 3 × 4 m room: pick 3 for length and 4 for width. For part of a meter, type it with a dot, e.g. 2.5.',
+  rules: 'Optional. 1–10 m, with a dot for decimals. The list offers whole meters from 1 to 10; type a size in between.',
   tip: "Don't include an indoor bathroom.",
 };
 
@@ -49,9 +50,10 @@ export const FIELD_GUIDE = {
   },
   rent: {
     label: 'Monthly rent',
-    helper: 'Rent per month in rupiah, max Rp100.000.000.',
+    helper: 'Per month. Slide up to Rp10.000.000, or type up to Rp100.000.000.',
     panel: {
-      what: 'Rent per month in rupiah, for the room you surveyed.',
+      what:
+        'Rent per month in rupiah, for the room you surveyed. Slide to the amount or type it exactly; the slider stops at Rp10.000.000.',
       find: 'Ask the owner. If the price depends on room type or facilities, enter the price of the room you surveyed.',
       example: 'Paid per semester or year? Divide by the months, e.g. Rp9.000.000/year = Rp750.000.',
       rules: 'Required to publish. Max Rp100.000.000.',
@@ -89,26 +91,7 @@ export const FIELD_GUIDE = {
       tip: 'Distance to campus is measured from this pin, so place it carefully.',
     },
   },
-  kosLocationName: {
-    label: 'Kos location name',
-    helper: 'A short label for the area.',
-    panel: {
-      what: 'A short label for the area.',
-      find: "Use the area, street, or a landmark you'll remember.",
-      example: 'Pogung Baru, near the mosque.',
-      rules: 'Optional.',
-    },
-  },
-  campusLocationName: {
-    label: 'Campus name',
-    helper: "The campus you'll commute to most.",
-    panel: {
-      what: "The campus you'll commute to most.",
-      find: 'If faculties are far apart, include yours.',
-      example: 'UGM – Faculty of Engineering.',
-      rules: 'Optional.',
-    },
-  },
+  // No location or campus name fields: Find on map names the area (the user's request).
   campusLocation: {
     label: 'Pin the campus',
     helper: 'Pin your campus to calculate the distance.',
