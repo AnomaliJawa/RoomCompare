@@ -1,6 +1,6 @@
 import { ownSurveys } from './seed/ownSurveys.js';
 import { communitySurveys } from './seed/communitySurveys.js';
-import { MAX_COMPARE, MIN_COMPARE, DISTANCE_BASIS } from './constants.js';
+import { MAX_COMPARE, MIN_COMPARE, DISTANCE_BASIS, STATUS } from './constants.js';
 import { checkWeights, effectiveWeights, isDefault } from './utils/weights.js';
 import * as storage from './storage.js';
 import * as db from './db.js';
@@ -239,13 +239,26 @@ export function isStarred(id) {
 }
 
 /**
- * What can be compared, by where it comes from: every survey of the user's
- * own and every community survey. Stars do not decide it. They once did, and
- * a new account, which starts with no surveys, was offered only the one
- * community kos starred on a first visit.
+ * Whether a survey can go into a comparison: every community survey, and the
+ * user's own once published. A draft is still being filled in; publishing is
+ * what asserts a survey is complete enough to compare against others
+ * (validate.js). Drafts were left out at the user's request, 2026-10-03.
+ */
+export function canCompare(id) {
+  if (state.communitySurveys.some((survey) => survey.id === id)) return true;
+  return state.surveys.some((survey) => survey.id === id && survey.status === STATUS.PUBLISHED);
+}
+
+/**
+ * What can be compared, by where it comes from: the user's own published
+ * surveys and every community survey, with how many drafts were left out so
+ * the picker can say why they are missing. Stars do not decide it. They once
+ * did, and a new account, which starts with no surveys, was offered only the
+ * one community kos starred on a first visit.
  */
 export function compareCandidates() {
-  return { own: state.surveys, community: state.communitySurveys };
+  const own = state.surveys.filter((survey) => survey.status === STATUS.PUBLISHED);
+  return { own, community: state.communitySurveys, drafts: state.surveys.length - own.length };
 }
 
 /** The same candidates as one list. */
@@ -360,7 +373,10 @@ export function setBestMatchWeights(weights) {
   return { ok: true, kept: result === storage.SAVE_RESULT.OK };
 }
 
-/** Returns false when the selection is already full, so the caller can explain why. */
+/**
+ * Returns false when the kos cannot be added — the selection is full, or it
+ * is a draft (canCompare) — so the caller can explain why.
+ */
 export function toggleCompare(id) {
   if (state.compareSelection.includes(id)) {
     state.compareSelection = state.compareSelection.filter((item) => item !== id);
@@ -368,6 +384,7 @@ export function toggleCompare(id) {
     notify();
     return true;
   }
+  if (!canCompare(id)) return false;
   if (state.compareSelection.length >= MAX_COMPARE) return false;
   state.compareSelection = [...state.compareSelection, id];
   notify();

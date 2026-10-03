@@ -1,6 +1,6 @@
 import { html, raw } from '../utils/dom.js';
 import { numberToCurrency, formatKosDistance } from '../utils/format.js';
-import { findSurvey, isOwnSurvey, isStarred, getState } from '../store.js';
+import { findSurvey, isOwnSurvey, isStarred, getState, canCompare } from '../store.js';
 import { notFound } from '../components/emptyState.js';
 import { galleryField, mountGalleries } from '../components/photoGallery.js';
 import { starButton } from '../components/starButton.js';
@@ -194,7 +194,8 @@ export function renderSurveyDetail({ id }) {
     : starButton(survey, { starred: isStarred(survey.id) });
 
   // The breadcrumbs sit above the head, not in it, so the buttons centre on
-  // the kos name and location rather than starting level with the trail.
+  // the kos name and location rather than starting level with the trail. A
+  // draft has no Add to compare: only published surveys can be compared.
   return html`
     ${breadcrumbs(
       [own ? { label: 'My surveys', href: '#/surveys' } : { label: 'Community', href: '#/community' }],
@@ -208,12 +209,14 @@ export function renderSurveyDetail({ id }) {
         </p>
       </div>
       <div class="page-head__actions">
-        <button
-          class="btn btn--secondary"
-          type="button"
-          data-action="toggle-compare"
-          data-id="${survey.id}"
-        >${inCompare ? 'In comparison' : 'Add to compare'}</button>
+        ${canCompare(id)
+          ? html`<button
+              class="btn btn--secondary"
+              type="button"
+              data-action="toggle-compare"
+              data-id="${survey.id}"
+            >${inCompare ? 'In comparison' : 'Add to compare'}</button>`
+          : ''}
         ${raw(actions)}
       </div>
     </div>

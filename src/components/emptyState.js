@@ -28,7 +28,7 @@ export function emptyState({ title, body, actions = [] }) {
 export const noSurveysYet = () =>
   emptyState({
     title: 'No kos recorded yet',
-    body: 'Add the first kos you visited. Once you have two, you can compare them side by side.',
+    body: 'Add the first kos you visited. Once two are published, you can compare them side by side.',
     actions: [{ label: 'Add survey', href: '#/surveys/new' }],
   });
 
@@ -50,7 +50,7 @@ export const nothingSelected = () =>
   emptyState({
     title: 'Add two kos to start comparing',
     body:
-      'Use Add kos to pick from the surveys you have recorded and the community’s. ' +
+      'Use Add kos to pick from your published surveys and the community’s. ' +
       'You can compare up to three at once.',
   });
 
