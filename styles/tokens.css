@@ -103,6 +103,14 @@
   --ease-out:      cubic-bezier(0.32, 0.72, 0, 1);  /* arrives, then settles */
 }
 
+/* --- Backdrops: ::backdrop inherits custom properties only from Safari 17.4 and Chrome 122, so it gets its own --- */
+
+:root,
+::backdrop {
+  --backdrop:          rgba(22, 36, 31, 0.4);  /* behind a dialog: the ink at 40% */
+  --backdrop-lightbox: rgba(22, 36, 31, 0.6);  /* behind a photo, dimmed further */
+}
+
 /* --- Increase Contrast: prefers-contrast: more darkens rules and muted text --- */
 
 @media (prefers-contrast: more) {
