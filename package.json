@@ -1,19 +1,37 @@
 {
   "name": "roomcompare",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Record, organize and compare surveyed boarding houses.",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
-    "start": "python server.py 5173",
-    "test": "vitest run && python -m unittest discover -s tests/server",
-    "test:web": "vitest run",
-    "test:server": "python -m unittest discover -s tests/server -v",
+    "dev": "node --disable-warning=ExperimentalWarning server/index.js --dev",
+    "build": "vite build",
+    "prestart": "vite build",
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "test": "vitest run",
+    "test:client": "vitest run --project client",
+    "test:server": "vitest run --project server",
     "test:watch": "vitest",
-    "seed:demo": "node tools-seed-demo.mjs"
+    "seed:demo": "node tools/seed-demo.mjs"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "lucide-react": "^1.51.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "jsdom": "^25.0.1",
-    "vitest": "^2.1.8"
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^29.0.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   }
 }
