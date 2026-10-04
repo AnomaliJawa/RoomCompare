@@ -27,7 +27,8 @@ export const ROUTES = [
   { path: '/surveys/:id/edit', page: SurveyFormPage, nav: 'surveys' },
   { path: '/community', page: CommunityPage, nav: 'community' },
   { path: '/community/:id', page: SurveyDetailPage, nav: 'community' },
-  { path: '/compare', page: ComparePage, nav: 'compare' },
+  // Three kos columns plus the criteria get the wide column (the user's choice).
+  { path: '/compare', page: ComparePage, nav: 'compare', wide: true },
 ];
 
 /** Asked once per page load, however often React mounts the app (its development checks mount twice). */
@@ -46,12 +47,12 @@ function NotFoundPage({ path }) {
 }
 
 /** Storage problems, and the account's: offline, or a change the server refused. */
-function Notices({ state }) {
+function Notices({ state, width }) {
   const { storageNotice, storageStatus, syncNotice, user } = state;
   // The account's notice means nothing on the login page.
   const accountNotice = user ? syncNotice : null;
   return (
-    <div className="mx-auto max-w-column px-6 pt-6 empty:hidden max-lg:px-4" role="status" aria-live="polite">
+    <div className={`mx-auto ${width} px-6 pt-6 empty:hidden max-lg:px-4`} role="status" aria-live="polite">
       {storageNotice && (
         <Banner
           message={storageNotice}
@@ -104,6 +105,8 @@ export function App() {
     window.scrollTo(0, 0);
   }, [visit]);
 
+  const width = route?.wide ? 'max-w-column-wide' : 'max-w-column';
+
   let content = <p className={meta}>Loading…</p>;
   if (ready && !guard) {
     const Page = route?.page;
@@ -131,9 +134,9 @@ export function App() {
         onToggleMenu={() => setMenuOpen((open) => !open)}
       />
 
-      <Notices state={state} />
+      <Notices state={state} width={width} />
 
-      <main ref={main} className="mx-auto max-w-column px-6 pt-10 pb-16 max-lg:px-4 max-lg:pt-6" id="app-root" tabIndex={-1}>
+      <main ref={main} className={`mx-auto ${width} px-6 pt-10 pb-16 max-lg:px-4 max-lg:pt-6`} id="app-root" tabIndex={-1}>
         {content}
       </main>
 

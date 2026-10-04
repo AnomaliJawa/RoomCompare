@@ -119,7 +119,7 @@ describe('the Best Match criteria panel', () => {
       ['Price', '25%'],
       ['Facilities', '20%'],
       ['Cleanliness', '15%'],
-      ['Location (surrounding amenities)', '15%'],
+      ['Location (distance and amenities)', '15%'],
       ['Distance to campus', '13%'],
       ['Security', '12%'],
     ]);

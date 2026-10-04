@@ -107,9 +107,9 @@ export const BEST_MATCH_CRITERIA = [
   },
   {
     key: 'location',
-    label: 'Location (surrounding amenities)',
+    label: 'Location (distance and amenities)',
     defaultWeight: 15,
-    description: `Recorded surroundings out of ${SURROUNDINGS.length}.`,
+    description: `Half nearness to campus, ranked against the other kos compared, and half recorded surroundings out of ${SURROUNDINGS.length}.`,
   },
   {
     key: 'distance',
