@@ -1,0 +1,249 @@
+@import "tailwindcss" source(".");
+
+/* Design tokens, "Field Ledger": separation by rules and alignment, never shadows. Light mode only. */
+@theme static {
+  /* Colour: one accent, only for what is interactive or the answer. Tailwind's palette is cleared. */
+  --color-*: initial;
+  --color-paper: #f7f8f6;
+  --color-surface: #ffffff;
+  --color-ink: #16241f;
+  --color-rule: #dce0da;
+  --color-accent: #1f5d4c;
+  --color-muted: #68706a;
+  --color-accent-tint: #edf3f0;
+  --color-accent-press: #17463a;
+  --color-alert: #8c2f2a;
+  --color-alert-bg: #faf0ef;
+  /* A starred kos only (the user's choice): 1.8:1; filled vs outline and aria-pressed carry the state. */
+  --color-star: #f5b400;
+
+  /* Typography: the narrow face buys table headers room for four columns. */
+  --font-*: initial;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: "Archivo Narrow", "Archivo", ui-sans-serif, sans-serif;
+
+  /* Major third from a 16px base. Nothing between these steps. */
+  --text-*: initial;
+  --text-xs: 0.8125rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.9375rem;
+  --text-2xl: 2.4375rem;
+
+  --leading-*: initial;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-body: 1.55;
+
+  --tracking-*: initial;
+  --tracking-tight: -0.02em;
+
+  /* Space keeps Tailwind's 4px step; the design uses 1, 2, 3, 4, 6, 10 and 16 of them (see DESIGN-SYSTEM.md). */
+  --spacing-target: 44px;
+
+  --radius-*: initial;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Elevation: the only shadows, for what floats above the page. */
+  --shadow-*: initial;
+  --shadow-dialog: 0 16px 48px rgba(22, 36, 31, 0.18);
+  --shadow-lightbox: 0 24px 64px rgba(22, 36, 31, 0.32);
+
+  --container-*: initial;
+  --container-column: 1120px;
+  --container-column-wide: 1320px;
+  --container-measure: 66ch;
+  --container-notes: 62ch;
+
+  /* Redefined to the design's own breakpoints; max-xl: is "900px and narrower", lg: is "641px and wider". */
+  --breakpoint-*: initial;
+  --breakpoint-xs: 360px;
+  --breakpoint-sm: 481px;
+  --breakpoint-md: 501px;
+  --breakpoint-lg: 641px;
+  --breakpoint-xl: 901px;
+
+  /* Motion: response to action only; all of it off under reduced motion. */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-*: initial;
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
+
+  --animate-*: initial;
+  --animate-dialog-in: dialog-in 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  --animate-backdrop-in: backdrop-in 200ms cubic-bezier(0.2, 0, 0.2, 1) both;
+  /* backwards, not both: a kept fill would override the sheet drag's inline transform. */
+  --animate-sheet-in: sheet-in 300ms cubic-bezier(0.32, 0.72, 0, 1) backwards;
+  --animate-ledger-in: ledger-in 200ms cubic-bezier(0.2, 0, 0.2, 1) both;
+  --animate-skeleton: skeleton-pulse 1.4s ease-in-out infinite;
+
+  @keyframes dialog-in {
+    from { opacity: 0; transform: translateY(0.5rem) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes sheet-in {
+    from { transform: translateY(100%); }
+    to { transform: none; }
+  }
+
+  @keyframes ledger-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes skeleton-pulse {
+    50% { opacity: 0.5; }
+  }
+}
+
+/* A small control keeps its size and gets a centred 44px hit area on touch screens. */
+@utility touch-hit {
+  @media (pointer: coarse) {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--spacing-target));
+      height: max(100%, var(--spacing-target));
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+@layer base {
+  /* ::backdrop inherits custom properties only from Safari 17.4 and Chrome 122, so it gets its own. */
+  :root,
+  ::backdrop {
+    --backdrop: rgba(22, 36, 31, 0.4);
+    --backdrop-lightbox: rgba(22, 36, 31, 0.6);
+  }
+
+  /* Increase Contrast darkens rules and muted text. */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-rule: #848d86;
+      --color-muted: #4a524c;
+    }
+  }
+
+  html {
+    text-size-adjust: 100%;
+    /* Every control draws its own pressed state; plain links keep the browser's tap flash. */
+    -webkit-tap-highlight-color: revert;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 400;
+    line-height: var(--leading-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  h1 { font-size: var(--text-xl); letter-spacing: var(--tracking-tight); }
+  h2 { font-size: var(--text-lg); }
+  h3 { font-size: var(--text-md); }
+  h4 { font-size: var(--text-base); }
+
+  p { max-width: var(--container-measure); }
+
+  /* Tabular figures, so equal-length values line up digit for digit. */
+  input[type="number"],
+  input[inputmode="numeric"] {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  /* Hover only where a pointer hovers: touch screens keep :hover after a tap. */
+  @media (hover: hover) {
+    a:hover { color: var(--color-accent-press); }
+  }
+
+  button { cursor: pointer; }
+
+  /* Ticks and radios keep the browser's own spacing, as before Tailwind. */
+  input:where([type="checkbox"], [type="radio"]) { margin: revert; }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  textarea { max-width: var(--container-notes); }
+
+  ::placeholder { color: revert; }
+
+  /* Visible on every interactive element; never outline: none. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  table { width: 100%; }
+
+  /* Preflight's margin reset would pin every modal to the top-left corner. */
+  dialog {
+    margin: auto;
+    color: var(--color-ink);
+  }
+
+  ::selection {
+    background: var(--color-accent-tint);
+    color: var(--color-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Leaflet's own stylesheet arrives unlayered, so these stay unlayered to win on specificity, as before. */
+.map-picker .leaflet-control-zoom a { border-radius: var(--radius-sm); }
+
+/* Leaflet's zoom buttons are 30px even on touch. */
+@media (pointer: coarse) {
+  .map-picker .leaflet-touch .leaflet-bar a {
+    width: var(--spacing-target);
+    height: var(--spacing-target);
+    line-height: var(--spacing-target);
+  }
+}
