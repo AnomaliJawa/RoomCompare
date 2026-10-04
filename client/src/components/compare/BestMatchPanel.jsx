@@ -171,8 +171,8 @@ export function BestMatchPanel({ surveys }) {
           <dd>The 1–4 rating, where 1 scores 0 and 4 scores 100.</dd>
           <dt>Location</dt>
           <dd>
-            Recorded surroundings out of {SURROUNDINGS.length}. The requirement weights “Location” without naming a
-            field; this is the reading in use.
+            Half nearness to campus, ranked as distance is, and half recorded surroundings out of {SURROUNDINGS.length}.
+            It needs the distance to campus recorded.
           </dd>
           <dt>Weights</dt>
           <dd>

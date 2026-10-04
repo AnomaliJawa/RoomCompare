@@ -116,10 +116,24 @@ describe('sub-scores', () => {
     expect(scored[0].parts.security).toBe(100);
   });
 
-  it('reads Location as recorded surroundings', () => {
-    const { scored } = computeBestMatch([kos('a', { surroundings: fill(7) }), kos('b', { surroundings: fill(0) })]);
-    expect(scored[0].parts.location).toBe(100);
-    expect(scored[1].parts.location).toBe(0);
+  it('reads Location as half nearness to campus, half surroundings', () => {
+    const { scored } = computeBestMatch([
+      kos('near-full', { kos: { distanceKm: 1 }, surroundings: fill(7) }),
+      kos('near-empty', { kos: { distanceKm: 1 }, surroundings: fill(0) }),
+      kos('far-full', { kos: { distanceKm: 3 }, surroundings: fill(7) }),
+      kos('far-empty', { kos: { distanceKm: 3 }, surroundings: fill(0) }),
+    ]);
+    expect(scored.map((item) => item.parts.location)).toEqual([100, 50, 50, 0]);
+  });
+
+  it('ranks Location’s nearness against the set, as Distance is', () => {
+    const { scored } = computeBestMatch([
+      kos('a', { kos: { distanceKm: 1 } }),
+      kos('b', { kos: { distanceKm: 2 } }),
+      kos('c', { kos: { distanceKm: 3 } }),
+    ]);
+    expect(scored.map((item) => item.parts.distance)).toEqual([100, 50, 0]);
+    expect(scored.map((item) => item.parts.location)).toEqual([50, 25, 0]);
   });
 
   it('treats an empty facility list as a recorded zero, not as missing', () => {
@@ -175,10 +189,19 @@ describe('missing data', () => {
     expect(scored[0].missing).toEqual(expect.arrayContaining(['monthly rent', 'security']));
   });
 
-  it('suppresses when there is no campus pin, so no distance', () => {
+  it('suppresses when there is no campus pin, so no distance, naming it once', () => {
     const { scored } = computeBestMatch([kos('a', { kos: { distanceKm: null } }), kos('b')]);
     expect(scored[0].total).toBeNull();
     expect(scored[0].missing).toEqual(['distance to campus']);
+  });
+
+  it('still needs the distance for Location when Distance is at 0%', () => {
+    const withoutDistance = { ...DEFAULT_WEIGHTS, distance: 0, price: 38 };
+    const { scored } = computeBestMatch([kos('a', { kos: { distanceKm: null } }), kos('b')], withoutDistance);
+    expect(scored[0].total).toBeNull();
+    expect(scored[0].missing).toEqual(['distance to campus']);
+    const withoutLocationEither = { ...withoutDistance, location: 0, price: 53 };
+    expect(computeBestMatch([kos('a', { kos: { distanceKm: null } }), kos('b')], withoutLocationEither).scored[0].total).not.toBeNull();
   });
 
   it('excludes a scoreless kos from the leaders', () => {

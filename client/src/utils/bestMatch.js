@@ -32,15 +32,18 @@ function facilityScore(survey) {
   return (count / TOTAL_FACILITY_COUNT) * 100;
 }
 
-/** Location reads as surroundings recorded out of 7: the requirement names no field (unconfirmed). */
-function locationScore(survey) {
-  return ((survey.surroundings?.length ?? 0) / SURROUNDINGS.length) * 100;
+/** Half nearness to campus, half surroundings out of 7: the user's reading of the requirement's unnamed Location. */
+function locationScore(survey, nearness) {
+  if (nearness === null) return null;
+  const amenities = ((survey.surroundings?.length ?? 0) / SURROUNDINGS.length) * 100;
+  return (nearness + amenities) / 2;
 }
 
 const MISSING_LABELS = {
   price: 'monthly rent',
   cleanliness: 'cleanliness',
   security: 'security',
+  location: 'distance to campus',
   distance: 'distance to campus',
 };
 
@@ -51,18 +54,24 @@ export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
   const distances = surveys.map((survey) => survey.kos.distanceKm ?? NaN);
 
   const scored = surveys.map((survey, index) => {
+    const nearness = relative(distances, index, { lowerIsBetter: true });
     const parts = {
       price: relative(rents, index, { lowerIsBetter: true }),
       facilities: facilityScore(survey),
       cleanliness: fromLikert(survey.room.cleanliness),
-      location: locationScore(survey),
-      distance: relative(distances, index, { lowerIsBetter: true }),
+      location: locationScore(survey, nearness),
+      distance: nearness,
       security: fromLikert(survey.additional.security),
     };
 
-    const missing = counted
-      .filter((criterion) => parts[criterion.key] === null)
-      .map((criterion) => MISSING_LABELS[criterion.key] ?? criterion.key);
+    // Location and Distance both need the distance; it is named once.
+    const missing = [
+      ...new Set(
+        counted
+          .filter((criterion) => parts[criterion.key] === null)
+          .map((criterion) => MISSING_LABELS[criterion.key] ?? criterion.key),
+      ),
+    ];
 
     // Divided once, at the end: the weights are percentages.
     const total = missing.length
