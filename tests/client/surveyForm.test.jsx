@@ -47,7 +47,7 @@ const saved = {
     rent: 1_250_000,
   },
   room: { lengthM: 3, widthM: 4, facilities: [], cleanliness: 4, internet: null, photoIds: [] },
-  bathroom: { facilities: [], photoIds: [] },
+  bathroom: { type: null, toilet: null, waterHeater: null, photoIds: [] },
   shared: { facilities: [], photoIds: [] },
   surroundings: [],
   additional: { security: 2, notes: 'Quiet street.', videoIds: [] },
@@ -78,7 +78,7 @@ describe('guidance on the survey form', () => {
     expect(intros).toEqual(Object.values(SECTION_INTROS));
 
     const helpers = Object.values(FIELD_GUIDE).map((guide) => guide.helper).filter(Boolean);
-    expect(helpers).toHaveLength(20);
+    expect(helpers).toHaveLength(23);
     for (const helper of helpers) expect(screen.getAllByText(helper).length).toBeGreaterThan(0);
     // Removed at the user's request: only the status line describes the distance.
     expect(screen.getByLabelText('Distance to campus').getAttribute('aria-describedby')).toBe('f-distanceKm-status');
@@ -166,6 +166,33 @@ describe('guidance on the survey form', () => {
     expect(text(credit)).toBe('Route data © OpenStreetMap contributors');
     // "Fix the map" was removed at the user's request.
     expect(credit.querySelector('a')).toBeNull();
+  });
+});
+
+describe('the bathroom and the places of worship', () => {
+  it('asks the bathroom three questions, and keeps every surrounding in one list in the form order', async () => {
+    const { store, open } = await load();
+    open();
+    fireEvent.click(screen.getByRole('radio', { name: 'Indoor (inside the room)' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Squat toilet' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Yes' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Church (gereja)' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'ATM / bank' }));
+    const draft = saveDraft(store, 'Kos Bathroom');
+    expect(draft.bathroom).toEqual({ type: 'indoor', toilet: 'squat', waterHeater: true, photoIds: [] });
+    expect(draft.surroundings).toEqual(['ATM / bank', 'Church (gereja)']);
+  });
+
+  it('shows saved answers again, and ticking a faith keeps the other surroundings', async () => {
+    const { store, open } = await load();
+    store.addSurvey({ ...saved, bathroom: { ...saved.bathroom, type: 'outdoor', waterHeater: false }, surroundings: ['ATM / bank'] });
+    open('svy-scored');
+    expect(screen.getByRole('radio', { name: 'Outdoor (outside the room)' }).checked).toBe(true);
+    expect(screen.getByRole('radio', { name: 'No' }).checked).toBe(true);
+    expect(screen.getByRole('radio', { name: 'Squat toilet' }).checked).toBe(false);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Mosque (masjid)' }));
+    expect(screen.getByRole('checkbox', { name: 'ATM / bank' }).checked).toBe(true);
+    expect(screen.getByRole('checkbox', { name: 'Mosque (masjid)' }).checked).toBe(true);
   });
 });
 

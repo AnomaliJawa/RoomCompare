@@ -1,10 +1,13 @@
 import { numberToCurrency, formatKosDistance } from './format.js';
 import {
   ROOM_FACILITIES,
-  BATHROOM_FACILITIES,
+  BATHROOM_TYPES,
+  TOILET_TYPES,
+  YES_NO,
   SHARED_FACILITIES,
   SURROUNDINGS,
   COMPARISON_GROUPS,
+  choiceLabel,
   likertLabel,
   kosTypeLabel,
 } from '../constants.js';
@@ -71,7 +74,11 @@ export function buildGroups(surveys) {
       textRow('Internet quality', surveys.map((s) => likertLabel(s.room.internet) ?? MISSING)),
       ...facilityRows(ROOM_FACILITIES, surveys.map((s) => s.room.facilities)),
     ],
-    bathroom: facilityRows(BATHROOM_FACILITIES, surveys.map((s) => s.bathroom.facilities)),
+    bathroom: [
+      textRow('Bathroom type', surveys.map((s) => choiceLabel(BATHROOM_TYPES, s.bathroom?.type) ?? MISSING)),
+      textRow('Toilet type', surveys.map((s) => choiceLabel(TOILET_TYPES, s.bathroom?.toilet) ?? MISSING)),
+      textRow('Water heater', surveys.map((s) => choiceLabel(YES_NO, s.bathroom?.waterHeater) ?? MISSING)),
+    ],
     shared: facilityRows(SHARED_FACILITIES, surveys.map((s) => s.shared.facilities)),
     surroundings: facilityRows(SURROUNDINGS, surveys.map((s) => s.surroundings)),
     additional: [

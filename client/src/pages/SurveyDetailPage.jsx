@@ -2,11 +2,14 @@ import * as store from '../data/store.js';
 import { useStore } from '../hooks/useStore.js';
 import { toggleCompare } from '../actions/surveys.js';
 import {
-  BATHROOM_FACILITIES,
+  BATHROOM_TYPES,
   ROOM_FACILITIES,
   SHARED_FACILITIES,
   STATUS_LABELS,
   SURROUNDINGS,
+  TOILET_TYPES,
+  YES_NO,
+  choiceLabel,
   kosTypeLabel,
   likertLabel,
 } from '../constants.js';
@@ -197,7 +200,11 @@ export function SurveyDetailPage({ params: { id } }) {
       </Section>
 
       <Section title="Bathroom" icon="bathroom">
-        <Checklist all={BATHROOM_FACILITIES} selected={survey.bathroom.facilities} />
+        <DefinitionList>
+          <Definition label="Bathroom type" input={choiceLabel(BATHROOM_TYPES, survey.bathroom.type)} />
+          <Definition label="Toilet type" input={choiceLabel(TOILET_TYPES, survey.bathroom.toilet)} />
+          <Definition label="Water heater" input={choiceLabel(YES_NO, survey.bathroom.waterHeater)} />
+        </DefinitionList>
       </Section>
       <Section title="Shared facilities" icon="shared">
         <Checklist all={SHARED_FACILITIES} selected={survey.shared.facilities} />

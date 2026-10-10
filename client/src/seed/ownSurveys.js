@@ -31,14 +31,16 @@ export const ownSurveys = withSamplePhotos([
       photoIds: [],
     },
     bathroom: {
-      facilities: ['Indoor bathroom', 'Western-style toilet', 'Water heater'],
+      type: 'indoor',
+      toilet: 'sit',
+      waterHeater: true,
       photoIds: [],
     },
     shared: {
       facilities: ['Wifi', 'Motorcycle parking', 'Kitchen', 'Washing machine', 'Laundry', 'Dispenser'],
       photoIds: [],
     },
-    surroundings: ['Minimarket / supermarket', 'Eatery (warung makan)', 'Place of worship'],
+    surroundings: ['Minimarket / supermarket', 'Eatery (warung makan)', 'Mosque (masjid)'],
     additional: {
       security: 3,
       notes:
@@ -72,7 +74,9 @@ export const ownSurveys = withSamplePhotos([
       photoIds: [],
     },
     bathroom: {
-      facilities: ['Indoor bathroom', 'Western-style toilet'],
+      type: 'indoor',
+      toilet: 'sit',
+      waterHeater: false,
       photoIds: [],
     },
     shared: {
@@ -83,7 +87,7 @@ export const ownSurveys = withSamplePhotos([
       'Minimarket / supermarket',
       'Eatery (warung makan)',
       'Pharmacy / clinic',
-      'Place of worship',
+      'Hindu temple (pura)',
     ],
     additional: {
       security: 4,
@@ -118,14 +122,16 @@ export const ownSurveys = withSamplePhotos([
       photoIds: [],
     },
     bathroom: {
-      facilities: ['Indoor bathroom', 'Western-style toilet', 'Water heater'],
+      type: 'indoor',
+      toilet: 'sit',
+      waterHeater: true,
       photoIds: [],
     },
     shared: {
       facilities: ['Wifi', 'Motorcycle parking', 'Car parking', 'Kitchen', 'Washing machine'],
       photoIds: [],
     },
-    surroundings: ['Eatery (warung makan)', 'Place of worship', 'Gym / sports facilities'],
+    surroundings: ['Eatery (warung makan)', 'Buddhist temple (vihara)', 'Gym / sports facilities'],
     additional: {
       security: 3,
       notes: 'Closest to campus and the signal was strong. Bathroom fittings need work.',
@@ -157,7 +163,9 @@ export const ownSurveys = withSamplePhotos([
       photoIds: [],
     },
     bathroom: {
-      facilities: ['Outdoor bathroom', 'Squat toilet'],
+      type: 'outdoor',
+      toilet: 'squat',
+      waterHeater: false,
       photoIds: [],
     },
     shared: {
@@ -195,7 +203,7 @@ export const ownSurveys = withSamplePhotos([
       internet: 3,
       photoIds: [],
     },
-    bathroom: { facilities: ['Indoor bathroom', 'Western-style toilet'], photoIds: [] },
+    bathroom: { type: 'indoor', toilet: 'sit', waterHeater: false, photoIds: [] },
     shared: { facilities: ['Wifi', 'Motorcycle parking', 'Kitchen', 'Laundry', 'Dispenser'], photoIds: [] },
     surroundings: ['Minimarket / supermarket', 'Eatery (warung makan)', 'Laundry', 'ATM / bank'],
     additional: {
@@ -228,9 +236,9 @@ export const ownSurveys = withSamplePhotos([
       internet: 3,
       photoIds: [],
     },
-    bathroom: { facilities: ['Outdoor bathroom', 'Squat toilet'], photoIds: [] },
+    bathroom: { type: 'outdoor', toilet: 'squat', waterHeater: false, photoIds: [] },
     shared: { facilities: ['Wifi', 'Motorcycle parking', 'Kitchen'], photoIds: [] },
-    surroundings: ['Eatery (warung makan)', 'Minimarket / supermarket', 'Place of worship'],
+    surroundings: ['Eatery (warung makan)', 'Minimarket / supermarket', 'Church (gereja)'],
     additional: {
       security: 3,
       notes: 'Need to go back and ask whether electricity is included.',
@@ -273,7 +281,9 @@ export const ownSurveys = withSamplePhotos([
       photoIds: [],
     },
     bathroom: {
-      facilities: ['Indoor bathroom', 'Western-style toilet', 'Water heater'],
+      type: 'indoor',
+      toilet: 'sit',
+      waterHeater: true,
       photoIds: [],
     },
     shared: {
@@ -285,7 +295,7 @@ export const ownSurveys = withSamplePhotos([
       'Eatery (warung makan)',
       'Pharmacy / clinic',
       'ATM / bank',
-      'Place of worship',
+      'Buddhist temple (vihara)',
       'Gym / sports facilities',
     ],
     additional: {
@@ -318,7 +328,7 @@ export const ownSurveys = withSamplePhotos([
       internet: 2,
       photoIds: [],
     },
-    bathroom: { facilities: ['Outdoor bathroom', 'Squat toilet'], photoIds: [] },
+    bathroom: { type: 'outdoor', toilet: 'squat', waterHeater: false, photoIds: [] },
     shared: { facilities: ['Motorcycle parking', 'Kitchen'], photoIds: [] },
     surroundings: ['Eatery (warung makan)'],
     additional: {

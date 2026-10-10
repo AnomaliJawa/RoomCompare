@@ -8,9 +8,9 @@ import { MAX_SOURCE_BYTES, MAX_VIDEO_BYTES } from '../../client/src/utils/image.
 const FIELDS = [
   'name', 'rent', 'type', 'contactPhone', 'kosLocation', 'campusLocation', 'distance',
   'lengthM', 'widthM', 'roomFacility', 'cleanliness', 'internet', 'roomPhotos',
-  'bathroomFacility', 'bathroomPhotos',
+  'bathroomType', 'toiletType', 'waterHeater', 'bathroomPhotos',
   'sharedFacility', 'sharedPhotos',
-  'surrounding',
+  'surrounding', 'worship',
   'security', 'notes', 'videos',
 ];
 
@@ -23,7 +23,7 @@ const empty = {
 const MB = 1024 * 1024;
 
 describe('the guidance copy', () => {
-  it('covers all 21 fields of the form, each but the distance with a short helper line', () => {
+  it('covers all 24 fields of the form, each but the distance with a short helper line', () => {
     expect(Object.keys(FIELD_GUIDE)).toEqual(FIELDS);
     for (const [key, guide] of Object.entries(FIELD_GUIDE)) {
       expect(guide.label, key).toBeTruthy();

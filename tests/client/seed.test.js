@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { ownSurveys } from '../../client/src/seed/ownSurveys.js';
 import { communitySurveys } from '../../client/src/seed/communitySurveys.js';
+import { hasRecorded } from '../../client/src/seed/samplePhotos.js';
 import { MAX_PHOTOS_PER_SECTION, SAMPLE_PHOTO_PREFIX } from '../../client/src/constants.js';
 import { distanceBetween } from '../../client/src/utils/geo.js';
 
@@ -23,7 +24,8 @@ describe('the sample surveys and their photos', () => {
       expect(survey.room.photoIds.length, survey.id).toBeGreaterThan(0);
       for (const section of SECTIONS) {
         expect(survey[section].photoIds.length).toBeLessThanOrEqual(MAX_PHOTOS_PER_SECTION);
-        if (!survey[section].facilities.length) expect(survey[section].photoIds, `${survey.id} ${section}`).toEqual([]);
+        if (!hasRecorded(survey, section)) expect(survey[section].photoIds, `${survey.id} ${section}`).toEqual([]);
+        else expect(survey[section].photoIds.length, `${survey.id} ${section}`).toBeGreaterThan(0);
       }
     }
   });

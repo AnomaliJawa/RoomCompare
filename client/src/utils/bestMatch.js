@@ -1,4 +1,4 @@
-import { BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../constants.js';
+import { AMENITY_COUNT, BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, WORSHIP_PLACES } from '../constants.js';
 import { DEFAULT_WEIGHTS } from './weights.js';
 
 /** 1 is the floor, so (v-1)/3: a "Poor" rating must not read as a quarter mark. */
@@ -27,15 +27,22 @@ function relative(values, index, { lowerIsBetter }) {
 function facilityScore(survey) {
   const count =
     (survey.room.facilities?.length ?? 0) +
-    (survey.bathroom.facilities?.length ?? 0) +
-    (survey.shared.facilities?.length ?? 0);
+    (survey.shared.facilities?.length ?? 0) +
+    (survey.bathroom?.waterHeater === true ? 1 : 0) +
+    (survey.bathroom?.type === 'indoor' ? 1 : 0);
   return (count / TOTAL_FACILITY_COUNT) * 100;
+}
+
+/** Surroundings with every place of worship counted as one amenity. */
+function amenityCount(surroundings = []) {
+  const others = surroundings.filter((item) => !WORSHIP_PLACES.includes(item)).length;
+  return others + (surroundings.some((item) => WORSHIP_PLACES.includes(item)) ? 1 : 0);
 }
 
 /** Half nearness to campus, half surroundings out of 7: the user's reading of the requirement's unnamed Location. */
 function locationScore(survey, nearness) {
   if (nearness === null) return null;
-  const amenities = ((survey.surroundings?.length ?? 0) / SURROUNDINGS.length) * 100;
+  const amenities = (amenityCount(survey.surroundings) / AMENITY_COUNT) * 100;
   return (nearness + amenities) / 2;
 }
 

@@ -153,8 +153,20 @@ describe('facility requirements', () => {
       const survey = communitySurveys.find((s) => s.kos.name === name);
       expect(survey.kos.type).toBe('female');
       expect(survey.kos.rent).toBeLessThanOrEqual(1600000);
-      expect(survey.bathroom.facilities).toContain('Water heater');
+      expect(survey.bathroom.waterHeater).toBe(true);
     });
+  });
+
+  it('reads the bathroom from its answers: its type and its toilet', () => {
+    const indoor = names(['bathroom:Indoor bathroom']);
+    expect(indoor.length).toBeGreaterThan(0);
+    for (const name of indoor) expect(communitySurveys.find((s) => s.kos.name === name).bathroom.type).toBe('indoor');
+    const squatOutdoor = names(['bathroom:Outdoor bathroom', 'bathroom:Squat toilet']);
+    for (const name of squatOutdoor) {
+      const { bathroom } = communitySurveys.find((s) => s.kos.name === name);
+      expect([bathroom.type, bathroom.toilet]).toEqual(['outdoor', 'squat']);
+    }
+    expect(names(['bathroom:Indoor bathroom', 'bathroom:Outdoor bathroom'])).toEqual([]);
   });
 
   it('ignores an empty requirement list', () => {

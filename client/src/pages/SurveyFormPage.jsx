@@ -6,7 +6,7 @@ import { ROUTE_STATUS, rememberWalkingKm } from '../services/walkingRoute.js';
 import { navigate } from '../router.js';
 import { useWalkingDistance } from '../hooks/useWalkingDistance.js';
 import {
-  BATHROOM_FACILITIES,
+  BATHROOM_TYPES,
   DISTANCE_BASIS,
   KOS_TYPES,
   RENT_SLIDER,
@@ -14,6 +14,9 @@ import {
   ROOM_SIDE_CHOICES,
   SHARED_FACILITIES,
   STATUS,
+  TOILET_TYPES,
+  WORSHIP_PLACES,
+  YES_NO,
   SURROUNDINGS,
 } from '../constants.js';
 import { FIELD_GUIDE, SECTION_INTROS, rubricText } from '../content/guidance.js';
@@ -42,6 +45,8 @@ import { PageHead } from '../components/ui/PageHead.jsx';
 import { button, control, cx, fieldHint, fieldLabel, meta } from '../components/ui/styles.js';
 
 const guide = (key) => ({ key, ...FIELD_GUIDE[key] });
+
+const NEARBY = SURROUNDINGS.filter((item) => !WORSHIP_PLACES.includes(item));
 
 const DISTANCE_PLACEHOLDER = 'Fills in once both pins are set';
 
@@ -461,13 +466,29 @@ function SurveyForm({ saved }) {
         </Section>
 
         <Section index={3} title="Bathroom" intro={SECTION_INTROS.bathroom} errors={errors}>
-          <CheckboxGroup
-            name="bathroomFacility"
-            legend="Bathroom facilities"
-            options={BATHROOM_FACILITIES}
-            selected={values.bathroomFacility}
-            onChange={set('bathroomFacility')}
-            guide={guide('bathroomFacility')}
+          <RadioGroup
+            name="bathroomType"
+            legend="Bathroom type"
+            options={BATHROOM_TYPES}
+            value={values.bathroomType}
+            onChange={set('bathroomType')}
+            guide={guide('bathroomType')}
+          />
+          <RadioGroup
+            name="toiletType"
+            legend="Toilet type"
+            options={TOILET_TYPES}
+            value={values.toiletType}
+            onChange={set('toiletType')}
+            guide={guide('toiletType')}
+          />
+          <RadioGroup
+            name="waterHeater"
+            legend="Water heater"
+            options={YES_NO}
+            value={values.waterHeater}
+            onChange={set('waterHeater')}
+            guide={guide('waterHeater')}
           />
           <MediaUploader
             section="bathroom"
@@ -499,13 +520,22 @@ function SurveyForm({ saved }) {
         </Section>
 
         <Section index={5} title="Surroundings" intro={SECTION_INTROS.surroundings} errors={errors}>
+          {/* Two groups, one list: the places of worship are named apart so each faith can be found. */}
           <CheckboxGroup
             name="surrounding"
             legend="Around the kos"
-            options={SURROUNDINGS}
-            selected={values.surrounding}
-            onChange={set('surrounding')}
+            options={NEARBY}
+            selected={values.surrounding.filter((item) => NEARBY.includes(item))}
+            onChange={(next) => set('surrounding')([...next, ...values.surrounding.filter((item) => WORSHIP_PLACES.includes(item))])}
             guide={guide('surrounding')}
+          />
+          <CheckboxGroup
+            name="worship"
+            legend="Places of worship nearby"
+            options={WORSHIP_PLACES}
+            selected={values.surrounding.filter((item) => WORSHIP_PLACES.includes(item))}
+            onChange={(next) => set('surrounding')([...values.surrounding.filter((item) => NEARBY.includes(item)), ...next])}
+            guide={guide('worship')}
           />
         </Section>
 

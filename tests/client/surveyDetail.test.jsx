@@ -34,7 +34,7 @@ const survey = ({ room = [], bathroom = [], shared = [], videos = [] } = {}) => 
     rent: 1_250_000,
   },
   room: { lengthM: null, widthM: null, facilities: [], cleanliness: null, internet: null, photoIds: room },
-  bathroom: { facilities: [], photoIds: bathroom },
+  bathroom: { type: null, toilet: null, waterHeater: null, photoIds: bathroom },
   shared: { facilities: [], photoIds: shared },
   surroundings: [],
   additional: { security: null, notes: '', videoIds: videos },
@@ -157,17 +157,35 @@ describe('a community survey page', () => {
 describe('the facility checklists on the survey page', () => {
   it('mark what is there ✓ and what is not ✗, saying which to a screen reader', async () => {
     const { store, open } = await load();
-    const withBathroom = survey();
-    withBathroom.bathroom.facilities = ['Indoor bathroom'];
-    store.addSurvey(withBathroom);
+    const withWifi = survey();
+    withWifi.shared.facilities = ['Wifi'];
+    store.addSurvey(withWifi);
     const { container } = open('svy-media');
-    const rows = [...sectionNamed(container, 'Bathroom').querySelectorAll('li')].map((row) => [
+    const rows = [...sectionNamed(container, 'Shared facilities').querySelectorAll('li')].map((row) => [
       row.querySelector('[data-mark]').textContent,
       row.querySelector('.sr-only').textContent,
     ]);
     expect(rows).toContainEqual(['✓', 'present']);
     expect(rows).toContainEqual(['✗', 'not available']);
     expect(rows.some(([mark]) => mark === '—')).toBe(false);
+  });
+});
+
+describe('the bathroom on the survey page', () => {
+  it('answers its three questions, each "Not recorded" when skipped', async () => {
+    const { store, open } = await load();
+    const answered = survey();
+    answered.bathroom = { ...answered.bathroom, type: 'indoor', toilet: 'squat' };
+    store.addSurvey(answered);
+    const { container } = open('svy-media');
+    const bathroom = sectionNamed(container, 'Bathroom');
+    const answers = [...bathroom.querySelectorAll('[data-defn]')].map((row) => [row.dataset.defn, text(row.querySelector('dd'))]);
+    expect(answers).toEqual([
+      ['Bathroom type', 'Indoor (inside the room)'],
+      ['Toilet type', 'Squat toilet'],
+      ['Water heater', 'Not recorded'],
+    ]);
+    expect(bathroom.querySelector('li')).toBeNull();
   });
 });
 

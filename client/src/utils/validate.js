@@ -1,5 +1,5 @@
 import { isValidPoint } from './geo.js';
-import { KOS_TYPES } from '../constants.js';
+import { BATHROOM_TYPES, KOS_TYPES, TOILET_TYPES, YES_NO } from '../constants.js';
 
 /** A draft needs only a name; publishing needs everything a comparison depends on. */
 
@@ -23,6 +23,9 @@ export const FIELD_SECTION = {
   widthM: 2,
   cleanliness: 2,
   internet: 2,
+  bathroomType: 3,
+  toiletType: 3,
+  waterHeater: 3,
   security: 6,
   notes: 6,
 };
@@ -78,6 +81,12 @@ function checkLikert(value, key, errors, { required }) {
   }
 }
 
+/** An answer is optional, but it must be one of the choices offered. */
+function checkChoice(value, options, key, message, errors) {
+  if (value === null || value === undefined) return;
+  if (!options.some((option) => option.value === value)) errors[key] = message;
+}
+
 export function validateSurvey(data, { mode = 'publish' } = {}) {
   const errors = {};
   const publishing = mode === 'publish';
@@ -87,6 +96,9 @@ export function validateSurvey(data, { mode = 'publish' } = {}) {
   checkOptionalSizes(data, errors);
   checkNotes(data, errors);
   checkRent(data, errors, { required: publishing });
+  checkChoice(data.bathroom?.type, BATHROOM_TYPES, 'bathroomType', 'Choose indoor or outdoor.', errors);
+  checkChoice(data.bathroom?.toilet, TOILET_TYPES, 'toiletType', 'Choose squat or sitting.', errors);
+  checkChoice(data.bathroom?.waterHeater, YES_NO, 'waterHeater', 'Choose Yes or No.', errors);
 
   if (publishing) {
     if (isBlank(data.kos.type) || !KOS_TYPES.some((type) => type.value === data.kos.type)) {
