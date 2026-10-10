@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 
 /** Fresh modules for each test: the store reads storage once, at import. */
@@ -48,30 +48,33 @@ const rowOf = (container, label) => container.querySelector(`[data-defn="${label
 const actions = (container) => container.querySelector('[data-page-actions]');
 
 beforeEach(() => localStorage.clear());
+afterEach(() => vi.unstubAllGlobals());
 
 describe('photos and videos on the survey page', () => {
-  it('sit in one panel after the recorded sections, grouped in the order of the form', async () => {
+  it('open the page as one gallery, before the facts and every recorded section', async () => {
     const { store, open } = await load();
     store.addSurvey(survey({ room: ['p1', 'p2'], shared: ['p3'], videos: ['v1'] }));
     const { container } = open('svy-media');
-
+    const media = panelOf(container);
+    expect(media.compareDocumentPosition(container.querySelector('[data-facts]')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(sections(container).map((s) => text(s.querySelector('h2')))).toEqual([
-      'Kos information', 'Room', 'Bathroom', 'Shared facilities', 'Surroundings', 'Additional information', 'Photos and videos',
+      'Kos information', 'Room', 'Bathroom', 'Shared facilities', 'Surroundings', 'Additional information',
     ]);
-    const panel = panelOf(container);
-    expect(text(within(panel).getByText('3 photos, 1 video'))).toBe('3 photos, 1 video');
-    expect([...panel.querySelectorAll('h3')].map(text)).toEqual(['Room', 'Bathroom', 'Shared facilities', 'Videos']);
-    expect([...panel.querySelectorAll('[data-gallery]')].map((g) => g.dataset.gallery)).toEqual(['photo', 'photo', 'video']);
-    // An empty group still says so: nothing recorded is not the same as hidden.
-    expect(panel.textContent).toContain('No bathroom photos recorded.');
+    // An empty section still says so: nothing recorded is not the same as hidden.
+    expect(text(media.querySelector('[data-media-summary]'))).toBe(
+      '2 room photos, 1 shared facility photo and 1 video. No bathroom photos recorded.',
+    );
   });
 
-  it('leaves no photos or videos in the other sections', async () => {
+  it('names what is not on this device rather than reporting it lost', async () => {
     const { store, open } = await load();
-    store.addSurvey(survey({ room: ['p1'], bathroom: ['p2'], shared: ['p3'], videos: ['v1'] }));
+    store.addSurvey(survey({ room: ['p1', 'p2'], shared: ['p3'], videos: ['v1'] }));
     const { container } = open('svy-media');
-    expect(container.querySelectorAll('[data-gallery]')).toHaveLength(4);
-    expect(panelOf(container).querySelectorAll('[data-gallery]')).toHaveLength(4);
+    // jsdom has no IndexedDB, so no stored file is on this device, as for a survey synced from another phone.
+    await screen.findByText(/not on this device/);
+    expect(text(panelOf(container).querySelector('[data-gallery-status]'))).toBe(
+      '3 photos and 1 video are not on this device. Photos and videos stay on the device they were added on.',
+    );
   });
 
   it('says so once when nothing was recorded, instead of once per section', async () => {
@@ -88,7 +91,36 @@ describe('photos and videos on the survey page', () => {
     const { store, open } = await load();
     store.addSurvey(survey({ bathroom: ['p1'] }));
     const { container } = open('svy-media');
-    expect(within(panelOf(container)).getByText('1 photo')).toBeTruthy();
+    expect(text(panelOf(container).querySelector('[data-media-summary]'))).toBe(
+      '1 bathroom photo. No room photos and shared facility photos recorded.',
+    );
+  });
+
+  it('shows the first photo large and four more beside it, the rest behind +N, all in one viewer', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url) => ({ ok: true, blob: async () => new Blob([String(url)], { type: 'image/jpeg' }) })));
+    const { store, open } = await load();
+    // After the import: the modules construct URLs as they load.
+    vi.stubGlobal('URL', Object.assign(Object.create(URL), { createObjectURL: () => 'blob:sample', revokeObjectURL: () => {} }));
+    store.addSurvey(survey({
+      room: ['seed:room-1-1', 'seed:room-1-2', 'seed:room-1-3'],
+      bathroom: ['seed:bathroom-1-1', 'seed:bathroom-1-2'],
+      shared: ['seed:shared-1-1', 'seed:shared-1-2'],
+    }));
+    const { container } = open('svy-media');
+    await screen.findByRole('button', { name: 'Open photo 1 of 7, Room' });
+    const tiles = [...panelOf(container).querySelectorAll('[data-gallery="photo"] button')].map((b) => b.getAttribute('aria-label'));
+    expect(tiles).toEqual([
+      'Open photo 1 of 7, Room',
+      'Open photo 2 of 7, Room',
+      'Open photo 3 of 7, Room',
+      'Open photo 4 of 7, Bathroom',
+      'Open photo 5 of 7, and 2 more',
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Open photo 5 of 7, and 2 more' }));
+    const viewer = document.querySelector('dialog[open]');
+    expect(text(viewer.querySelector('figcaption'))).toBe('Bathroom: bathroom-1-2.jpg');
+    fireEvent.click(within(viewer).getByRole('button', { name: 'Next' }));
+    expect(text(viewer.querySelector('figcaption'))).toBe('Shared facilities: shared-1-1.jpg');
   });
 });
 
@@ -296,19 +328,37 @@ describe('Kos information on the survey page', () => {
     store.addSurvey(survey());
     const { container } = open('svy-media');
     const labels = [...sectionNamed(container, 'Kos information').querySelectorAll('dt')].map(text);
-    expect(labels).toEqual(['Type', 'Address', 'Pinned at', 'Campus', 'Distance to campus', 'Monthly rent', 'Owner or security phone']);
+    expect(labels).toEqual(['Type', 'Address', 'Campus', 'Distance to campus', 'Monthly rent', 'Owner or security phone']);
     expect(text(container.querySelector('[data-lede]'))).toBe('Lowokwaru, Malang');
   });
 
-  it('opens the pin in Google Maps, in a new tab', async () => {
+  it('shows the pin on a map, in place of its coordinates, with Google Maps a tap away', async () => {
     const { store, open } = await load();
     store.addSurvey(survey());
     const { container } = open('svy-media');
-    const link = rowOf(container, 'Pinned at').querySelector('a');
-    expect(text(link)).toBe('-7.940000, 112.620000');
+    const map = sectionNamed(container, 'Kos information').querySelector('[data-map-view]');
+    expect(map).not.toBeNull();
+    expect(within(map).getByRole('region', { name: 'Map of Kos Media' })).toBeTruthy();
+    expect(text(map.querySelector('[data-coordinates]'))).toBe('-7.940000, 112.620000');
+    const link = within(map).getByRole('link', { name: 'Open in Google Maps' });
     expect(link.getAttribute('href')).toBe('https://www.google.com/maps/search/?api=1&query=-7.94%2C112.62');
     expect([link.getAttribute('target'), link.getAttribute('rel')]).toEqual(['_blank', 'noopener']);
-    expect(link.getAttribute('aria-label')).toBe('-7.940000, 112.620000, open in Google Maps');
+    expect(rowOf(container, 'Pinned at')).toBeNull();
+  });
+
+  it('names the campus on the map when one is pinned', async () => {
+    const { store, open } = await load();
+    store.addSurvey({ ...survey(), kos: { ...survey().kos, campusLocation: { lat: -7.95, lng: 112.61, label: 'Universitas Brawijaya' } } });
+    open('svy-media');
+    expect(screen.getByRole('region', { name: 'Map of Kos Media and the campus' })).toBeTruthy();
+  });
+
+  it('reads "Not recorded" for the map when the kos was never pinned', async () => {
+    const { store, open } = await load();
+    store.addSurvey({ ...survey(), kos: { ...survey().kos, kosLocation: null } });
+    const { container } = open('svy-media');
+    expect(container.querySelector('[data-map-view]')).toBeNull();
+    expect(text(rowOf(container, 'Map').querySelector('dd'))).toBe('Not recorded');
   });
 
   it('names the campus as typed, or as the lookup found it, so the distance says where to', async () => {

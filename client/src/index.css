@@ -237,11 +237,11 @@
 }
 
 /* Leaflet's own stylesheet arrives unlayered, so these stay unlayered to win on specificity, as before. */
-.map-picker .leaflet-control-zoom a { border-radius: var(--radius-sm); }
+:is(.map-picker, .map-view) .leaflet-control-zoom a { border-radius: var(--radius-sm); }
 
 /* Leaflet's zoom buttons are 30px even on touch. */
 @media (pointer: coarse) {
-  .map-picker .leaflet-touch .leaflet-bar a {
+  :is(.map-picker, .map-view) .leaflet-touch .leaflet-bar a {
     width: var(--spacing-target);
     height: var(--spacing-target);
     line-height: var(--spacing-target);
