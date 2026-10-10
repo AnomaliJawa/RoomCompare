@@ -10,7 +10,7 @@ export const ID = {
   'Log out': 'Keluar',
   'Logged in as {email}': 'Masuk sebagai {email}',
   Menu: 'Menu',
-  Language: 'Bahasa',
+  'Switch to {language}': 'Ganti ke {language}',
   Breadcrumb: 'Navigasi jejak',
   'Skip to content': 'Langsung ke konten',
   'Loading…': 'Memuat…',

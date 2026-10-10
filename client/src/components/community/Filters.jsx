@@ -19,26 +19,41 @@ import {
 } from '../ui/styles.js';
 import { msg, t } from '../../i18n/index.js';
 
-export function FilterBar({ filters, total, showing, onOpen, openerRef }) {
+/** The search with Filters on its line (the user's request); below 901px the count drops under them. */
+export function FilterBar({ query, onQuery, filters, total, showing, onOpen, openerRef }) {
   const active = activeFilterCount(filters);
-  return (
-    <div className="mb-16 flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <button ref={openerRef} className={button({ variant: 'secondary' })} type="button" aria-haspopup="dialog" onClick={onOpen}>
-          {t('Filters')}
-          {active > 0 && (
-            <span className="ml-2 inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-narrow text-xs text-surface tabular-nums lining-nums">
-              {active}
-            </span>
-          )}
-        </button>
+  const actions = (
+    <>
+      <button ref={openerRef} className={button({ variant: 'secondary', className: 'shrink-0' })} type="button" aria-haspopup="dialog" onClick={onOpen}>
+        {t('Filters')}
         {active > 0 && (
-          <button className={button({ variant: 'quiet' })} type="button" onClick={() => store.clearCommunityFilters()}>
-            {t('Clear')}
-          </button>
+          <span className="ml-2 inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-narrow text-xs text-surface tabular-nums lining-nums">
+            {active}
+          </span>
         )}
+      </button>
+      {active > 0 && (
+        <button className={button({ variant: 'quiet', className: 'shrink-0' })} type="button" onClick={() => store.clearCommunityFilters()}>
+          {t('Clear')}
+        </button>
+      )}
+    </>
+  );
+  return (
+    <div className="mb-16 flex items-end justify-between gap-3 max-xl:flex-col max-xl:items-stretch">
+      <div className="min-w-0 xl:w-[420px] lg:max-w-[420px]">
+        <TextField
+          name="community-search"
+          id="community-search"
+          label={t('Search by kos name or area')}
+          type="search"
+          value={query}
+          placeholder={t('e.g. Kartika or Dinoyo')}
+          onChange={onQuery}
+          action={actions}
+        />
       </div>
-      <p className={meta} role="status" aria-live="polite">
+      <p className={cx(meta, 'xl:flex xl:min-h-10 xl:items-center')} role="status" aria-live="polite">
         {t('Showing {showing} of {total} shared surveys.', { showing, total })}
       </p>
     </div>
@@ -70,7 +85,8 @@ function FilterContent() {
       </div>
 
       <div className={dialogBody}>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] items-end gap-4">
+        {/* 200: "Hanya berbintang" (Starred only) keeps to one line. */}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] items-end gap-4">
           <TextField
             name="f-location"
             id="f-location"

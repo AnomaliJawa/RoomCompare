@@ -100,13 +100,15 @@ export function SurveyCard({ survey, variant = 'own', starred = false, inCompare
           />
         </div>
         <div className="relative z-1 mt-auto flex flex-wrap gap-2 pt-4 pointer-coarse:gap-3">
-          <a className={button(small)} href={href}>
+          {/* Below 360px a community card drops View, which the whole card already does, to keep its star and like on the line. */}
+          <a className={button({ ...small, display: community ? 'inline-flex max-xs:hidden' : 'inline-flex' })} href={href}>
             {t('View')}
           </a>
           {community ? (
             <>
+              {/* "Compare", not "Add to compare": the longer label pushed the star and like onto a second line. */}
               <button className={button(small)} type="button" onClick={() => toggleCompare(survey.id, { go: community })}>
-                {inCompare ? t('In comparison') : t('Add to compare')}
+                {inCompare ? t('In comparison') : t('Compare')}
               </button>
               <StarButton survey={survey} starred={starred} small className="ml-auto" />
               <LikeButton survey={survey} liked={liked} count={likes} small />

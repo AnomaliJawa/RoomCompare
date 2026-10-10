@@ -1,38 +1,26 @@
+import { Globe } from 'lucide-react';
 import * as store from '../../data/store.js';
 import { LANGUAGES, getLanguage, t } from '../../i18n/index.js';
-import { cx } from '../ui/styles.js';
+import { ICON } from '../ui/icons.js';
+import { button, cx } from '../ui/styles.js';
 
-const option = cx(
-  'inline-flex min-h-8 min-w-8 items-center justify-center rounded-sm px-2 text-xs font-semibold transition-colors',
-  '[-webkit-tap-highlight-color:transparent] pointer-coarse:min-h-target pointer-coarse:min-w-target',
-);
-
-/** EN and ID, the one shown pressed; each code's tooltip names its language in that language. */
+/**
+ * One button naming the language shown, "EN" or "ID" (the user's choice); pressing it switches to the
+ * other, as its tooltip says. Its spoken name adds the language's own name.
+ */
 export function LanguageSwitch({ className = '' }) {
-  const current = getLanguage();
+  const current = LANGUAGES.find(({ code }) => code === getLanguage());
+  const next = LANGUAGES.find(({ code }) => code !== current.code);
   return (
-    <div className={cx('items-center gap-1', className)} role="group" aria-label={t('Language')}>
-      {LANGUAGES.map(({ code, short, name }) => {
-        const pressed = code === current;
-        return (
-          <button
-            key={code}
-            className={cx(
-              option,
-              pressed
-                ? 'bg-accent-tint text-accent active:bg-accent-tint active:text-accent-press'
-                : 'text-muted hover:text-ink active:bg-accent-tint active:text-ink',
-            )}
-            type="button"
-            lang={code}
-            title={name}
-            aria-pressed={pressed ? 'true' : 'false'}
-            onClick={() => store.setLanguage(code)}
-          >
-            {short}
-          </button>
-        );
-      })}
-    </div>
+    <button
+      className={button({ variant: 'quiet', gap: 'gap-1', className: cx('shrink-0 pointer-coarse:min-w-target', className) })}
+      type="button"
+      title={t('Switch to {language}', { language: next.name })}
+      onClick={() => store.setLanguage(next.code)}
+    >
+      <Globe {...ICON} className="block max-xs:hidden" aria-hidden="true" />
+      {current.short}
+      <span className="sr-only"> · {current.name}</span>
+    </button>
   );
 }
