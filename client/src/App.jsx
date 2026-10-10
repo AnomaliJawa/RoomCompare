@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as store from './data/store.js';
 import { useStore } from './hooks/useStore.js';
-import { currentPath, navigate, startAtDashboard, useRoute } from './router.js';
-import { rememberReturn, restoreSession } from './actions/account.js';
+import { navigate, startAtDashboard, useRoute } from './router.js';
+import { restoreSession } from './actions/account.js';
 import { ConfirmDialog } from './components/feedback/ConfirmDialog.jsx';
 import { ToastRegion } from './components/feedback/ToastRegion.jsx';
 import { NavBar } from './components/layout/NavBar.jsx';
@@ -88,16 +88,13 @@ export function App() {
   const guard = useMemo(() => {
     if (!ready || !route) return null;
     const signedIn = Boolean(store.getState().user);
-    if (!route.public && !signedIn) return { to: '/login', returnTo: currentPath() };
+    if (!route.public && !signedIn) return { to: '/login' };
     if (route.public && signedIn) return { to: '/dashboard' };
     return null;
   }, [ready, visit]);
 
   useEffect(() => {
-    if (!guard) return;
-    // Every route but log in and register needs an account; a visitor sent to log in returns after.
-    if (guard.returnTo) rememberReturn(guard.returnTo);
-    navigate(guard.to, { replace: true });
+    if (guard) navigate(guard.to, { replace: true });
   }, [guard]);
 
   useEffect(() => {

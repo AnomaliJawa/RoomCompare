@@ -28,6 +28,7 @@ const state = {
   compareSelection: [],
   compareShown: false,
   search: '',
+  communitySearch: '',
   communityFilters: {
     location: '',
     minRent: '',
@@ -349,6 +350,11 @@ export function restoreCompare(selection, shown) {
 
 export function setSearch(value) {
   state.search = value;
+  notify();
+}
+
+export function setCommunitySearch(value) {
+  state.communitySearch = value;
   notify();
 }
 

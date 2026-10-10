@@ -42,6 +42,12 @@ describe('a community survey card', () => {
     expect(off.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
   });
 
+  it('names the campus its distance is measured to, or says campus when none is pinned', () => {
+    const toBrawijaya = { ...community, kos: { ...community.kos, campusLocation: { label: 'Universitas Brawijaya, Ketawanggede', address: 'Universitas Brawijaya' } } };
+    expect(within(card(toBrawijaya, { variant: 'community' })).getByText('To Universitas Brawijaya')).toBeTruthy();
+    expect(within(card(community, { variant: 'community' })).getByText('To campus')).toBeTruthy();
+  });
+
   it('offers Add to compare, and says so once it is in', () => {
     expect(within(card(community, { variant: 'community' })).getByRole('button', { name: 'Add to compare' })).toBeTruthy();
     expect(within(card(community, { variant: 'community', inCompare: true })).getByRole('button', { name: 'In comparison' })).toBeTruthy();

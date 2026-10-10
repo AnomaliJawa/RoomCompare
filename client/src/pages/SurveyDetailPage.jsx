@@ -10,7 +10,7 @@ import {
   kosTypeLabel,
   likertLabel,
 } from '../constants.js';
-import { formatKosDistance, numberToCurrency } from '../utils/format.js';
+import { campusName, formatKosDistance, numberToCurrency } from '../utils/format.js';
 import { formatCoordinate, isValidPoint } from '../utils/geo.js';
 import { Gallery } from '../components/survey/PhotoGallery.jsx';
 import { DeleteButton, EditLink, LikeButton, StarButton } from '../components/survey/SurveyButtons.jsx';
@@ -181,7 +181,7 @@ export function SurveyDetailPage({ params: { id } }) {
         actions={
           <>
             {store.canCompare(id) && (
-              <button className={button({ className: 'max-lg:flex-1' })} type="button" onClick={() => toggleCompare(id)}>
+              <button className={button({ className: 'max-lg:flex-1' })} type="button" onClick={() => toggleCompare(id, { go: !own })}>
                 {compareSelection.includes(id) ? 'In comparison' : 'Add to compare'}
               </button>
             )}
@@ -212,7 +212,7 @@ export function SurveyDetailPage({ params: { id } }) {
           <Definition label="Type" input={kosTypeLabel(kos.type)} />
           <Definition label="Address" input={kos.kosLocation?.address} />
           <Definition label="Pinned at" input={mapsLink(kos.kosLocation)} />
-          <Definition label="Campus" input={kos.campusLocation?.address || kos.campusLocation?.label} />
+          <Definition label="Campus" input={campusName(kos)} />
           <Definition label="Distance to campus" input={kos.distanceKm == null ? null : formatKosDistance(kos)} />
           <Definition label="Monthly rent" input={numberToCurrency(kos.rent)} />
           <Definition label="Owner or security phone" input={contact(kos.contactPhone)} />

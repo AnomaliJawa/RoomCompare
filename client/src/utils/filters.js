@@ -34,14 +34,18 @@ export function activeFilterCount(filters) {
   );
 }
 
-export function filterCommunity(surveys, filters, starredIds) {
+/** `search` matches the kos name or its area; the filters narrow what it finds. */
+export function filterCommunity(surveys, filters, starredIds, search = '') {
+  const query = search.trim().toLowerCase();
   const location = filters.location.trim().toLowerCase();
   const min = filters.minRent === '' ? null : Number(filters.minRent);
   const max = filters.maxRent === '' ? null : Number(filters.maxRent);
   const required = filters.facilities ?? [];
 
   return surveys.filter((survey) => {
-    if (location && !(survey.kos.kosLocation?.label ?? '').toLowerCase().includes(location)) return false;
+    const area = (survey.kos.kosLocation?.label ?? '').toLowerCase();
+    if (query && !survey.kos.name.toLowerCase().includes(query) && !area.includes(query)) return false;
+    if (location && !area.includes(location)) return false;
     if (filters.type && survey.kos.type !== filters.type) return false;
     if (filters.starredOnly && !starredIds.includes(survey.id)) return false;
     if (min !== null && Number.isFinite(min) && survey.kos.rent < min) return false;

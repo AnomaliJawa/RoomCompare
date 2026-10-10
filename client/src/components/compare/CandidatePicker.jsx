@@ -1,4 +1,4 @@
-import { MAX_COMPARE } from '../../constants.js';
+import { MAX_COMPARE, MIN_COMPARE } from '../../constants.js';
 import * as store from '../../data/store.js';
 import { toggleCompare } from '../../actions/surveys.js';
 import { useStore } from '../../hooks/useStore.js';
@@ -176,10 +176,21 @@ export function PickerContent({ candidates, selection, replacing = null, onRepla
       ) : (
         <div className={cx(dialogFoot, sheetFoot)}>
           <p className={meta} role="status" aria-live="polite">
-            {selection.length} of {MAX_COMPARE} selected.
+            {selection.length} of {MAX_COMPARE} selected
+            {selection.length < MIN_COMPARE ? `, ${MIN_COMPARE - selection.length} more to compare` : ''}.
           </p>
-          <button className={button({ variant: 'primary' })} type="button" onClick={close}>
-            Done
+          {/* Compare, not Done: closing and then pressing Compare in the bar was two steps for one intent. */}
+          <button
+            className={button({ variant: 'primary' })}
+            type="button"
+            disabled={selection.length < MIN_COMPARE}
+            title={selection.length < MIN_COMPARE ? 'Select at least two kos' : undefined}
+            onClick={() => {
+              store.showComparison();
+              close();
+            }}
+          >
+            Compare
           </button>
         </div>
       )}

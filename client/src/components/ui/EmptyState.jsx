@@ -30,8 +30,7 @@ export function EmptyState({ title, body, actions = [], className = '', children
 export const NoSurveysYet = () => (
   <EmptyState
     title="No kos recorded yet"
-    body="Add the first kos you visited. Once two are published, you can compare them side by side."
-    actions={[{ label: 'Add survey', href: '#/surveys/new' }]}
+    body="Use Add survey at the top to record the first kos you visited. Once two are published, you can compare them side by side."
   />
 );
 

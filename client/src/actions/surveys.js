@@ -56,7 +56,8 @@ export function toggleStar(id) {
 // No toast: the filled heart and the count already say so.
 export const toggleLike = (id) => store.toggleLike(id);
 
-export function toggleCompare(id) {
+/** `go`: after adding, open Compare, so a kos picked from Community lands where it is compared. */
+export function toggleCompare(id, { go = false } = {}) {
   const survey = store.findSurvey(id);
   if (!store.toggleCompare(id)) {
     toast(
@@ -68,4 +69,5 @@ export function toggleCompare(id) {
   }
   // Adding needs no toast: the pressed button already says so.
   if (!store.getState().compareSelection.includes(id)) toast(`${survey.kos.name} removed from comparison`);
+  else if (go) navigate('/compare');
 }

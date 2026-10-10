@@ -42,6 +42,20 @@ describe('creating an account, checked before it is sent', () => {
   });
 });
 
+describe('after logging in', () => {
+  it('always lands on the Dashboard, wherever the visitor was before', async () => {
+    vi.resetModules();
+    vi.doMock('../../client/src/services/sync.js', () => ({ start: async () => true, stop() {}, flush: async () => {}, pendingCount: () => 0 }));
+    vi.doMock('../../client/src/services/distanceRefresh.js', () => ({ start() {}, stop() {}, setOpenSurvey() {} }));
+    const account = await import('../../client/src/actions/account.js');
+    window.location.hash = '#/surveys';
+    await account.enter(async () => ({ user: { id: 'u1', email: 'a@example.test', name: 'A' } }), {});
+    expect(window.location.hash).toBe('#/dashboard');
+    vi.doUnmock('../../client/src/services/sync.js');
+    vi.doUnmock('../../client/src/services/distanceRefresh.js');
+  });
+});
+
 describe('the account pages', () => {
   beforeEach(() => localStorage.clear());
 
