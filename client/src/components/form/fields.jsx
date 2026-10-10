@@ -123,27 +123,36 @@ export function TextField({
   inputMode,
   plain = false,
   guide = null,
+  // Buttons on the input's line, stretched to its height (Filters beside the community search).
+  action = null,
   ...rest
 }) {
+  const input = (
+    <input
+      className={control({
+        invalid: Boolean(error),
+        width: action ? 'w-full min-w-0 flex-1' : 'w-full',
+        className: cx(numeric && 'tabular-nums lining-nums'),
+      })}
+      id={id}
+      name={name}
+      type={type}
+      value={value ?? ''}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      inputMode={inputMode}
+      autoCapitalize={plain ? 'none' : undefined}
+      spellCheck={plain ? false : undefined}
+      aria-invalid={error ? 'true' : undefined}
+      aria-describedby={supportIds(id, field, { hint, guide, error })}
+      onChange={(event) => onChange?.(event.target.value)}
+      {...rest}
+    />
+  );
   return (
     <Field field={field} error={error}>
       <FieldLabel id={id} label={label} guide={guide} />
-      <input
-        className={control({ invalid: Boolean(error), className: cx(numeric && 'tabular-nums lining-nums') })}
-        id={id}
-        name={name}
-        type={type}
-        value={value ?? ''}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        autoCapitalize={plain ? 'none' : undefined}
-        spellCheck={plain ? false : undefined}
-        aria-invalid={error ? 'true' : undefined}
-        aria-describedby={supportIds(id, field, { hint, guide, error })}
-        onChange={(event) => onChange?.(event.target.value)}
-        {...rest}
-      />
+      {action ? <div className="flex gap-2">{input}{action}</div> : input}
       <Support id={id} field={field} hint={hint} guide={guide} error={error} length={String(value ?? '').length} />
     </Field>
   );
@@ -295,7 +304,8 @@ function Group({ name, legend, guide, rubric = null, error, children }) {
       aria-describedby={described}
     >
       <Legend name={name} legend={legend} guide={guide} invalid={Boolean(error)} />
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">{children}</div>
+      {/* 260: the longest choice, "Sitting (Western-style) toilet", stays on one line; min() keeps a phone's column in. */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-2">{children}</div>
       {guide && (
         <p className={cx(fieldHint, 'mt-3')} id={`${name}-hint`}>
           {guide.helper}

@@ -8,7 +8,8 @@ import { GuestSurveys, NoSearchResults, NoSurveysYet } from '../components/ui/Em
 import { PageHead } from '../components/ui/PageHead.jsx';
 import { t } from '../i18n/index.js';
 
-export const cardGrid = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4';
+// 320, not 280: a community card's View, Compare, star and like then fit one line, in Indonesian, on a touch screen.
+export const cardGrid = 'grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-4';
 
 export function SurveyListPage() {
   const { user } = useStore();

@@ -48,8 +48,8 @@ describe('a community survey card', () => {
     expect(within(card(community, { variant: 'community' })).getByText('To campus')).toBeTruthy();
   });
 
-  it('offers Add to compare, and says so once it is in', () => {
-    expect(within(card(community, { variant: 'community' })).getByRole('button', { name: 'Add to compare' })).toBeTruthy();
+  it('offers Compare, and says so once it is in', () => {
+    expect(within(card(community, { variant: 'community' })).getByRole('button', { name: 'Compare' })).toBeTruthy();
     expect(within(card(community, { variant: 'community', inCompare: true })).getByRole('button', { name: 'In comparison' })).toBeTruthy();
   });
 });

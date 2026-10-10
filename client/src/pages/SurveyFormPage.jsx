@@ -80,7 +80,8 @@ function Section({ index, title, intro, errors, children }) {
   const intros = guidance().SECTION_INTROS;
   const count = Object.keys(errors).filter((key) => FIELD_SECTION[key] === index).length;
   return (
-    <section className="rounded-md border border-rule bg-surface p-6" data-section={index}>
+    // Below 360px a narrower inset keeps the longest choice, "Sitting (Western-style) toilet", on one line.
+    <section className="rounded-md border border-rule bg-surface p-6 max-xs:p-4" data-section={index}>
       <div className="flex items-center gap-3">
         <span
           className="grid size-7 place-items-center rounded-sm bg-accent-tint font-narrow text-xs font-bold text-accent"

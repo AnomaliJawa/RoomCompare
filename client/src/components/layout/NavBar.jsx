@@ -20,7 +20,7 @@ const link = cx(
 /**
  * The header: the wordmark alone until the session is known. Guests get the same links, and Log in
  * where Log out would be; Add survey sends them to log in. On phones it keeps one row: the logo,
- * Add survey and the menu icon.
+ * the language, Add survey and the menu icon; the language stays out of the menu, one tap away.
  */
 export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
   const who = user ? t('Logged in as {email}', { email: user.email }) : undefined;
@@ -56,7 +56,6 @@ export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
                   {t(item.label)}
                 </a>
               ))}
-              <LanguageSwitch className="hidden max-xl:flex max-xl:py-2 max-xl:pl-3" />
               {/* On narrow screens Log out, or Log in, moves to the foot of the menu. */}
               {user ? (
                 <button className={cx(link, 'hidden max-xl:flex')} type="button" title={who} onClick={logOut}>
@@ -71,10 +70,10 @@ export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
               )}
             </nav>
 
-            <LanguageSwitch className="ml-auto flex max-xl:hidden" />
+            <LanguageSwitch className="ml-auto" />
 
             {/* Equal columns, so both actions take the wider label's width; the menu icon takes its own. */}
-            <div className="ml-auto grid xl:ml-0 auto-cols-fr grid-flow-col items-center gap-2 pointer-coarse:gap-3 max-xl:auto-cols-auto">
+            <div className="grid auto-cols-fr grid-flow-col items-center gap-2 pointer-coarse:gap-3 max-xl:auto-cols-auto">
               <button
                 className={button({
                   variant: 'secondary',
