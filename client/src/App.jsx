@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as store from './data/store.js';
 import { useStore } from './hooks/useStore.js';
-import { navigate, startAtDashboard, useRoute } from './router.js';
-import { restoreSession } from './actions/account.js';
+import { navigate, startAt, useRoute } from './router.js';
+import { requireAccount, restoreSession } from './actions/account.js';
 import { ConfirmDialog } from './components/feedback/ConfirmDialog.jsx';
 import { ToastRegion } from './components/feedback/ToastRegion.jsx';
 import { NavBar } from './components/layout/NavBar.jsx';
@@ -16,19 +16,22 @@ import { SurveyDetailPage } from './pages/SurveyDetailPage.jsx';
 import { SurveyFormPage } from './pages/SurveyFormPage.jsx';
 import { SurveyListPage } from './pages/SurveyListPage.jsx';
 
+/**
+ * `access`: public (log in and register, which a logged-in visitor skips), open (guests explore too),
+ * or account. A guest sent to an account route logs in first, told why, or goes to Community.
+ */
 export const ROUTES = [
-  // The only routes open without an account.
-  { path: '/login', page: LoginPage, nav: null, public: true },
-  { path: '/register', page: RegisterPage, nav: null, public: true },
-  { path: '/dashboard', page: DashboardPage, nav: null },
-  { path: '/surveys', page: SurveyListPage, nav: 'surveys' },
-  { path: '/surveys/new', page: SurveyFormPage, nav: 'surveys' },
-  { path: '/surveys/:id', page: SurveyDetailPage, nav: 'surveys' },
-  { path: '/surveys/:id/edit', page: SurveyFormPage, nav: 'surveys' },
-  { path: '/community', page: CommunityPage, nav: 'community' },
-  { path: '/community/:id', page: SurveyDetailPage, nav: 'community' },
+  { path: '/login', page: LoginPage, nav: null, access: 'public' },
+  { path: '/register', page: RegisterPage, nav: null, access: 'public' },
+  { path: '/dashboard', page: DashboardPage, nav: null, access: 'account' },
+  { path: '/surveys', page: SurveyListPage, nav: 'surveys', access: 'open' },
+  { path: '/surveys/new', page: SurveyFormPage, nav: 'surveys', access: 'account', reason: 'Log in to add a survey.' },
+  { path: '/surveys/:id', page: SurveyDetailPage, nav: 'surveys', access: 'account', reason: 'Log in to see your surveys.' },
+  { path: '/surveys/:id/edit', page: SurveyFormPage, nav: 'surveys', access: 'account', reason: 'Log in to edit your surveys.' },
+  { path: '/community', page: CommunityPage, nav: 'community', access: 'open' },
+  { path: '/community/:id', page: SurveyDetailPage, nav: 'community', access: 'open' },
   // Three kos columns plus the criteria get the wide column (the user's choice).
-  { path: '/compare', page: ComparePage, nav: 'compare', wide: true },
+  { path: '/compare', page: ComparePage, nav: 'compare', access: 'open', wide: true },
 ];
 
 /** Asked once per page load, however often React mounts the app (its development checks mount twice). */
@@ -76,7 +79,7 @@ export function App() {
   useEffect(() => {
     starting ??= restoreSession();
     starting.finally(() => {
-      startAtDashboard();
+      startAt(store.getState().user ? '/dashboard' : '/community');
       setReady(true);
     });
   }, []);
@@ -88,13 +91,15 @@ export function App() {
   const guard = useMemo(() => {
     if (!ready || !route) return null;
     const signedIn = Boolean(store.getState().user);
-    if (!route.public && !signedIn) return { to: '/login' };
-    if (route.public && signedIn) return { to: '/dashboard' };
+    if (route.access === 'public' && signedIn) return { to: '/dashboard' };
+    if (route.access === 'account' && !signedIn) return route.reason ? { reason: route.reason } : { to: '/community' };
     return null;
   }, [ready, visit]);
 
   useEffect(() => {
-    if (guard) navigate(guard.to, { replace: true });
+    if (!guard) return;
+    if (guard.reason) requireAccount(guard.reason, { replace: true });
+    else navigate(guard.to, { replace: true });
   }, [guard]);
 
   useEffect(() => {
@@ -125,7 +130,9 @@ export function App() {
       </a>
 
       <NavBar
+        ready={ready}
         user={ready ? state.user : null}
+        auth={route?.access === 'public'}
         active={route?.nav ?? null}
         menuOpen={menuOpen}
         onToggleMenu={() => setMenuOpen((open) => !open)}

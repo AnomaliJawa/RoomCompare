@@ -367,14 +367,26 @@ describe('the compare page', () => {
   beforeEach(() => localStorage.clear());
 
   // The store reads storage once at import, so each render gets a fresh copy.
-  async function page(count, shown) {
+  async function page(count, shown, { guest = false } = {}) {
     vi.resetModules();
     const store = await import('../../client/src/data/store.js');
     const { ComparePage } = await import('../../client/src/pages/ComparePage.jsx');
+    if (!guest) store.setUser({ id: 'user-ana', email: 'ana@example.test', name: 'Ana' });
     store.compareCandidates().own.slice(0, count).forEach((s) => store.toggleCompare(s.id));
     if (shown) store.showComparison();
     return { ...render(<ComparePage />), store };
   }
+
+  it('shows a guest the empty slots, and asks them to log in when one is chosen', async () => {
+    await page(0, false, { guest: true });
+    expect(screen.getByText('Log in to compare kos')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe('#/login');
+    const { pendingLoginReason } = await import('../../client/src/actions/account.js');
+    fireEvent.click(screen.getAllByRole('button').find((button) => button.dataset.slot === '0'));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(window.location.hash).toBe('#/login');
+    expect(pendingLoginReason()).toBe('Log in to compare kos.');
+  });
 
   it('picks kos from the slots, with no Add kos button and no picker beside the table', async () => {
     await page(3, true);
