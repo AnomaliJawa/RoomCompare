@@ -9,6 +9,7 @@ import { SurveyCard } from '../components/survey/SurveyCard.jsx';
 import { NoFilterResults, NoSearchResults } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
 import { cardGrid } from './SurveyListPage.jsx';
+import { t } from '../i18n/index.js';
 
 export function CommunityPage() {
   const { communitySurveys, communityFilters, communitySearch, starredIds, compareSelection } = useStore();
@@ -20,18 +21,18 @@ export function CommunityPage() {
   return (
     <>
       <PageHead
-        title="Community surveys"
-        lede="Kos recorded by other people. Filter them, star the ones worth keeping, and add any of them to a comparison."
+        title={t('Community surveys')}
+        lede={t('Kos recorded by other people. Filter them, star the ones worth keeping, and add any of them to a comparison.')}
       />
 
       <div className="mb-6 max-w-[420px]">
         <TextField
           name="community-search"
           id="community-search"
-          label="Search by kos name or area"
+          label={t('Search by kos name or area')}
           type="search"
           value={query}
-          placeholder="e.g. Kartika or Dinoyo"
+          placeholder={t('e.g. Kartika or Dinoyo')}
           onChange={setQuery}
         />
       </div>

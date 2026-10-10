@@ -1,5 +1,6 @@
 import { CircleCheck, CircleDashed } from 'lucide-react';
-import { STATUS, STATUS_LABELS, kosTypeLabel } from '../../constants.js';
+import { STATUS, kosTypeLabel, statusLabel } from '../../constants.js';
+import { t } from '../../i18n/index.js';
 import { toggleCompare } from '../../actions/surveys.js';
 import { useMediaRecords } from '../../hooks/useMediaRecords.js';
 import { campusName, formatKosDistance, numberToCurrency } from '../../utils/format.js';
@@ -34,7 +35,7 @@ const STATUS_ICONS = { [STATUS.DRAFT]: CircleDashed, [STATUS.PUBLISHED]: CircleC
 
 /** The status word stays as the icon's name and tooltip. */
 export function StatusBadge({ status }) {
-  const label = STATUS_LABELS[status];
+  const label = statusLabel(status);
   const Icon = STATUS_ICONS[status];
   return (
     <span
@@ -91,21 +92,21 @@ export function SurveyCard({ survey, variant = 'own', starred = false, inCompare
           {community ? <span className={meta}>{kosTypeLabel(survey.kos.type)}</span> : <StatusBadge status={survey.status} />}
         </div>
         <div className="mt-2 flex gap-6 border-t border-rule pt-3">
-          <Fact label="Rent" value={numberToCurrency(survey.kos.rent)} />
+          <Fact label={t('Rent')} value={numberToCurrency(survey.kos.rent)} />
           <Fact
             className="min-w-0 flex-1"
-            label={campusName(survey.kos) ? `To ${campusName(survey.kos)}` : 'To campus'}
+            label={campusName(survey.kos) ? t('To {campus}', { campus: campusName(survey.kos) }) : t('To campus')}
             value={formatKosDistance(survey.kos)}
           />
         </div>
         <div className="relative z-1 mt-auto flex flex-wrap gap-2 pt-4 pointer-coarse:gap-3">
           <a className={button(small)} href={href}>
-            View
+            {t('View')}
           </a>
           {community ? (
             <>
               <button className={button(small)} type="button" onClick={() => toggleCompare(survey.id, { go: community })}>
-                {inCompare ? 'In comparison' : 'Add to compare'}
+                {inCompare ? t('In comparison') : t('Add to compare')}
               </button>
               <StarButton survey={survey} starred={starred} small className="ml-auto" />
               <LikeButton survey={survey} liked={liked} count={likes} small />

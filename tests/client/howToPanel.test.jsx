@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { FIELD_GUIDE, PANEL_PARTS, RUBRICS } from '../../client/src/content/guidance.js';
+import { FIELD_GUIDE, PANEL_PARTS, RUBRICS } from '../../client/src/content/guidance.en.js';
 import { HowToContent, HowToPanel, placeHowTo } from '../../client/src/components/form/HowToPanel.jsx';
 
 const text = (node) => node?.textContent.replace(/\s+/g, ' ').trim();

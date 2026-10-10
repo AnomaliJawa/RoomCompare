@@ -1,4 +1,5 @@
 import { DISTANCE_BASIS } from '../constants.js';
+import { t } from '../i18n/index.js';
 
 /** The thousands separator is fixed, not Intl's, so a live input never changes shape. */
 
@@ -40,16 +41,16 @@ export function formatRent(value) {
 
 /** Missing values read "Not recorded", never "Rp NaN". */
 export function numberToCurrency(value) {
-  if (value === null || value === undefined) return 'Not recorded';
+  if (value === null || value === undefined) return t('Not recorded');
   const n = Number(value);
-  if (!Number.isFinite(n)) return 'Not recorded';
+  if (!Number.isFinite(n)) return t('Not recorded');
   return `Rp ${groupDigits(String(Math.trunc(Math.abs(n))))}`;
 }
 
 export function formatDistance(value) {
-  if (value === null || value === undefined) return 'Not recorded';
+  if (value === null || value === undefined) return t('Not recorded');
   const n = Number(value);
-  if (!Number.isFinite(n)) return 'Not recorded';
+  if (!Number.isFinite(n)) return t('Not recorded');
   return `${n.toFixed(1).replace('.', ',')} km`;
 }
 
@@ -66,5 +67,5 @@ export function campusName(kos) {
 /** Only straight lines are marked; the no-break space keeps the mark whole when it wraps. */
 export function formatKosDistance(kos) {
   const text = formatDistance(kos?.distanceKm);
-  return isStraightLineDistance(kos) ? `${text} (straight\u00a0line)` : text;
+  return isStraightLineDistance(kos) ? t('{distance} (straight\u00a0line)', { distance: text }) : text;
 }

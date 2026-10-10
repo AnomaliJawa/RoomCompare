@@ -6,6 +6,7 @@ import { TextField } from '../components/form/fields.jsx';
 import { SurveyCard } from '../components/survey/SurveyCard.jsx';
 import { GuestSurveys, NoSearchResults, NoSurveysYet } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
+import { t } from '../i18n/index.js';
 
 export const cardGrid = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4';
 
@@ -14,7 +15,7 @@ export function SurveyListPage() {
   if (!user) {
     return (
       <>
-        <PageHead title="My surveys" lede="The kos you have visited and recorded, kept in your account." />
+        <PageHead title={t('My surveys')} lede={t('The kos you have visited and recorded, kept in your account.')} />
         <GuestSurveys />
       </>
     );
@@ -48,17 +49,21 @@ function OwnSurveys() {
   return (
     <>
       <PageHead
-        title="My surveys"
-        lede={`${surveys.length} kos recorded${search ? `, ${visible.length} matching` : ''}.`}
+        title={t('My surveys')}
+        lede={
+          search
+            ? t('{count} kos recorded, {matching} matching.', { count: surveys.length, matching: visible.length })
+            : t('{count} kos recorded.', { count: surveys.length })
+        }
       />
       <div className="mb-6 max-w-[420px]">
         <TextField
           name="survey-search"
           id="survey-search"
-          label="Search by kos name"
+          label={t('Search by kos name')}
           type="search"
           value={query}
-          placeholder="e.g. Melati"
+          placeholder={t('e.g. Melati')}
           onChange={setQuery}
         />
       </div>

@@ -1,3 +1,5 @@
+import { msg } from '../i18n/index.js';
+
 /** Images are downscaled before storage; the original is never kept. */
 
 export const MAX_EDGE = 1600;
@@ -44,7 +46,7 @@ async function decode(file) {
     return await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new MediaError('That image could not be read.', {
+      img.onerror = () => reject(new MediaError(msg('That image could not be read.'), {
         fileName: file.name,
         code: 'decode',
       }));
@@ -58,7 +60,7 @@ async function decode(file) {
 function toBlob(canvas, type, quality) {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new MediaError('That image could not be converted.'))),
+      (blob) => (blob ? resolve(blob) : reject(new MediaError(msg('That image could not be converted.')))),
       type,
       quality,
     );
@@ -67,13 +69,13 @@ function toBlob(canvas, type, quality) {
 
 export async function downscaleImage(file, { maxEdge = MAX_EDGE, quality = JPEG_QUALITY } = {}) {
   if (!file || !file.type?.startsWith('image/')) {
-    throw new MediaError('Only image files can be added as photos.', {
+    throw new MediaError(msg('Only image files can be added as photos.'), {
       fileName: file?.name,
       code: 'type',
     });
   }
   if (file.size > MAX_SOURCE_BYTES) {
-    throw new MediaError('That image is larger than 10 MB.', {
+    throw new MediaError(msg('That image is larger than 10 MB.'), {
       fileName: file.name,
       code: 'size',
     });
@@ -84,7 +86,7 @@ export async function downscaleImage(file, { maxEdge = MAX_EDGE, quality = JPEG_
   const height = source.height || source.naturalHeight;
 
   if (!width || !height) {
-    throw new MediaError('That image could not be read.', { fileName: file.name, code: 'decode' });
+    throw new MediaError(msg('That image could not be read.'), { fileName: file.name, code: 'decode' });
   }
 
   const target = scaledSize(width, height, maxEdge);
@@ -125,13 +127,13 @@ export async function downscaleImage(file, { maxEdge = MAX_EDGE, quality = JPEG_
 /** Videos cannot be transcoded in the browser, so they are only checked. */
 export function acceptVideo(file) {
   if (!file || !file.type?.startsWith('video/')) {
-    throw new MediaError('Only video files can be added here.', {
+    throw new MediaError(msg('Only video files can be added here.'), {
       fileName: file?.name,
       code: 'type',
     });
   }
   if (file.size > MAX_VIDEO_BYTES) {
-    throw new MediaError('Videos must be under 20 MB.', {
+    throw new MediaError(msg('Videos must be under 20 MB.'), {
       fileName: file.name,
       code: 'size',
     });

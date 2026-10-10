@@ -13,7 +13,8 @@ async function load() {
   const store = await import('../../client/src/data/store.js');
   const { SurveyFormPage } = await import('../../client/src/pages/SurveyFormPage.jsx');
   const { ConfirmDialog } = await import('../../client/src/components/feedback/ConfirmDialog.jsx');
-  const guidance = await import('../../client/src/content/guidance.js');
+  const guidance = await import('../../client/src/content/guidance.en.js');
+  const { rubricText } = await import('../../client/src/content/guidance.js');
   const route = await import('../../client/src/services/walkingRoute.js');
   const surveyForm = await import('../../client/src/utils/surveyForm.js');
   const open = (id) =>
@@ -23,7 +24,7 @@ async function load() {
         <ConfirmDialog />
       </>,
     );
-  return { store, open, route, ...guidance, ...surveyForm };
+  return { store, open, route, rubricText, ...guidance, ...surveyForm };
 }
 
 const text = (node) => node?.textContent.trim();

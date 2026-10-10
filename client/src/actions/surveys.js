@@ -4,6 +4,7 @@ import { confirmDialog, dismissToast, toast } from '../components/feedback/feedb
 import { navigate } from '../router.js';
 import { requireAccount } from './account.js';
 import { MAX_COMPARE } from '../constants.js';
+import { msg, t } from '../i18n/index.js';
 
 /** What a person does to a survey from a card or its page, with the toast that answers it. */
 
@@ -16,7 +17,7 @@ async function undoDelete() {
   await restoreMedia(media);
   store.restoreSurvey(survey, index);
   dismissToast();
-  toast(`${survey.kos.name} restored`);
+  toast(t('{name} restored', { name: survey.kos.name }));
 }
 
 /** `leaveTo`: where to go once it is gone, when the page was the survey's own. */
@@ -25,10 +26,11 @@ export async function askDelete(id, { leaveTo = null } = {}) {
   if (!survey) return;
 
   const photoCount = (await loadSurveyMedia(id)).length;
-  const body = photoCount
-    ? `${survey.kos.name} and its ${photoCount} photo${photoCount === 1 ? '' : 's'} will be removed from your surveys.`
-    : `${survey.kos.name} will be removed from your surveys.`;
-  if (!(await confirmDialog({ title: 'Delete this survey?', body, confirmLabel: 'Delete' }))) return;
+  const name = survey.kos.name;
+  let body = t('{name} will be removed from your surveys.', { name });
+  if (photoCount === 1) body = t('{name} and its 1 photo will be removed from your surveys.', { name });
+  else if (photoCount > 1) body = t('{name} and its {count} photos will be removed from your surveys.', { name, count: photoCount });
+  if (!(await confirmDialog({ title: t('Delete this survey?'), body, confirmLabel: t('Delete') }))) return;
 
   // Capture the media before the delete cascades, so undo restores the photos too.
   const captured = await loadSurveyMedia(id);
@@ -39,8 +41,8 @@ export async function askDelete(id, { leaveTo = null } = {}) {
   await mediaCleanup;
 
   pendingUndo = { survey: removed, index, media: captured };
-  toast(`${survey.kos.name} deleted`, {
-    action: { label: 'Undo', onClick: undoDelete },
+  toast(t('{name} deleted', { name }), {
+    action: { label: t('Undo'), onClick: undoDelete },
     onExpire: () => {
       pendingUndo = null;
     },
@@ -51,13 +53,13 @@ export async function askDelete(id, { leaveTo = null } = {}) {
 export function toggleStar(id) {
   store.toggleStar(id);
   const { kos } = store.findSurvey(id);
-  toast(store.isStarred(id) ? `${kos.name} starred` : `${kos.name} unstarred`);
+  toast(store.isStarred(id) ? t('{name} starred', { name: kos.name }) : t('{name} unstarred', { name: kos.name }));
 }
 
 // No toast: the filled heart and the count already say so.
 export function toggleLike(id) {
   if (!store.getState().user) {
-    requireAccount('Log in to like a kos.');
+    requireAccount(msg('Log in to like a kos.'));
     return;
   }
   store.toggleLike(id);
@@ -66,19 +68,19 @@ export function toggleLike(id) {
 /** `go`: after adding, open Compare, so a kos picked from Community lands where it is compared. */
 export function toggleCompare(id, { go = false } = {}) {
   if (!store.getState().user) {
-    requireAccount('Log in to compare kos.');
+    requireAccount(msg('Log in to compare kos.'));
     return;
   }
   const survey = store.findSurvey(id);
   if (!store.toggleCompare(id)) {
     toast(
       store.canCompare(id)
-        ? `Remove one kos before adding another. You can compare up to ${MAX_COMPARE}.`
-        : `Publish ${survey.kos.name} to compare it. Drafts are left out of comparisons.`,
+        ? t('Remove one kos before adding another. You can compare up to {max}.', { max: MAX_COMPARE })
+        : t('Publish {name} to compare it. Drafts are left out of comparisons.', { name: survey.kos.name }),
     );
     return;
   }
   // Adding needs no toast: the pressed button already says so.
-  if (!store.getState().compareSelection.includes(id)) toast(`${survey.kos.name} removed from comparison`);
+  if (!store.getState().compareSelection.includes(id)) toast(t('{name} removed from comparison', { name: survey.kos.name }));
   else if (go) navigate('/compare');
 }

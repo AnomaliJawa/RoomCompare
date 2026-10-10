@@ -1,3 +1,5 @@
+import { t } from '../../i18n/index.js';
+
 /** Toasts and the confirm dialog: called from anywhere, shown by <ToastRegion> and <ConfirmDialog>. */
 
 export const TOAST_DURATION = 7000;
@@ -68,7 +70,7 @@ export function holdToast({ pointer = hovered, focus = focused } = {}) {
 }
 
 /** Resolves true on confirm; false on cancel or Escape. */
-export function confirmDialog({ title, body, confirmLabel = 'Delete', cancelLabel = 'Keep', tone = 'danger' }) {
+export function confirmDialog({ title, body, confirmLabel = t('Delete'), cancelLabel = t('Keep'), tone = 'danger' }) {
   confirmation?.resolve(false);
   return new Promise((resolve) => {
     confirmation = { title, body, confirmLabel, cancelLabel, tone, resolve };

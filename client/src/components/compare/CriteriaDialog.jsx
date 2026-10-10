@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import * as store from '../../data/store.js';
-import { BEST_MATCH_CRITERIA } from '../../constants.js';
+import { BEST_MATCH_CRITERIA, criterionDescription, criterionLabel } from '../../constants.js';
+import { t } from '../../i18n/index.js';
 import { DEFAULT_WEIGHTS, checkWeights } from '../../utils/weights.js';
 import { toast } from '../feedback/feedback.js';
 import { Modal, useCloseModal } from '../ui/Modal.jsx';
@@ -11,10 +12,10 @@ import { button, control, cx, dialogBody, dialogFoot, dialogFrame, dialogHead, d
 const isWeight = (value) => Number.isInteger(value) && value >= 0 && value <= 100;
 
 function totalMessage({ total, invalid }) {
-  if (invalid.length) return 'Each weight is a whole number from 0 to 100.';
-  if (total < 100) return `Total ${total}% · ${100 - total}% left to share`;
-  if (total > 100) return `Total ${total}% · ${total - 100}% over`;
-  return 'Total 100%';
+  if (invalid.length) return t('Each weight is a whole number from 0 to 100.');
+  if (total < 100) return t('Total {total}% · {left}% left to share', { total, left: 100 - total });
+  if (total > 100) return t('Total {total}% · {over}% over', { total, over: total - 100 });
+  return t('Total 100%');
 }
 
 /** A blank field reads as NaN, not 0, so it is reported rather than counted as nothing. */
@@ -38,7 +39,7 @@ function WeightRow({ criterion, typed, position, invalid, onType, onSlide }) {
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0 not-first:border-t not-first:border-rule">
       <label className="col-start-1 row-start-1 font-semibold" id={`${id}-label`} htmlFor={id}>
-        {criterion.label}
+        {criterionLabel(criterion)}
       </label>
       <div className="col-start-2 row-start-1 flex items-center gap-2">
         <input
@@ -80,7 +81,7 @@ function WeightRow({ criterion, typed, position, invalid, onType, onSlide }) {
         onChange={(event) => onSlide(criterion.key, event.target.value)}
       />
       <p className="col-span-2 row-start-3 text-xs text-muted" id={`${id}-hint`}>
-        {criterion.description}
+        {criterionDescription(criterion)}
       </p>
     </li>
   );
@@ -113,24 +114,23 @@ export function CriteriaForm({ weights }) {
     const { ok, kept } = store.setBestMatchWeights(readWeights(typed));
     if (!ok) return;
     close();
-    toast(kept ? 'Best Match weights saved' : 'Weights applied, but this browser could not keep them');
+    toast(kept ? t('Best Match weights saved') : t('Weights applied, but this browser could not keep them'));
   };
 
   return (
     <form className={dialogFrame} noValidate onSubmit={save}>
       <div className={cx(dialogHead, 'criteria-head')}>
         <h2 className={dialogTitle} id="criteria-dialog-title">
-          Best Match criteria
+          {t('Best Match criteria')}
         </h2>
         <button className={button({ variant: 'quiet', size: 'small' })} type="button" onClick={close}>
-          Close
+          {t('Close')}
         </button>
       </div>
 
       <div className={dialogBody}>
         <p className={meta}>
-          How much each criterion counts in each kos's Best Match score. The total must be 100%; 0% leaves a criterion
-          out.
+          {t("How much each criterion counts in each kos's Best Match score. The total must be 100%; 0% leaves a criterion out.")}
         </p>
         <ul>
           {BEST_MATCH_CRITERIA.map((criterion) => (
@@ -159,10 +159,10 @@ export function CriteriaForm({ weights }) {
         </p>
         <div className="flex items-center gap-3 max-lg:flex-col-reverse max-lg:items-stretch max-lg:*:w-full">
           <button className={button({ variant: 'quiet' })} type="button" onClick={reset}>
-            Reset to default
+            {t('Reset to default')}
           </button>
           <button className={button({ variant: 'primary' })} type="submit" disabled={!check.ok}>
-            Save
+            {t('Save')}
           </button>
         </div>
       </div>

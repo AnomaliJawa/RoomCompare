@@ -1,14 +1,16 @@
 import * as api from './api.js';
 import * as store from '../data/store.js';
 import * as storage from '../data/localStore.js';
+import { msg, t } from '../i18n/index.js';
 
 /** Recording never waits on the network: changes queue in localStorage and are sent after. */
 
 const QUEUE_PREFIX = 'roomcompare:v1:pending:';
 const RETRY_MS = 15_000;
 
-const OFFLINE_NOTICE =
-  'You’re offline. Changes are saved on this device and will reach your account when you reconnect.';
+const OFFLINE_NOTICE = msg(
+  'You’re offline. Changes are saved on this device and will reach your account when you reconnect.',
+);
 
 let account = null;
 /** Survey id → the JSON the server was last told. */
@@ -103,8 +105,8 @@ async function send() {
       // Refused for a reason retrying cannot fix: dropped and said, so it cannot block the queue.
       if (pending.get(id) === change) pending.delete(id);
       saveQueue();
-      const name = change.survey?.kos?.name || 'A survey';
-      store.setSyncNotice(`${name} could not be saved to your account: ${error.message}`);
+      const name = change.survey?.kos?.name || t('A survey');
+      store.setSyncNotice(t('{name} could not be saved to your account: {reason}', { name, reason: error.message }));
     }
   }
   if (account && !pending.size && store.getState().syncNotice === OFFLINE_NOTICE) store.setSyncNotice(null);

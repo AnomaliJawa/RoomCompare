@@ -11,6 +11,7 @@ import {
   likertLabel,
   kosTypeLabel,
 } from '../constants.js';
+import { t } from '../i18n/index.js';
 
 /** Never truncated: every facility row gets an explicit ✓ or —. */
 
@@ -24,7 +25,7 @@ function textRow(label, values, { best = null, prose = false } = {}) {
 function facilityRows(all, pick) {
   return all.map((item) => ({
     kind: 'facility',
-    label: item,
+    label: t(item),
     values: pick.map((list) => (list ?? []).includes(item)),
     best: null,
   }));
@@ -41,69 +42,70 @@ function lowestIndex(numbers) {
   return best;
 }
 
-export function buildGroups(surveys) {
+/** `notes` reads a survey's notes as they are shown: a community survey's in the reader's language. */
+export function buildGroups(surveys, { notes = (survey) => survey.additional.notes } = {}) {
   const rents = surveys.map((s) => s.kos.rent ?? NaN);
   const distances = surveys.map((s) => s.kos.distanceKm ?? NaN);
 
   // No Status row: draft or published describes the record, not the kos.
   const rows = {
     kos: [
-      textRow('Type', surveys.map((s) => kosTypeLabel(s.kos.type) ?? MISSING)),
-      textRow('Location', surveys.map((s) => s.kos.kosLocation?.label ?? MISSING)),
-      textRow('Monthly rent', surveys.map((s) => (s.kos.rent == null ? MISSING : numberToCurrency(s.kos.rent))), {
+      textRow(t('Type'), surveys.map((s) => kosTypeLabel(s.kos.type) ?? MISSING)),
+      textRow(t('Location'), surveys.map((s) => s.kos.kosLocation?.label ?? MISSING)),
+      textRow(t('Monthly rent'), surveys.map((s) => (s.kos.rent == null ? MISSING : numberToCurrency(s.kos.rent))), {
         best: lowestIndex(rents),
       }),
       textRow(
-        'Distance to campus',
+        t('Distance to campus'),
         surveys.map((s) => (s.kos.distanceKm == null ? MISSING : formatKosDistance(s.kos))),
         { best: lowestIndex(distances) },
       ),
     ],
     room: [
       textRow(
-        'Dimensions',
+        t('Dimensions'),
         surveys.map((s) => (s.room.lengthM && s.room.widthM ? `${s.room.lengthM} × ${s.room.widthM} m` : MISSING)),
       ),
       textRow(
-        'Floor area',
+        t('Floor area'),
         surveys.map((s) =>
           s.room.lengthM && s.room.widthM ? `${(s.room.lengthM * s.room.widthM).toFixed(1)} m²` : MISSING,
         ),
       ),
-      textRow('Cleanliness', surveys.map((s) => likertLabel(s.room.cleanliness) ?? MISSING)),
-      textRow('Internet quality', surveys.map((s) => likertLabel(s.room.internet) ?? MISSING)),
+      textRow(t('Cleanliness'), surveys.map((s) => likertLabel(s.room.cleanliness) ?? MISSING)),
+      textRow(t('Internet quality'), surveys.map((s) => likertLabel(s.room.internet) ?? MISSING)),
       ...facilityRows(ROOM_FACILITIES, surveys.map((s) => s.room.facilities)),
     ],
     bathroom: [
-      textRow('Bathroom type', surveys.map((s) => choiceLabel(BATHROOM_TYPES, s.bathroom?.type) ?? MISSING)),
-      textRow('Toilet type', surveys.map((s) => choiceLabel(TOILET_TYPES, s.bathroom?.toilet) ?? MISSING)),
-      textRow('Water heater', surveys.map((s) => choiceLabel(YES_NO, s.bathroom?.waterHeater) ?? MISSING)),
+      textRow(t('Bathroom type'), surveys.map((s) => choiceLabel(BATHROOM_TYPES, s.bathroom?.type) ?? MISSING)),
+      textRow(t('Toilet type'), surveys.map((s) => choiceLabel(TOILET_TYPES, s.bathroom?.toilet) ?? MISSING)),
+      textRow(t('Water heater'), surveys.map((s) => choiceLabel(YES_NO, s.bathroom?.waterHeater) ?? MISSING)),
     ],
     shared: facilityRows(SHARED_FACILITIES, surveys.map((s) => s.shared.facilities)),
     surroundings: facilityRows(SURROUNDINGS, surveys.map((s) => s.surroundings)),
     additional: [
-      textRow('Security', surveys.map((s) => likertLabel(s.additional.security) ?? MISSING)),
-      textRow('Notes', surveys.map((s) => s.additional.notes || MISSING), { prose: true }),
+      textRow(t('Security'), surveys.map((s) => likertLabel(s.additional.security) ?? MISSING)),
+      textRow(t('Notes'), surveys.map((s) => notes(s) || MISSING), { prose: true }),
       textRow(
-        'Photos recorded',
+        t('Photos recorded'),
         surveys.map((s) => {
           const count =
             (s.room.photoIds?.length ?? 0) +
             (s.bathroom.photoIds?.length ?? 0) +
             (s.shared.photoIds?.length ?? 0);
-          return count === 0 ? 'None' : String(count);
+          return count === 0 ? t('None') : String(count);
         }),
       ),
     ],
   };
-  return COMPARISON_GROUPS.map(({ key, label }) => ({ label, rows: rows[key] }));
+  return COMPARISON_GROUPS.map(({ key, label }) => ({ label: t(label), rows: rows[key] }));
 }
 
 /** Leads the comparison when scores are passed; the panel under it shows how each total is reached. */
 export function scoreGroup(scores) {
   return {
-    label: 'Best Match score',
-    rows: [{ kind: 'score', label: 'Score', values: scores.map((score) => score.total), scores, best: null }],
+    label: t('Best Match score'),
+    rows: [{ kind: 'score', label: t('Score'), values: scores.map((score) => score.total), scores, best: null }],
   };
 }
 

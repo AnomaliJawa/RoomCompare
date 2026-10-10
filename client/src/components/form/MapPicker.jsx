@@ -4,31 +4,32 @@ import { GEOCODE_STATUS, geocodeAddress, shortLabel } from '../../services/geoco
 import { addTiles, loadLeaflet } from '../../services/leaflet.js';
 import { InfoButton, errorId } from './fields.jsx';
 import { button, control, cx, fieldError, fieldHint, fieldLabel } from '../ui/styles.js';
+import { msg, t } from '../../i18n/index.js';
 
 /** Leaflet loads on demand, so a blocked CDN degrades to typed coordinates; geolocation is optional. */
 
 const SEARCH_MESSAGES = {
-  [GEOCODE_STATUS.NOT_FOUND]: 'No match for that address. Try a nearby landmark, or tap the map.',
-  [GEOCODE_STATUS.THROTTLED]: 'One moment — searches are limited to one a second.',
-  [GEOCODE_STATUS.EMPTY]: 'Enter an address to look up.',
+  [GEOCODE_STATUS.NOT_FOUND]: msg('No match for that address. Try a nearby landmark, or tap the map.'),
+  [GEOCODE_STATUS.THROTTLED]: msg('One moment — searches are limited to one a second.'),
+  [GEOCODE_STATUS.EMPTY]: msg('Enter an address to look up.'),
 };
 
 /** Geolocation is a convenience; refusal is expected, not an error. */
 function requestPosition(onPoint, say) {
   if (!navigator.geolocation) {
-    say('This browser cannot report your location. Tap the map instead.');
+    say(t('This browser cannot report your location. Tap the map instead.'));
     return;
   }
-  say('Finding your location…');
+  say(t('Finding your location…'));
   navigator.geolocation.getCurrentPosition(
     (position) => onPoint({ lat: position.coords.latitude, lng: position.coords.longitude }),
-    () => say('Location unavailable. Tap the map to pin it instead.'),
+    () => say(t('Location unavailable. Tap the map to pin it instead.')),
     { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
   );
 }
 
 /** A pin, its address and the area the lookup found: `point` is { label, address, lat, lng }. */
-export function MapPicker({ name, label, point, onChange, addressLabel = 'Address', placeholder = 'Street, area, city', guide = null, error = '' }) {
+export function MapPicker({ name, label, point, onChange, addressLabel = t('Address'), placeholder = t('Street, area, city'), guide = null, error = '' }) {
   const canvas = useRef(null);
   const map = useRef(null);
   const latest = useRef({ point, onChange });
@@ -53,7 +54,7 @@ export function MapPicker({ name, label, point, onChange, addressLabel = 'Addres
       if (!live) return;
       if (!L) {
         setLeaflet('unavailable');
-        setReadout('Map unavailable. Enter coordinates below.');
+        setReadout(t('Map unavailable. Enter coordinates below.'));
         return;
       }
       setLeaflet('ready');
@@ -105,21 +106,21 @@ export function MapPicker({ name, label, point, onChange, addressLabel = 'Addres
   const search = async () => {
     const query = String(point.address ?? '').trim();
     if (!query) {
-      setSearchStatus('Enter an address to look up.');
+      setSearchStatus(t('Enter an address to look up.'));
       document.getElementById(`${name}-address`)?.focus();
       return;
     }
     setSearching(true);
-    setSearchStatus('Looking up that address…');
+    setSearchStatus(t('Looking up that address…'));
     const result = await geocodeAddress(query);
     setSearching(false);
     if (result.status === GEOCODE_STATUS.OK) {
-      setSearchStatus(`Found ${result.displayName}`);
+      setSearchStatus(t('Found {place}', { place: result.displayName }));
       // The lookup names the area: the form has no field to type it in.
       publish({ lat: result.lat, lng: result.lng }, { view: 17, extra: { label: shortLabel(result.displayName) } });
       return;
     }
-    setSearchStatus(SEARCH_MESSAGES[result.status] ?? 'Address lookup is unavailable. Tap the map to pin it instead.');
+    setSearchStatus(t(SEARCH_MESSAGES[result.status] ?? msg('Address lookup is unavailable. Tap the map to pin it instead.')));
   };
 
   const locate = () => requestPosition((coords) => publish(coords, { view: 16 }), setReadout);
@@ -139,7 +140,7 @@ export function MapPicker({ name, label, point, onChange, addressLabel = 'Addres
           <InfoButton guide={guide} />
         </span>
         <button className={button({ size: 'small' })} type="button" onClick={locate}>
-          Use my location
+          {t('Use my location')}
         </button>
       </div>
 
@@ -167,7 +168,7 @@ export function MapPicker({ name, label, point, onChange, addressLabel = 'Addres
           }}
         />
         <button className={button({ className: 'shrink-0 max-sm:w-full' })} type="button" disabled={searching} onClick={search}>
-          Find on map
+          {t('Find on map')}
         </button>
       </div>
       <p className={cx(fieldHint, 'empty:hidden')} id={`${name}-search-status`} role="status" aria-live="polite">
@@ -182,15 +183,15 @@ export function MapPicker({ name, label, point, onChange, addressLabel = 'Addres
         {/* Leaflet adds its own classes here, so React must never rewrite this element's class. */}
         <div ref={canvas} className="h-full" role="application" aria-labelledby={`${name}-label`} />
         {leaflet === 'loading' && (
-          <p className="absolute inset-0 grid place-items-center text-xs text-muted">Loading map…</p>
+          <p className="absolute inset-0 grid place-items-center text-xs text-muted">{t('Loading map…')}</p>
         )}
       </div>
 
       {leaflet === 'unavailable' && (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
           {[
-            ['lat', 'Latitude'],
-            ['lng', 'Longitude'],
+            ['lat', t('Latitude')],
+            ['lng', t('Longitude')],
           ].map(([key, text]) => (
             <div key={key} className="flex flex-col gap-2">
               <label className={fieldLabel} htmlFor={`${name}-${key}`}>

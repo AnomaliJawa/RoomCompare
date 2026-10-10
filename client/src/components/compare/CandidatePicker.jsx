@@ -3,6 +3,8 @@ import * as store from '../../data/store.js';
 import { toggleCompare } from '../../actions/surveys.js';
 import { useStore } from '../../hooks/useStore.js';
 import { formatKosDistance, numberToCurrency } from '../../utils/format.js';
+import { t } from '../../i18n/index.js';
+import { selectedCount } from './CompareBar.jsx';
 import { Modal, useCloseModal } from '../ui/Modal.jsx';
 import {
   button,
@@ -32,7 +34,7 @@ function AddButton({ survey, selection }) {
       disabled={blocked}
       onClick={() => toggleCompare(survey.id)}
     >
-      {picked ? 'Selected' : blocked ? `Maximum of ${MAX_COMPARE}` : 'Add'}
+      {picked ? t('Selected') : blocked ? t('Maximum of {max}', { max: MAX_COMPARE }) : t('Add')}
     </button>
   );
 }
@@ -42,20 +44,20 @@ function ChangeButton({ survey, selection, replacing, onReplace }) {
   if (survey.id === replacing.id) {
     return (
       <button className={small('primary')} type="button" data-id={survey.id} disabled>
-        Current
+        {t('Current')}
       </button>
     );
   }
   if (selection.includes(survey.id)) {
     return (
       <button className={small('secondary')} type="button" data-id={survey.id} disabled>
-        Selected
+        {t('Selected')}
       </button>
     );
   }
   return (
     <button className={small('secondary')} type="button" data-id={survey.id} onClick={() => onReplace(survey.id)}>
-      Choose
+      {t('Choose')}
     </button>
   );
 }
@@ -73,7 +75,7 @@ function CandidateList({ candidates, selection, replacing, onReplace }) {
               {survey.kos.name}
             </span>
             <p className={meta}>
-              {survey.kos.kosLocation?.label ?? 'Location not recorded'} · {numberToCurrency(survey.kos.rent)} ·{' '}
+              {survey.kos.kosLocation?.label ?? t('Location not recorded')} · {numberToCurrency(survey.kos.rent)} ·{' '}
               {formatKosDistance(survey.kos)}
             </p>
           </div>
@@ -106,14 +108,18 @@ function Group({ id, title, candidates, empty, note = null, ...list }) {
   );
 }
 
-const draftCount = (drafts) => (drafts === 1 ? 'One draft isn’t' : `${drafts} drafts aren’t`);
 
 /** Both links leave the Compare page, so they close the dialog too. */
 function OwnEmpty({ drafts }) {
   const close = useCloseModal();
-  const [text, label, href] = drafts
-    ? [`${draftCount(drafts)} listed: only published surveys can be compared.`, 'Go to my surveys', '#/surveys']
-    : ['You have not recorded a kos yet.', 'Add survey', '#/surveys/new'];
+  let [text, label, href] = [t('You have not recorded a kos yet.'), t('Add survey'), '#/surveys/new'];
+  if (drafts) {
+    text =
+      drafts === 1
+        ? t('One draft isn’t listed: only published surveys can be compared.')
+        : t('{count} drafts aren’t listed: only published surveys can be compared.', { count: drafts });
+    [label, href] = [t('Go to my surveys'), '#/surveys'];
+  }
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <p className={meta}>{text}</p>
@@ -134,32 +140,40 @@ export function PickerContent({ candidates, selection, replacing = null, onRepla
     <div className={dialogFrame}>
       <div className={cx(dialogHead, 'picker-head')}>
         <h2 className={dialogTitle} id="picker-dialog-title">
-          {replacing ? 'Change kos' : 'Add kos'}
+          {replacing ? t('Change kos') : t('Add kos')}
         </h2>
         <button className={small('quiet')} type="button" onClick={close}>
-          Close
+          {t('Close')}
         </button>
       </div>
 
       <div className={dialogBody} data-picker-body>
         <p className={meta} data-picker-intro>
           {replacing
-            ? `Choose a kos to compare in place of ${replacing.kos.name}, or remove it.`
-            : `Your published surveys and the community’s. Up to ${MAX_COMPARE} at once.`}
+            ? t('Choose a kos to compare in place of {name}, or remove it.', { name: replacing.kos.name })
+            : t('Your published surveys and the community’s. Up to {max} at once.', { max: MAX_COMPARE })}
         </p>
         <Group
           id="picker-own"
-          title="My surveys"
+          title={t('My surveys')}
           candidates={own}
-          note={drafts ? <p className={meta}>{draftCount(drafts)} listed. Publish a survey to compare it.</p> : null}
+          note={
+            drafts ? (
+              <p className={meta}>
+                {drafts === 1
+                  ? t('One draft isn’t listed. Publish a survey to compare it.')
+                  : t('{count} drafts aren’t listed. Publish a survey to compare it.', { count: drafts })}
+              </p>
+            ) : null
+          }
           empty={<OwnEmpty drafts={drafts} />}
           {...list}
         />
         <Group
           id="picker-community"
-          title="Community"
+          title={t('Community')}
           candidates={community}
-          empty={<p className={meta}>No community surveys to show right now.</p>}
+          empty={<p className={meta}>{t('No community surveys to show right now.')}</p>}
           {...list}
         />
       </div>
@@ -167,30 +181,29 @@ export function PickerContent({ candidates, selection, replacing = null, onRepla
       {replacing ? (
         <div className={cx(dialogFoot, sheetFoot)}>
           <button className={button({ variant: 'danger' })} type="button" onClick={() => onRemove(replacing.id)}>
-            Remove {replacing.kos.name}
+            {t('Remove {name}', { name: replacing.kos.name })}
           </button>
           <button className={button({ variant: 'secondary' })} type="button" onClick={close}>
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       ) : (
         <div className={cx(dialogFoot, sheetFoot)}>
           <p className={meta} role="status" aria-live="polite">
-            {selection.length} of {MAX_COMPARE} selected
-            {selection.length < MIN_COMPARE ? `, ${MIN_COMPARE - selection.length} more to compare` : ''}.
+            {selectedCount(selection.length)}
           </p>
           {/* Compare, not Done: closing and then pressing Compare in the bar was two steps for one intent. */}
           <button
             className={button({ variant: 'primary' })}
             type="button"
             disabled={selection.length < MIN_COMPARE}
-            title={selection.length < MIN_COMPARE ? 'Select at least two kos' : undefined}
+            title={selection.length < MIN_COMPARE ? t('Select at least two kos') : undefined}
             onClick={() => {
               store.showComparison();
               close();
             }}
           >
-            Compare
+            {t('Compare')}
           </button>
         </div>
       )}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { addTiles, loadLeaflet } from '../../services/leaflet.js';
 import { formatCoordinate, googleMapsUrl, isValidPoint } from '../../utils/geo.js';
 import { cx, meta } from '../ui/styles.js';
+import { t } from '../../i18n/index.js';
 
 const latLng = (point) => [Number(point.lat), Number(point.lng)];
 
@@ -27,7 +28,7 @@ export function MapView({ kos, campus = null, name }) {
       if (withCampus) {
         const accent = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
         L.circleMarker(latLng(campus), { radius: 8, color: accent, weight: 2, fillColor: accent, fillOpacity: 0.35 })
-          .bindTooltip('Campus')
+          .bindTooltip(t('Campus'))
           .addTo(instance);
         instance.fitBounds([latLng(kos), latLng(campus)], { padding: [40, 40], maxZoom: 16 });
       } else {
@@ -47,13 +48,13 @@ export function MapView({ kos, campus = null, name }) {
       {/* Isolated, so Leaflet's own z-indexes stay inside the map, under the sticky nav. */}
       <div className="relative isolate h-72 overflow-hidden rounded-md border border-rule bg-paper max-lg:h-56" hidden={leaflet === 'unavailable'}>
         {/* Leaflet adds its own classes here, so React must never rewrite this element's class. */}
-        <div ref={canvas} className="h-full" role="region" aria-label={withCampus ? `Map of ${name} and the campus` : `Map of ${name}`} />
-        {leaflet === 'loading' && <p className="absolute inset-0 grid place-items-center text-xs text-muted">Loading map…</p>}
+        <div ref={canvas} className="h-full" role="region" aria-label={withCampus ? t('Map of {name} and the campus', { name }) : t('Map of {name}', { name })} />
+        {leaflet === 'loading' && <p className="absolute inset-0 grid place-items-center text-xs text-muted">{t('Loading map…')}</p>}
       </div>
       <p className={cx(meta, 'flex flex-wrap items-baseline gap-x-4 gap-y-1 tabular-nums lining-nums')}>
         <span data-coordinates>{formatCoordinate(kos)}</span>
         <a className="active:text-accent-press touch-hit" href={googleMapsUrl(kos)} target="_blank" rel="noopener">
-          Open in Google Maps
+          {t('Open in Google Maps')}
         </a>
       </p>
     </div>

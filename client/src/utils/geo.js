@@ -1,3 +1,5 @@
+import { t } from '../i18n/index.js';
+
 const EARTH_RADIUS_KM = 6371;
 
 export const DEFAULT_CENTER = { lat: -7.9526, lng: 112.6148 };
@@ -53,6 +55,6 @@ export function googleMapsUrl(point) {
 }
 
 export function formatCoordinate(point) {
-  if (!isValidPoint(point)) return 'Not pinned';
+  if (!isValidPoint(point)) return t('Not pinned');
   return `${Number(point.lat).toFixed(6)}, ${Number(point.lng).toFixed(6)}`;
 }

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import * as store from '../../data/store.js';
 import { useStore } from '../../hooks/useStore.js';
-import { AMENITY_COUNT, BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT } from '../../constants.js';
+import { AMENITY_COUNT, BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, criterionLabel } from '../../constants.js';
+import { t } from '../../i18n/index.js';
 import { computeBestMatch, joinList } from '../../utils/bestMatch.js';
 import { isDefault } from '../../utils/weights.js';
 import { button, cx, meta, narrowLabel, unrecorded } from '../ui/styles.js';
@@ -59,13 +60,13 @@ function PartCell({ part, name, quiet }) {
 
 function Score({ item, leaders }) {
   if (item.total === null) {
-    return <span className={unrecorded}>Score unavailable — {joinList(item.missing)} not recorded</span>;
+    return <span className={unrecorded}>{t('Score unavailable — {missing} not recorded', { missing: joinList(item.missing) })}</span>;
   }
   const leader = leaders.includes(item.survey.id);
   return (
     <span className={cx('inline-flex items-baseline gap-3 text-md font-semibold tabular-nums lining-nums', leader && 'text-accent')}>
       {item.total}
-      {leader && <span className={cx(narrowLabel, 'border-l-2 border-accent pl-2')}>Best match</span>}
+      {leader && <span className={cx(narrowLabel, 'border-l-2 border-accent pl-2')}>{t('Best match')}</span>}
     </span>
   );
 }
@@ -73,7 +74,8 @@ function Score({ item, leaders }) {
 const summary = cx(
   'relative flex cursor-pointer list-none flex-col gap-1 p-4 [&::-webkit-details-marker]:hidden',
   'after:absolute after:right-4 after:text-xs after:font-semibold after:text-accent',
-  "after:content-['Show'] group-open:after:content-['Hide'] focus-visible:-outline-offset-2",
+  // The words come from the summary's data attributes, so they follow the language.
+  'after:content-[attr(data-show)] group-open:after:content-[attr(data-hide)] focus-visible:-outline-offset-2',
 );
 
 /** Once opened it stays open: React keeps the element, and with it the open state. */
@@ -88,17 +90,19 @@ export function BestMatchPanel({ surveys }) {
   return (
     <>
     <details className="group mt-6 rounded-md border border-rule bg-surface" data-best-match>
-      <summary className={summary}>
-        <span className="font-semibold">Optional: weighted score</span>{' '}
-        <span className={meta}>A guide, not a recommendation. The decision stays yours.</span>
+      <summary className={summary} data-show={t('Show')} data-hide={t('Hide')}>
+        <span className="font-semibold">{t('Optional: weighted score')}</span>{' '}
+        <span className={meta}>{t('A guide, not a recommendation. The decision stays yours.')}</span>
       </summary>
 
       <div className="flex flex-col gap-4 border-t border-rule p-4">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
           <p className={cx(meta, 'max-w-measure flex-[1_1_280px]')} data-best-match-note>
-            Scores are relative to these {surveys.length} kos, not to kos in general: the cheapest of three is not
-            necessarily cheap. {isDefault(weights) ? 'The weights are the defaults.' : 'The weights are your own.'}
-            {tied ? ' Two kos scored the same, so both are marked.' : ''}
+            {t('Scores are relative to these {count} kos, not to kos in general: the cheapest of three is not necessarily cheap.', {
+              count: surveys.length,
+            })}{' '}
+            {isDefault(weights) ? t('The weights are the defaults.') : t('The weights are your own.')}
+            {tied ? ` ${t('Two kos scored the same, so both are marked.')}` : ''}
           </p>
           <button
             ref={edit}
@@ -107,7 +111,7 @@ export function BestMatchPanel({ surveys }) {
             aria-haspopup="dialog"
             onClick={() => setEditing(true)}
           >
-            Edit criteria
+            {t('Edit criteria')}
           </button>
         </div>
 
@@ -125,10 +129,10 @@ export function BestMatchPanel({ surveys }) {
             <thead className={ledger.head()} role="rowgroup">
               <tr role="row">
                 <th className={ledger.columnHeader({ corner: true })} scope="col" role="columnheader">
-                  Criterion
+                  {t('Criterion')}
                 </th>
                 <th className={cx(ledger.columnHeader(), 'tabular-nums lining-nums')} scope="col" role="columnheader">
-                  Weight
+                  {t('Weight')}
                 </th>
                 {surveys.map((survey) => (
                   <th key={survey.id} className={ledger.columnHeader()} scope="col" role="columnheader">
@@ -144,10 +148,10 @@ export function BestMatchPanel({ surveys }) {
                 return (
                   <tr key={criterion.key} className={ledger.row} role="row" data-off={off ? 'true' : undefined}>
                     <th className={ledger.rowHeader({ quiet: off })} scope="row" role="rowheader">
-                      {criterion.label}
+                      {criterionLabel(criterion)}
                     </th>
                     <td className={cx(ledger.cell({ layout: 'breakdown' }), 'tabular-nums lining-nums', off && 'text-muted')} role="cell" data-weight>
-                      <CellLabel name="Weight" weight />
+                      <CellLabel name={t('Weight')} weight />
                       <span className={value(true)} data-cell-value>
                         {weights[criterion.key]}%
                       </span>
@@ -163,22 +167,26 @@ export function BestMatchPanel({ surveys }) {
         </div>
 
         <dl className="my-[1em] grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-rule pt-3 text-xs max-lg:grid-cols-1 max-lg:gap-x-0 max-lg:gap-y-1 [&_dd]:max-w-measure [&_dd]:text-muted max-lg:[&_dd]:mb-2 [&_dt]:font-narrow [&_dt]:font-semibold [&_dt]:text-ink">
-          <dt>Price and distance</dt>
-          <dd>Ranked against the other kos here. Best value scores 100.</dd>
-          <dt>Facilities</dt>
-          <dd>Recorded facilities out of {TOTAL_FACILITY_COUNT}: room and shared, a water heater, and an indoor bathroom.</dd>
-          <dt>Cleanliness and security</dt>
-          <dd>The 1–4 rating, where 1 scores 0 and 4 scores 100.</dd>
-          <dt>Location</dt>
+          <dt>{t('Price and distance')}</dt>
+          <dd>{t('Ranked against the other kos here. Best value scores 100.')}</dd>
+          <dt>{t('Facilities')}</dt>
           <dd>
-            Half nearness to campus, ranked as distance is, and half recorded surroundings out of {AMENITY_COUNT}, any place
-            of worship counting once.
-            It needs the distance to campus recorded.
+            {t('Recorded facilities out of {facilities}: room and shared, a water heater, and an indoor bathroom.', {
+              facilities: TOTAL_FACILITY_COUNT,
+            })}
           </dd>
-          <dt>Weights</dt>
+          <dt>{t('Cleanliness and security')}</dt>
+          <dd>{t('The 1–4 rating, where 1 scores 0 and 4 scores 100.')}</dd>
+          <dt>{t('Location')}</dt>
           <dd>
-            Set with Edit criteria, as whole percentages that total 100%. A criterion at 0% is left out of the score, so
-            it does not need to be recorded.
+            {t(
+              'Half nearness to campus, ranked as distance is, and half recorded surroundings out of {amenities}, any place of worship counting once. It needs the distance to campus recorded.',
+              { amenities: AMENITY_COUNT },
+            )}
+          </dd>
+          <dt>{t('Weights')}</dt>
+          <dd>
+            {t('Set with Edit criteria, as whole percentages that total 100%. A criterion at 0% is left out of the score, so it does not need to be recorded.')}
           </dd>
         </dl>
       </div>

@@ -5,6 +5,7 @@ import { useMediaRecords } from '../../hooks/useMediaRecords.js';
 import { formatBytes } from '../../utils/image.js';
 import { cx, fieldError, fieldLabel, meta, narrowLabel } from '../ui/styles.js';
 import { InfoButton } from './fields.jsx';
+import { t } from '../../i18n/index.js';
 
 /** Files are stored when chosen, so an interrupted survey keeps them; only records leave the device. */
 
@@ -22,7 +23,7 @@ const fileItem = cx(item, 'flex items-center justify-between gap-3 p-3');
 function RemoveButton({ label, onClick, inline = false }) {
   return (
     <button className={cx(remove, !inline && 'absolute right-1 bottom-1')} type="button" aria-label={label} onClick={onClick}>
-      Remove
+      {t('Remove')}
     </button>
   );
 }
@@ -46,7 +47,6 @@ function FileRow({ name, detail, children }) {
  */
 export function MediaUploader({ section, kind = 'photo', label, ids, onChange, surveyId, guide = null }) {
   const max = kind === 'video' ? MAX_VIDEOS : MAX_PHOTOS_PER_SECTION;
-  const noun = kind === 'video' ? 'videos' : 'photos';
   const { records } = useMediaRecords(ids);
   const held = new Map(records.map((record) => [record.id, record]));
   const input = useRef(null);
@@ -61,13 +61,13 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
     const files = [...fileList];
     if (!files.length || busy.current) return;
     busy.current = true;
-    setStatus(`Adding ${files.length} file${files.length === 1 ? '' : 's'}…`);
+    setStatus(files.length === 1 ? t('Adding 1 file…') : t('Adding {count} files…', { count: files.length }));
     try {
       let added = [];
       let failures = [];
       if (kind === 'video') {
         const room = Math.max(0, max - latest.current.length);
-        failures = files.slice(room).map((file) => ({ fileName: file.name, message: `Only ${max} videos can be added.` }));
+        failures = files.slice(room).map((file) => ({ fileName: file.name, message: t('Only {max} videos can be added.', { max }) }));
         for (const file of files.slice(0, room)) {
           const result = await addVideo(file, { surveyId });
           if (result.ok) added.push(result.record.id);
@@ -89,7 +89,7 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
   // Dropped from the list only: files go after save, so Cancel can still restore them.
   const drop = (id) => {
     onChange(latest.current.filter((item) => item !== id));
-    setStatus('Photo removed. It is deleted when you save.');
+    setStatus(t('Photo removed. It is deleted when you save.'));
   };
 
   const dragOver = (event) => {
@@ -121,7 +121,7 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
           <InfoButton guide={guide} />
         </span>
         <span className={cx(narrowLabel, 'text-muted tabular-nums lining-nums')} data-count>
-          {ids.length} of {max}
+          {t('{count} of {max}', { count: ids.length, max })}
         </span>
       </div>
 
@@ -137,10 +137,16 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
         aria-describedby={`${section}-uploader-hint`}
         onClick={() => input.current?.click()}
       >
-        <span className="font-semibold">{full ? `Maximum of ${max} reached` : `Choose ${noun}, or drag them here`}</span>
+        <span className="font-semibold">
+          {full
+            ? t('Maximum of {max} reached', { max })
+            : kind === 'video'
+              ? t('Choose videos, or drag them here')
+              : t('Choose photos, or drag them here')}
+        </span>
         <span className="text-xs text-muted" id={`${section}-uploader-hint`}>
           {guide?.helper ??
-            (kind === 'video' ? `Up to ${max}, 20 MB each.` : `Up to ${max}. Large photos are resized automatically.`)}
+            (kind === 'video' ? t('Up to {max}, 20 MB each.', { max }) : t('Up to {max}. Large photos are resized automatically.', { max }))}
         </span>
       </button>
 
@@ -160,12 +166,12 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
           const record = held.get(id);
           if (kind === 'video') {
             return record ? (
-              <FileRow key={id} name={record.originalName || 'Video'} detail={formatBytes(record.byteSize)}>
-                <RemoveButton label={`Remove ${record.originalName || 'file'}`} onClick={() => drop(id)} inline />
+              <FileRow key={id} name={record.originalName || t('Video')} detail={formatBytes(record.byteSize)}>
+                <RemoveButton label={t('Remove {name}', { name: record.originalName || t('file') })} onClick={() => drop(id)} inline />
               </FileRow>
             ) : (
-              <FileRow key={id} name="Video" detail="Not on this device">
-                <RemoveButton label="Remove video not on this device" onClick={() => drop(id)} inline />
+              <FileRow key={id} name={t('Video')} detail={t('Not on this device')}>
+                <RemoveButton label={t('Remove video not on this device')} onClick={() => drop(id)} inline />
               </FileRow>
             );
           }
@@ -173,12 +179,12 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
           return (
             <li key={id} className={item}>
               {record ? (
-                <img className="h-24 w-full object-cover" src={record.url} alt={record.originalName || 'Survey photo'} />
+                <img className="h-24 w-full object-cover" src={record.url} alt={record.originalName || t('Survey photo')} />
               ) : (
-                <span className={cx(narrowLabel, 'block h-24 w-full p-2 text-muted')}>Not on this device</span>
+                <span className={cx(narrowLabel, 'block h-24 w-full p-2 text-muted')}>{t('Not on this device')}</span>
               )}
               <RemoveButton
-                label={record ? `Remove ${record.originalName || 'file'}` : 'Remove photo not on this device'}
+                label={record ? t('Remove {name}', { name: record.originalName || t('file') }) : t('Remove photo not on this device')}
                 onClick={() => drop(id)}
               />
             </li>
@@ -192,7 +198,7 @@ export function MediaUploader({ section, kind = 'photo', label, ids, onChange, s
             {status.map((failure, index) => (
               <li key={index} className={fieldError}>
                 {failure.fileName ? `${failure.fileName}: ` : ''}
-                {failure.message}
+                {t(failure.message)}
               </li>
             ))}
           </ul>

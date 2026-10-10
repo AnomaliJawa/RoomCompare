@@ -5,14 +5,15 @@ import {
   BATHROOM_TYPES,
   ROOM_FACILITIES,
   SHARED_FACILITIES,
-  STATUS_LABELS,
   SURROUNDINGS,
   TOILET_TYPES,
   YES_NO,
   choiceLabel,
   kosTypeLabel,
   likertLabel,
+  statusLabel,
 } from '../constants.js';
+import { msg, t } from '../i18n/index.js';
 import { campusName, formatKosDistance, numberToCurrency } from '../utils/format.js';
 import { isValidPoint } from '../utils/geo.js';
 import { MapView } from '../components/survey/MapView.jsx';
@@ -26,7 +27,7 @@ import { button, cx, narrowLabel, panel, unrecorded } from '../components/ui/sty
 
 /** Missing values read "Not recorded": unknown and absent are different facts. */
 function Value({ input }) {
-  if (input === null || input === undefined || input === '') return <span className={unrecorded}>Not recorded</span>;
+  if (input === null || input === undefined || input === '') return <span className={unrecorded}>{t('Not recorded')}</span>;
   return input;
 }
 
@@ -72,8 +73,8 @@ function Checklist({ all, selected }) {
             <span className={cx('w-[1em] font-semibold', present ? 'text-accent' : 'text-muted')} aria-hidden="true" data-mark>
               {present ? '✓' : '✗'}
             </span>
-            <span>{item}</span>
-            <span className="sr-only">{present ? 'present' : 'not available'}</span>
+            <span>{t(item)}</span>
+            <span className="sr-only">{present ? t('present') : t('not available')}</span>
           </li>
         );
       })}
@@ -95,16 +96,28 @@ function Section({ title, icon, first = false, children }) {
 /** At the top, as a gallery: the photos say more about a kos at a glance than any list below them. */
 function MediaSection({ survey }) {
   const groups = [
-    { title: 'Room', noun: 'room photo', ids: survey.room?.photoIds },
-    { title: 'Bathroom', noun: 'bathroom photo', ids: survey.bathroom?.photoIds },
-    { title: 'Shared facilities', noun: 'shared facility photo', ids: survey.shared?.photoIds },
-    { title: 'Videos', noun: 'video', ids: survey.additional?.videoIds, kind: 'video' },
+    { title: msg('Room'), one: msg('1 room photo'), many: msg('{count} room photos'), none: msg('room photos'), ids: survey.room?.photoIds },
+    {
+      title: msg('Bathroom'),
+      one: msg('1 bathroom photo'),
+      many: msg('{count} bathroom photos'),
+      none: msg('bathroom photos'),
+      ids: survey.bathroom?.photoIds,
+    },
+    {
+      title: msg('Shared facilities'),
+      one: msg('1 shared facility photo'),
+      many: msg('{count} shared facility photos'),
+      none: msg('shared facility photos'),
+      ids: survey.shared?.photoIds,
+    },
+    { title: msg('Videos'), one: msg('1 video'), many: msg('{count} videos'), ids: survey.additional?.videoIds, kind: 'video' },
   ].map((group) => ({ ...group, ids: group.ids ?? [] }));
 
   return (
     <section className="mb-6" aria-labelledby="media-title">
       <h2 className="sr-only" id="media-title">
-        Photos and videos
+        {t('Photos and videos')}
       </h2>
       <MediaGallery groups={groups} />
     </section>
@@ -126,10 +139,10 @@ export function SurveyDetailPage({ params: { id } }) {
   if (!survey) {
     return (
       <NotFound
-        title="That survey is not here"
-        body="It may have been deleted, or the link may be wrong."
+        title={msg('That survey is not here')}
+        body={msg('It may have been deleted, or the link may be wrong.')}
         backHref="#/surveys"
-        backLabel="Back to my surveys"
+        backLabel={msg('Back to my surveys')}
       />
     );
   }
@@ -141,17 +154,17 @@ export function SurveyDetailPage({ params: { id } }) {
   return (
     <>
       <Breadcrumbs
-        trail={[own ? { label: 'My surveys', href: '#/surveys' } : { label: 'Community', href: '#/community' }]}
+        trail={[own ? { label: msg('My surveys'), href: '#/surveys' } : { label: msg('Community'), href: '#/community' }]}
         current={kos.name}
       />
       <PageHead
         title={kos.name}
-        lede={`${kos.kosLocation?.label ?? ''}${own ? '' : ` · Shared by ${survey.ownerName}`}`}
+        lede={own ? kos.kosLocation?.label ?? '' : t('{area} · Shared by {name}', { area: kos.kosLocation?.label ?? '', name: survey.ownerName })}
         actions={
           <>
             {store.canCompare(id) && (
               <button className={button({ className: 'max-lg:flex-1' })} type="button" onClick={() => toggleCompare(id, { go: !own })}>
-                {compareSelection.includes(id) ? 'In comparison' : 'Add to compare'}
+                {compareSelection.includes(id) ? t('In comparison') : t('Add to compare')}
               </button>
             )}
             {own ? (
@@ -172,53 +185,53 @@ export function SurveyDetailPage({ params: { id } }) {
       <MediaSection survey={survey} />
 
       <div className={cx(panel, 'flex flex-wrap gap-6')} data-facts>
-        <Fact label="Monthly rent">{numberToCurrency(kos.rent)}</Fact>
-        <Fact label="Distance to campus">{formatKosDistance(kos)}</Fact>
-        <Fact label="Room">{room.lengthM && room.widthM ? `${room.lengthM} × ${room.widthM} m` : 'Not recorded'}</Fact>
-        {own && <Fact label="Status">{STATUS_LABELS[survey.status]}</Fact>}
+        <Fact label={t('Monthly rent')}>{numberToCurrency(kos.rent)}</Fact>
+        <Fact label={t('Distance to campus')}>{formatKosDistance(kos)}</Fact>
+        <Fact label={t('Room')}>{room.lengthM && room.widthM ? `${room.lengthM} × ${room.widthM} m` : t('Not recorded')}</Fact>
+        {own && <Fact label={t('Status')}>{statusLabel(survey.status)}</Fact>}
       </div>
 
-      <Section title="Kos information" icon="kos" first>
+      <Section title={t('Kos information')} icon="kos" first>
         <DefinitionList>
-          <Definition label="Type" input={kosTypeLabel(kos.type)} />
-          <Definition label="Address" input={kos.kosLocation?.address} />
-          {!isValidPoint(kos.kosLocation) && <Definition label="Map" input={null} />}
-          <Definition label="Campus" input={campusName(kos)} />
-          <Definition label="Distance to campus" input={kos.distanceKm == null ? null : formatKosDistance(kos)} />
-          <Definition label="Monthly rent" input={numberToCurrency(kos.rent)} />
-          <Definition label="Owner or security phone" input={contact(kos.contactPhone)} />
+          <Definition label={t('Type')} input={kosTypeLabel(kos.type)} />
+          <Definition label={t('Address')} input={kos.kosLocation?.address} />
+          {!isValidPoint(kos.kosLocation) && <Definition label={t('Map')} input={null} />}
+          <Definition label={t('Campus')} input={campusName(kos)} />
+          <Definition label={t('Distance to campus')} input={kos.distanceKm == null ? null : formatKosDistance(kos)} />
+          <Definition label={t('Monthly rent')} input={numberToCurrency(kos.rent)} />
+          <Definition label={t('Owner or security phone')} input={contact(kos.contactPhone)} />
         </DefinitionList>
         {isValidPoint(kos.kosLocation) && <MapView kos={kos.kosLocation} campus={kos.campusLocation} name={kos.name} />}
       </Section>
 
-      <Section title="Room" icon="room">
+      <Section title={t('Room')} icon="room">
         <DefinitionList>
-          <Definition label="Cleanliness" input={likertLabel(room.cleanliness)} />
-          <Definition label="Internet quality" input={likertLabel(room.internet)} />
+          <Definition label={t('Cleanliness')} input={likertLabel(room.cleanliness)} />
+          <Definition label={t('Internet quality')} input={likertLabel(room.internet)} />
         </DefinitionList>
         <Checklist all={ROOM_FACILITIES} selected={room.facilities} />
       </Section>
 
-      <Section title="Bathroom" icon="bathroom">
+      <Section title={t('Bathroom')} icon="bathroom">
         <DefinitionList>
-          <Definition label="Bathroom type" input={choiceLabel(BATHROOM_TYPES, survey.bathroom.type)} />
-          <Definition label="Toilet type" input={choiceLabel(TOILET_TYPES, survey.bathroom.toilet)} />
-          <Definition label="Water heater" input={choiceLabel(YES_NO, survey.bathroom.waterHeater)} />
+          <Definition label={t('Bathroom type')} input={choiceLabel(BATHROOM_TYPES, survey.bathroom.type)} />
+          <Definition label={t('Toilet type')} input={choiceLabel(TOILET_TYPES, survey.bathroom.toilet)} />
+          <Definition label={t('Water heater')} input={choiceLabel(YES_NO, survey.bathroom.waterHeater)} />
         </DefinitionList>
       </Section>
-      <Section title="Shared facilities" icon="shared">
+      <Section title={t('Shared facilities')} icon="shared">
         <Checklist all={SHARED_FACILITIES} selected={survey.shared.facilities} />
       </Section>
-      <Section title="Surroundings" icon="surroundings">
+      <Section title={t('Surroundings')} icon="surroundings">
         <Checklist all={SURROUNDINGS} selected={survey.surroundings} />
       </Section>
 
-      <Section title="Additional information" icon="additional">
+      <Section title={t('Additional information')} icon="additional">
         <DefinitionList>
-          <Definition label="Security" input={likertLabel(additional.security)} />
+          <Definition label={t('Security')} input={likertLabel(additional.security)} />
         </DefinitionList>
         <p className="max-w-notes whitespace-pre-wrap" data-notes>
-          <Value input={additional.notes} />
+          <Value input={store.notesOf(survey)} />
         </p>
       </Section>
 

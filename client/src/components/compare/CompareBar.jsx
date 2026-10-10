@@ -3,6 +3,7 @@ import { MAX_COMPARE, MIN_COMPARE } from '../../constants.js';
 import * as store from '../../data/store.js';
 import { ICON } from '../ui/icons.js';
 import { button, cx, meta } from '../ui/styles.js';
+import { t } from '../../i18n/index.js';
 
 /** Equal slots with names only, so a long name cannot grow its card; Compare opens at two. */
 
@@ -25,21 +26,21 @@ function Filled({ survey, index, onChange }) {
         type="button"
         data-slot={index}
         aria-haspopup="dialog"
-        aria-label={`Change ${survey.kos.name}`}
+        aria-label={t('Change {name}', { name: survey.kos.name })}
         onClick={() => onChange(survey.id, index)}
       >
         <span className="min-w-0 flex-1 truncate font-semibold" title={survey.kos.name}>
           {survey.kos.name}
         </span>
-        <span className={hint} aria-hidden="true" title="Change">
+        <span className={hint} aria-hidden="true" title={t('Change')}>
           <ArrowLeftRight {...ICON} />
         </span>
       </button>
       <button
         className={cx(square, 'touch-hit text-alert hover:bg-alert-bg hover:text-alert active:bg-alert-bg active:text-alert')}
         type="button"
-        aria-label={`Remove ${survey.kos.name} from the comparison`}
-        title="Remove"
+        aria-label={t('Remove {name} from the comparison', { name: survey.kos.name })}
+        title={t('Remove')}
         onClick={() => store.removeFromCompare(survey.id)}
       >
         <X {...ICON} />
@@ -56,16 +57,23 @@ function Empty({ index, onAdd }) {
         type="button"
         data-slot={index}
         aria-haspopup="dialog"
-        aria-label={`Add kos ${index + 1}`}
+        aria-label={t('Add kos {index}', { index: index + 1 })}
         onClick={() => onAdd(index)}
       >
-        <span className={meta}>Kos {index + 1}</span>
-        <span className={hint} aria-hidden="true" title="Add">
+        <span className={meta}>{t('Kos {index}', { index: index + 1 })}</span>
+        <span className={hint} aria-hidden="true" title={t('Add')}>
           <Plus {...ICON} />
         </span>
       </button>
     </li>
   );
+}
+
+/** "2 of 3 selected", and how many more a comparison needs; the picker says the same. */
+export function selectedCount(count) {
+  return count < MIN_COMPARE
+    ? t('{count} of {max} selected, {more} more to compare.', { count, max: MAX_COMPARE, more: MIN_COMPARE - count })
+    : t('{count} of {max} selected.', { count, max: MAX_COMPARE });
 }
 
 /** `--slots` comes from MAX_COMPARE, so the limit is written only in constants.js. */
@@ -77,7 +85,7 @@ export function CompareBar({ selected, shown, onAdd, onChange, onCompare, onStar
     <section
       ref={barRef}
       className="mb-10 flex flex-wrap items-center gap-4 rounded-md border border-rule bg-surface p-4 max-lg:flex-col max-lg:items-stretch"
-      aria-label="Selected for comparison"
+      aria-label={t('Selected for comparison')}
     >
       <ul
         className="grid min-w-0 flex-[1_1_100%] grid-cols-[repeat(var(--slots),minmax(0,1fr))] gap-2 max-xl:grid-cols-[minmax(0,1fr)]"
@@ -95,21 +103,21 @@ export function CompareBar({ selected, shown, onAdd, onChange, onCompare, onStar
       {/* Stacked on a phone, the button runs full width above the count. */}
       <div className="flex flex-[1_1_100%] items-center justify-end gap-3 max-lg:flex-col-reverse max-lg:items-stretch">
         <p className={cx(meta, 'mr-auto max-lg:mr-0')} role="status" aria-live="polite">
-          {selected.length} of {MAX_COMPARE} selected{ready ? '' : `, ${MIN_COMPARE - selected.length} more to compare`}.
+          {selectedCount(selected.length)}
         </p>
         {shown ? (
           <button className={button({ variant: 'quiet', className: 'max-lg:w-full' })} type="button" onClick={onStartOver}>
-            Start over
+            {t('Start over')}
           </button>
         ) : (
           <button
             className={button({ variant: 'primary', className: 'max-lg:w-full' })}
             type="button"
             disabled={!ready}
-            title={ready ? undefined : 'Select at least two kos'}
+            title={ready ? undefined : t('Select at least two kos')}
             onClick={onCompare}
           >
-            Compare
+            {t('Compare')}
           </button>
         )}
       </div>

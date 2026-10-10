@@ -3,6 +3,7 @@ import { communitySurveys } from '../seed/communitySurveys.js';
 import { MAX_COMPARE, MIN_COMPARE, DISTANCE_BASIS, STATUS } from '../constants.js';
 import { checkWeights, effectiveWeights, isDefault } from '../utils/weights.js';
 import { normalizeSurvey } from '../utils/migrate.js';
+import { applyLanguage, getLanguage, msg, t } from '../i18n/index.js';
 import * as storage from './localStore.js';
 import * as db from './mediaDb.js';
 
@@ -18,6 +19,8 @@ const seeded = boot.status !== storage.LOAD_STATUS.OK;
 const state = {
   /** In memory only: the session itself is an HttpOnly cookie. */
   user: null,
+  /** Per device, not per account; held by the i18n module, mirrored here so the app re-renders. */
+  language: getLanguage(),
   ownerId: seeded ? null : boot.data.ownerId ?? null,
   surveys: seeded ? structuredClone(ownSurveys) : boot.data.surveys.map(normalizeSurvey),
   communitySurveys: structuredClone(communitySurveys),
@@ -43,9 +46,9 @@ const state = {
   storageStatus: boot.status === storage.LOAD_STATUS.UNAVAILABLE ? 'unavailable' : 'ok',
   storageNotice:
     boot.status === storage.LOAD_STATUS.CORRUPT
-      ? 'Saved surveys could not be read, so RoomCompare started fresh. The unreadable copy has been kept.'
+      ? msg('Saved surveys could not be read, so RoomCompare started fresh. The unreadable copy has been kept.')
       : boot.status === storage.LOAD_STATUS.UNAVAILABLE
-        ? 'Saving is off in this browser mode. Your surveys will not be kept after you close this tab.'
+        ? msg('Saving is off in this browser mode. Your surveys will not be kept after you close this tab.')
         : null,
   syncNotice: null,
 };
@@ -95,10 +98,10 @@ function commit() {
     } else if (result === storage.SAVE_RESULT.QUOTA) {
       state.storageStatus = 'quota';
       state.storageNotice =
-        'Storage is full, so the last change was not saved. Delete a survey you no longer need to free space.';
+        msg('Storage is full, so the last change was not saved. Delete a survey you no longer need to free space.');
     } else {
       state.storageStatus = 'failed';
-      state.storageNotice = 'The last change could not be saved.';
+      state.storageNotice = msg('The last change could not be saved.');
     }
   }
   notify();
@@ -114,6 +117,12 @@ export function setUser(user) {
   // Each account's weights and likes wait on this device for its next login here.
   state.bestMatchWeights = user ? storage.loadWeights(user.id) : null;
   state.likedIds = user ? storage.loadLikes(user.id) : [];
+  notify();
+}
+
+export function setLanguage(code) {
+  if (!applyLanguage(code)) return;
+  state.language = code;
   notify();
 }
 
@@ -172,6 +181,12 @@ export function findSurvey(id) {
 
 export function isOwnSurvey(id) {
   return state.surveys.some((survey) => survey.id === id);
+}
+
+/** Community notes are sample text, shown in the reader's language; your own are your words, as written. */
+export function notesOf(survey) {
+  const notes = survey.additional?.notes;
+  return isOwnSurvey(survey.id) ? notes : t(notes);
 }
 
 export function isStarred(id) {
