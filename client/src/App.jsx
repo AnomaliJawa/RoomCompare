@@ -15,6 +15,7 @@ import { DashboardPage } from './pages/DashboardPage.jsx';
 import { SurveyDetailPage } from './pages/SurveyDetailPage.jsx';
 import { SurveyFormPage } from './pages/SurveyFormPage.jsx';
 import { SurveyListPage } from './pages/SurveyListPage.jsx';
+import { msg, t } from './i18n/index.js';
 
 /**
  * `access`: public (log in and register, which a logged-in visitor skips), open (guests explore too),
@@ -25,9 +26,9 @@ export const ROUTES = [
   { path: '/register', page: RegisterPage, nav: null, access: 'public' },
   { path: '/dashboard', page: DashboardPage, nav: null, access: 'account' },
   { path: '/surveys', page: SurveyListPage, nav: 'surveys', access: 'open' },
-  { path: '/surveys/new', page: SurveyFormPage, nav: 'surveys', access: 'account', reason: 'Log in to add a survey.' },
-  { path: '/surveys/:id', page: SurveyDetailPage, nav: 'surveys', access: 'account', reason: 'Log in to see your surveys.' },
-  { path: '/surveys/:id/edit', page: SurveyFormPage, nav: 'surveys', access: 'account', reason: 'Log in to edit your surveys.' },
+  { path: '/surveys/new', page: SurveyFormPage, nav: 'surveys', access: 'account', reason: msg('Log in to add a survey.') },
+  { path: '/surveys/:id', page: SurveyDetailPage, nav: 'surveys', access: 'account', reason: msg('Log in to see your surveys.') },
+  { path: '/surveys/:id/edit', page: SurveyFormPage, nav: 'surveys', access: 'account', reason: msg('Log in to edit your surveys.') },
   { path: '/community', page: CommunityPage, nav: 'community', access: 'open' },
   { path: '/community/:id', page: SurveyDetailPage, nav: 'community', access: 'open' },
   // Three kos columns plus the criteria get the wide column (the user's choice).
@@ -40,10 +41,10 @@ let starting = null;
 function NotFoundPage({ path }) {
   return (
     <section className="rounded-md border border-dashed border-rule bg-surface px-6 py-10 text-left">
-      <p className="text-md font-semibold">Nothing at this address</p>
-      <p className="mt-2 mb-4 text-muted">{path} does not match any page.</p>
+      <p className="text-md font-semibold">{t('Nothing at this address')}</p>
+      <p className="mt-2 mb-4 text-muted">{t('{path} does not match any page.', { path })}</p>
       <a className={button({ variant: 'primary' })} href="#/dashboard">
-        Go to the dashboard
+        {t('Go to the dashboard')}
       </a>
     </section>
   );
@@ -58,12 +59,12 @@ function Notices({ state, width }) {
     <div className={`mx-auto ${width} px-6 pt-6 empty:hidden max-lg:px-4`} role="status" aria-live="polite">
       {storageNotice && (
         <Banner
-          message={storageNotice}
+          message={t(storageNotice)}
           tone={storageStatus === 'ok' ? 'info' : 'alert'}
-          action={{ label: 'Dismiss', onClick: () => store.clearStorageNotice() }}
+          action={{ label: t('Dismiss'), onClick: () => store.clearStorageNotice() }}
         />
       )}
-      {accountNotice && <Banner message={accountNotice} action={{ label: 'Dismiss', onClick: () => store.setSyncNotice(null) }} />}
+      {accountNotice && <Banner message={t(accountNotice)} action={{ label: t('Dismiss'), onClick: () => store.setSyncNotice(null) }} />}
     </div>
   );
 }
@@ -109,7 +110,7 @@ export function App() {
 
   const width = route?.wide ? 'max-w-column-wide' : 'max-w-column';
 
-  let content = <p className={meta}>Loading…</p>;
+  let content = <p className={meta}>{t('Loading…')}</p>;
   if (ready && !guard) {
     const Page = route?.page;
     content = Page ? <Page key={`${path}#${visit}`} params={params} /> : <NotFoundPage path={path} />;
@@ -126,7 +127,7 @@ export function App() {
           main.current?.focus();
         }}
       >
-        Skip to content
+        {t('Skip to content')}
       </a>
 
       <NavBar

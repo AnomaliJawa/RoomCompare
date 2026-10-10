@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MISSING, buildGroups, rowDiffers, scoreGroup } from '../../utils/comparison.js';
 import { cx, unrecorded } from '../ui/styles.js';
+import * as store from '../../data/store.js';
+import { t } from '../../i18n/index.js';
 import * as ledger from './ledger.js';
 
 /** Never truncated: every criterion and all 31 facilities, each with an explicit ✓ or —. */
@@ -35,7 +37,7 @@ function HeaderRow({ names, rule = true, reveal = null }) {
   return (
     <tr role="row">
       <th className={ledger.columnHeader({ corner: true, rule })} scope="col" role="columnheader">
-        Criterion
+        {t('Criterion')}
       </th>
       {names.map((name, index) => {
         const motion = reveal?.(index) ?? { className: '' };
@@ -74,17 +76,17 @@ function Value({ row, value, index, name, last, reveal }) {
 
   if (row.kind === 'facility') {
     return value
-      ? td(<>✓<span className="sr-only"> present</span></>, { className: 'font-semibold text-accent' })
-      : td(<>—<span className="sr-only"> not available</span></>, { className: 'text-muted' });
+      ? td(<>✓<span className="sr-only"> {t('present')}</span></>, { className: 'font-semibold text-accent' })
+      : td(<>—<span className="sr-only"> {t('not available')}</span></>, { className: 'text-muted' });
   }
   if (row.kind === 'score') {
     const score = row.scores[index];
     if (score.total === null) {
-      return td(<span className={unrecorded}>Score unavailable — {score.missing} not recorded</span>);
+      return td(<span className={unrecorded}>{t('Score unavailable — {missing} not recorded', { missing: score.missing })}</span>);
     }
     return td(score.total, { best: score.leader, className: cx('tabular-nums lining-nums', score.leader && 'font-semibold text-accent') });
   }
-  if (value === MISSING) return td(<span className={unrecorded}>Not recorded</span>);
+  if (value === MISSING) return td(<span className={unrecorded}>{t('Not recorded')}</span>);
   const best = row.best === index;
   return td(value, {
     prose: row.prose,
@@ -141,14 +143,14 @@ function Section({ group, index, names, reveal }) {
 /** `scores`: each kos's Best Match `{ total, leader, missing }`; omitted, there is no score section. */
 export function ComparisonTable({ surveys, scores = null }) {
   const reveal = useReveal();
-  const groups = [...(scores ? [scoreGroup(scores)] : []), ...buildGroups(surveys)];
+  const groups = [...(scores ? [scoreGroup(scores)] : []), ...buildGroups(surveys, { notes: store.notesOf })];
   const names = surveys.map((survey) => survey.kos.name);
 
   // One scroller for every section, so the columns stay lined up when it scrolls.
   return (
     <div className="flex flex-col gap-4 overflow-x-auto max-xl:overflow-x-visible" data-comparison>
       <div className={cx(card, 'max-xl:hidden')}>
-        <table className={ledger.table({ sectioned: true })} role="table" aria-label="Kos in this comparison">
+        <table className={ledger.table({ sectioned: true })} role="table" aria-label={t('Kos in this comparison')}>
           <Columns count={names.length} />
           <thead role="rowgroup">
             {/* The names card is its own frame, so the heavy group rule would double it. */}

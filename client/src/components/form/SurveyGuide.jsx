@@ -1,5 +1,6 @@
 import { CircleHelp } from 'lucide-react';
-import { SURVEY_GUIDE } from '../../content/guidance.js';
+import { guidance } from '../../content/guidance.js';
+import { t } from '../../i18n/index.js';
 import { Modal, useCloseModal } from '../ui/Modal.jsx';
 import { button, cx, dialogBody, dialogFoot, dialogFrame, dialogHead, dialogTitle, sheetFoot } from '../ui/styles.js';
 import { iconButton } from './fields.jsx';
@@ -34,7 +35,7 @@ export function firstSurveyGuide() {
 
 export function SurveyGuideButton({ onOpen, buttonRef }) {
   return (
-    <button ref={buttonRef} className={iconButton} type="button" aria-label={SURVEY_GUIDE.title} aria-haspopup="dialog" onClick={onOpen}>
+    <button ref={buttonRef} className={iconButton} type="button" aria-label={guidance().SURVEY_GUIDE.title} aria-haspopup="dialog" onClick={onOpen}>
       <CircleHelp size={24} strokeWidth={1.75} absoluteStrokeWidth className="block" />
     </button>
   );
@@ -42,6 +43,7 @@ export function SurveyGuideButton({ onOpen, buttonRef }) {
 
 function GuideContent() {
   const close = useCloseModal();
+  const { SURVEY_GUIDE } = guidance();
   const list = 'mt-2 pl-6 [&>li+li]:mt-1';
   return (
     <div className={dialogFrame}>
@@ -50,7 +52,7 @@ function GuideContent() {
           {SURVEY_GUIDE.title}
         </h2>
         <button className={button({ variant: 'quiet', size: 'small' })} type="button" onClick={close}>
-          Close
+          {t('Close')}
         </button>
       </div>
       <div className={dialogBody}>
@@ -75,7 +77,7 @@ function GuideContent() {
       </div>
       <div className={cx(dialogFoot, sheetFoot)}>
         <button className={button({ variant: 'primary' })} type="button" onClick={close}>
-          Got it
+          {t('Got it')}
         </button>
       </div>
     </div>

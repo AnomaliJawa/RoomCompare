@@ -1,4 +1,5 @@
-import { FIELD_GUIDE, PANEL_PARTS, RUBRICS } from '../../content/guidance.js';
+import { guidance } from '../../content/guidance.js';
+import { t } from '../../i18n/index.js';
 import { Modal, useCloseModal } from '../ui/Modal.jsx';
 import { button, cx, narrowLabel } from '../ui/styles.js';
 
@@ -52,7 +53,7 @@ function Part({ title, children }) {
 
 function Scores({ levels }) {
   return (
-    <Part title="Scores">
+    <Part title={t('Scores')}>
       <dl className="m-0 flex flex-col gap-2">
         {levels.map((level) => (
           <div key={level.score} data-score>
@@ -63,7 +64,7 @@ function Scores({ levels }) {
               {level.text}
               {level.benchmark && (
                 <span className="block text-xs text-muted tabular-nums lining-nums" data-benchmark>
-                  Average Download {level.benchmark}
+                  {t('Average Download {speed}', { speed: level.benchmark })}
                 </span>
               )}
             </dd>
@@ -76,6 +77,7 @@ function Scores({ levels }) {
 
 export function HowToContent({ guideKey }) {
   const close = useCloseModal();
+  const { FIELD_GUIDE, PANEL_PARTS, RUBRICS } = guidance();
   const guide = FIELD_GUIDE[guideKey];
   if (!guide?.panel) return null;
 
@@ -84,7 +86,7 @@ export function HowToContent({ guideKey }) {
     if (name === 'example' && RUBRICS[guideKey]) parts.push(<Scores key="scores" levels={RUBRICS[guideKey]} />);
     if (name === 'example' && guide.photos) {
       parts.push(
-        <Part key="shots" title="Suggested shots">
+        <Part key="shots" title={t('Suggested shots')}>
           <ul className="m-0 list-disc pl-6">
             {guide.photos.map((shot) => (
               <li key={shot}>{shot}</li>
@@ -106,10 +108,10 @@ export function HowToContent({ guideKey }) {
     <div className="flex min-h-0 flex-col" data-guide={guideKey}>
       <div className="howto-head flex items-center justify-between gap-3 border-b border-rule px-4 py-3 max-lg:touch-none">
         <h2 className="text-base font-semibold" id="howto-title">
-          How to fill {guide.label}
+          {t('How to fill {field}', { field: guide.label })}
         </h2>
         <button className={button({ variant: 'quiet', size: 'small' })} type="button" onClick={close}>
-          Close
+          {t('Close')}
         </button>
       </div>
       {/* The sheet's own close button clears the home indicator. */}

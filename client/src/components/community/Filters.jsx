@@ -17,6 +17,7 @@ import {
   meta,
   sheetFoot,
 } from '../ui/styles.js';
+import { msg, t } from '../../i18n/index.js';
 
 export function FilterBar({ filters, total, showing, onOpen, openerRef }) {
   const active = activeFilterCount(filters);
@@ -24,7 +25,7 @@ export function FilterBar({ filters, total, showing, onOpen, openerRef }) {
     <div className="mb-16 flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-2">
         <button ref={openerRef} className={button({ variant: 'secondary' })} type="button" aria-haspopup="dialog" onClick={onOpen}>
-          Filters
+          {t('Filters')}
           {active > 0 && (
             <span className="ml-2 inline-grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-narrow text-xs text-surface tabular-nums lining-nums">
               {active}
@@ -33,12 +34,12 @@ export function FilterBar({ filters, total, showing, onOpen, openerRef }) {
         </button>
         {active > 0 && (
           <button className={button({ variant: 'quiet' })} type="button" onClick={() => store.clearCommunityFilters()}>
-            Clear
+            {t('Clear')}
           </button>
         )}
       </div>
       <p className={meta} role="status" aria-live="polite">
-        Showing {showing} of {total} shared surveys.
+        {t('Showing {showing} of {total} shared surveys.', { showing, total })}
       </p>
     </div>
   );
@@ -61,10 +62,10 @@ function FilterContent() {
     <div className={dialogFrame}>
       <div className={cx(dialogHead, 'filter-head')}>
         <h2 className={dialogTitle} id="filter-dialog-title">
-          Filters
+          {t('Filters')}
         </h2>
         <button className={button({ variant: 'quiet', size: 'small' })} type="button" onClick={close}>
-          Close
+          {t('Close')}
         </button>
       </div>
 
@@ -73,34 +74,34 @@ function FilterContent() {
           <TextField
             name="f-location"
             id="f-location"
-            label="Location"
+            label={t('Location')}
             type="search"
             value={location}
-            placeholder="e.g. Dinoyo"
+            placeholder={t('e.g. Dinoyo')}
             onChange={setLocation}
           />
-          <CurrencyField name="f-min" id="f-min" label="Rent from" value={minRent} onChange={(amount) => setMinRent(asDigits(amount))} />
-          <CurrencyField name="f-max" id="f-max" label="Rent up to" value={maxRent} onChange={(amount) => setMaxRent(asDigits(amount))} />
+          <CurrencyField name="f-min" id="f-min" label={t('Rent from')} value={minRent} onChange={(amount) => setMinRent(asDigits(amount))} />
+          <CurrencyField name="f-max" id="f-max" label={t('Rent up to')} value={maxRent} onChange={(amount) => setMaxRent(asDigits(amount))} />
           <SelectField
             name="f-type"
             id="f-type"
-            label="Kos type"
+            label={t('Kos type')}
             value={filters.type}
             onChange={set('type')}
-            options={[{ value: '', label: 'All types' }, ...KOS_TYPES]}
+            options={[{ value: '', label: msg('All types') }, ...KOS_TYPES]}
           />
           <label className={choice({ checked: filters.starredOnly, className: 'min-h-10' })}>
             <input type="checkbox" checked={filters.starredOnly} onChange={(event) => store.setCommunityFilter('starredOnly', event.target.checked)} />
-            Starred only
+            {t('Starred only')}
           </label>
         </div>
 
         <div className="flex flex-col gap-4 border-t border-rule pt-4">
-          <p className={meta}>A kos must have every facility you pick.</p>
+          <p className={meta}>{t('A kos must have every facility you pick.')}</p>
           {/* Scoped to their section: a room refrigerator is not a shared one. */}
           {FACILITY_SECTIONS.map(({ key, legend, options }) => (
             <fieldset key={key} className="m-0 border-0 p-0">
-              <legend className="mb-3 p-0 text-xs font-medium text-muted">{legend}</legend>
+              <legend className="mb-3 p-0 text-xs font-medium text-muted">{t(legend)}</legend>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
                 {options.map((name) => {
                   const value = facilityKey(key, name);
@@ -108,7 +109,7 @@ function FilterContent() {
                   return (
                     <label key={value} className={choice({ checked })}>
                       <input type="checkbox" value={value} checked={checked} onChange={() => store.toggleCommunityFacility(value)} />
-                      {name}
+                      {t(name)}
                     </label>
                   );
                 })}
@@ -120,10 +121,10 @@ function FilterContent() {
 
       <div className={cx(dialogFoot, sheetFoot)}>
         <button className={button({ variant: 'quiet' })} type="button" disabled={!active} onClick={() => store.clearCommunityFilters()}>
-          Clear all
+          {t('Clear all')}
         </button>
         <button className={button({ variant: 'primary' })} type="button" onClick={close}>
-          Show {showing} {showing === 1 ? 'survey' : 'surveys'}
+          {showing === 1 ? t('Show 1 survey') : t('Show {count} surveys', { count: showing })}
         </button>
       </div>
     </div>

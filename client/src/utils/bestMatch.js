@@ -1,5 +1,6 @@
 import { AMENITY_COUNT, BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, WORSHIP_PLACES } from '../constants.js';
 import { DEFAULT_WEIGHTS } from './weights.js';
+import { msg, t } from '../i18n/index.js';
 
 /** 1 is the floor, so (v-1)/3: a "Poor" rating must not read as a quarter mark. */
 function fromLikert(value) {
@@ -47,11 +48,12 @@ function locationScore(survey, nearness) {
 }
 
 const MISSING_LABELS = {
-  price: 'monthly rent',
-  cleanliness: 'cleanliness',
-  security: 'security',
-  location: 'distance to campus',
-  distance: 'distance to campus',
+  price: msg('monthly rent'),
+  facilities: msg('facilities'),
+  cleanliness: msg('cleanliness'),
+  security: msg('security'),
+  location: msg('distance to campus'),
+  distance: msg('distance to campus'),
 };
 
 /** A kos missing any weighted input gets no total; a criterion at 0% needs no data. */
@@ -76,7 +78,7 @@ export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
       ...new Set(
         counted
           .filter((criterion) => parts[criterion.key] === null)
-          .map((criterion) => MISSING_LABELS[criterion.key] ?? criterion.key),
+          .map((criterion) => t(MISSING_LABELS[criterion.key])),
       ),
     ];
 
@@ -102,4 +104,4 @@ export function computeBestMatch(surveys, weights = DEFAULT_WEIGHTS) {
 }
 
 export const joinList = (items) =>
-  items.length === 1 ? items[0] : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+  items.length === 1 ? items[0] : t('{items} and {last}', { items: items.slice(0, -1).join(', '), last: items[items.length - 1] });

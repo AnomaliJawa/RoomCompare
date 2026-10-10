@@ -1,11 +1,13 @@
 import { Menu } from 'lucide-react';
 import { logOut } from '../../actions/account.js';
+import { msg, t } from '../../i18n/index.js';
 import { button, cx } from '../ui/styles.js';
+import { LanguageSwitch } from './LanguageSwitch.jsx';
 
 const LINKS = [
-  { nav: 'surveys', href: '#/surveys', label: 'My surveys' },
-  { nav: 'community', href: '#/community', label: 'Community' },
-  { nav: 'compare', href: '#/compare', label: 'Compare' },
+  { nav: 'surveys', href: '#/surveys', label: msg('My surveys') },
+  { nav: 'community', href: '#/community', label: msg('Community') },
+  { nav: 'compare', href: '#/compare', label: msg('Compare') },
 ];
 
 // On narrow screens the links drop down under the header, each marked by a rule on its left.
@@ -21,7 +23,7 @@ const link = cx(
  * Add survey and the menu icon.
  */
 export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
-  const who = user ? `Logged in as ${user.email}` : undefined;
+  const who = user ? t('Logged in as {email}', { email: user.email }) : undefined;
   // On Log in and Register the page itself is the action.
   const actions = !auth;
   return (
@@ -46,30 +48,33 @@ export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
                 !menuOpen && 'max-xl:hidden',
               )}
               id="nav-links"
-              aria-label="Primary"
+              aria-label={t('Primary')}
               data-open={menuOpen ? 'true' : 'false'}
             >
               {LINKS.map((item) => (
                 <a key={item.nav} className={cx('inline-flex', link)} href={item.href} aria-current={active === item.nav ? 'page' : undefined}>
-                  {item.label}
+                  {t(item.label)}
                 </a>
               ))}
+              <LanguageSwitch className="hidden max-xl:flex max-xl:py-2 max-xl:pl-3" />
               {/* On narrow screens Log out, or Log in, moves to the foot of the menu. */}
               {user ? (
                 <button className={cx(link, 'hidden max-xl:flex')} type="button" title={who} onClick={logOut}>
-                  Log out
+                  {t('Log out')}
                 </button>
               ) : (
                 actions && (
                   <a className={cx(link, 'hidden max-xl:flex')} href="#/login">
-                    Log in
+                    {t('Log in')}
                   </a>
                 )
               )}
             </nav>
 
+            <LanguageSwitch className="ml-auto flex max-xl:hidden" />
+
             {/* Equal columns, so both actions take the wider label's width; the menu icon takes its own. */}
-            <div className="ml-auto grid auto-cols-fr grid-flow-col items-center gap-2 pointer-coarse:gap-3 max-xl:auto-cols-auto">
+            <div className="ml-auto grid xl:ml-0 auto-cols-fr grid-flow-col items-center gap-2 pointer-coarse:gap-3 max-xl:auto-cols-auto">
               <button
                 className={button({
                   variant: 'secondary',
@@ -81,26 +86,26 @@ export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
                 type="button"
                 aria-controls="nav-links"
                 aria-expanded={menuOpen ? 'true' : 'false'}
-                aria-label="Menu"
+                aria-label={t('Menu')}
                 onClick={onToggleMenu}
               >
                 <Menu size={20} strokeWidth={2} absoluteStrokeWidth className="block" />
               </button>
               {user ? (
                 <button className={button({ variant: 'quiet', display: 'inline-flex max-xl:hidden' })} type="button" title={who} onClick={logOut}>
-                  Log out
+                  {t('Log out')}
                 </button>
               ) : (
                 actions && (
                   <a className={button({ variant: 'quiet', display: 'inline-flex max-xl:hidden' })} href="#/login">
-                    Log in
+                    {t('Log in')}
                   </a>
                 )
               )}
               {/* A guest's goes through the route guard, which asks them to log in first. */}
               {actions && (
                 <a className={button({ variant: 'primary', className: 'max-md:px-3' })} href="#/surveys/new">
-                  Add survey
+                  {t('Add survey')}
                 </a>
               )}
             </div>

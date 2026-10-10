@@ -1,4 +1,5 @@
 import { ROOM_FACILITIES, SHARED_FACILITIES } from '../constants.js';
+import { msg } from '../i18n/index.js';
 
 /** Matches ignoring case and accents, so a phone keyboard's spelling still finds the kos. */
 function searchKey(value) {
@@ -25,9 +26,9 @@ const BATHROOM_REQUIREMENTS = {
 
 /** Facility filters are scoped to their section: a room refrigerator is not a shared one. */
 export const FACILITY_SECTIONS = [
-  { key: 'room', legend: 'Room facilities', options: ROOM_FACILITIES },
-  { key: 'bathroom', legend: 'Bathroom', options: Object.keys(BATHROOM_REQUIREMENTS) },
-  { key: 'shared', legend: 'Shared facilities', options: SHARED_FACILITIES },
+  { key: 'room', legend: msg('Room facilities'), options: ROOM_FACILITIES },
+  { key: 'bathroom', legend: msg('Bathroom'), options: Object.keys(BATHROOM_REQUIREMENTS) },
+  { key: 'shared', legend: msg('Shared facilities'), options: SHARED_FACILITIES },
 ];
 
 export const facilityKey = (section, name) => `${section}:${name}`;

@@ -19,7 +19,8 @@ import {
   YES_NO,
   SURROUNDINGS,
 } from '../constants.js';
-import { FIELD_GUIDE, SECTION_INTROS, rubricText } from '../content/guidance.js';
+import { guidance, rubricText } from '../content/guidance.js';
+import { locale, msg, t } from '../i18n/index.js';
 import { formatKosDistance } from '../utils/format.js';
 import { FIELD_SECTION, findDuplicateName, validateSurvey } from '../utils/validate.js';
 import { formValues, newSurveyId, readSurvey } from '../utils/surveyForm.js';
@@ -44,18 +45,20 @@ import { NotFound } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
 import { button, control, cx, fieldHint, fieldLabel, meta } from '../components/ui/styles.js';
 
-const guide = (key) => ({ key, ...FIELD_GUIDE[key] });
+const guide = (key) => ({ key, ...guidance().FIELD_GUIDE[key] });
 
 const NEARBY = SURROUNDINGS.filter((item) => !WORSHIP_PLACES.includes(item));
 
-const DISTANCE_PLACEHOLDER = 'Fills in once both pins are set';
+const DISTANCE_PLACEHOLDER = msg('Fills in once both pins are set');
 
 /** Only an unreachable route fixes itself later; no route between the pins needs a pin moved. */
 const DISTANCE_NOTES = {
-  [ROUTE_STATUS.UNAVAILABLE]:
+  [ROUTE_STATUS.UNAVAILABLE]: msg(
     'The walking route can’t be reached right now, so this is the straight line. It’s replaced once the route can be measured.',
-  [ROUTE_STATUS.NO_ROUTE]:
+  ),
+  [ROUTE_STATUS.NO_ROUTE]: msg(
     'No walking route was found between the pins, so this is the straight line. Check that both pins are on or beside a road.',
+  ),
 };
 
 /** New surveys only: Cancel on an edit promises the saved version is untouched. */
@@ -74,6 +77,7 @@ function controlFor(form, field) {
 const without = (errors, fields) => Object.fromEntries(Object.entries(errors).filter(([key]) => !fields.includes(key)));
 
 function Section({ index, title, intro, errors, children }) {
+  const intros = guidance().SECTION_INTROS;
   const count = Object.keys(errors).filter((key) => FIELD_SECTION[key] === index).length;
   return (
     <section className="rounded-md border border-rule bg-surface p-6" data-section={index}>
@@ -87,11 +91,11 @@ function Section({ index, title, intro, errors, children }) {
         <h2>{title}</h2>
         {count > 0 && (
           <span className="ml-auto rounded-sm border border-alert bg-alert-bg px-2 py-1 font-narrow text-xs font-semibold whitespace-nowrap text-alert" data-section-errors>
-            {count} to fix
+            {t('{count} to fix', { count })}
           </span>
         )}
       </div>
-      <p className="mt-3 mb-6 max-w-measure border-l-2 border-rule pl-3 text-muted">{intro}</p>
+      <p className="mt-3 mb-6 max-w-measure border-l-2 border-rule pl-3 text-muted">{intros[intro]}</p>
       <div className="flex flex-col gap-6">{children}</div>
     </section>
   );
@@ -199,7 +203,7 @@ function SurveyForm({ saved }) {
         // The form is now editing a real record rather than creating one.
         record.current = surveyId;
       }
-      setAutosaveNote(`Draft saved ${new Date().toLocaleTimeString()}`);
+      setAutosaveNote(t('Draft saved {time}', { time: new Date().toLocaleTimeString(locale()) }));
     }, AUTOSAVE_MS);
     return () => clearInterval(timer);
   }, []);
@@ -236,9 +240,12 @@ function SurveyForm({ saved }) {
     const duplicate = findDuplicateName(store.getState().surveys, data.kos.name, { excludeId: record.current || surveyId });
     if (duplicate) {
       const proceed = await confirmDialog({
-        title: 'You already have a survey with this name',
-        body: `${duplicate.kos.name} in ${duplicate.kos.kosLocation?.label ?? 'an unnamed location'} is already saved. Save this one as well?`,
-        confirmLabel: 'Save anyway',
+        title: t('You already have a survey with this name'),
+        body: t('{name} in {area} is already saved. Save this one as well?', {
+          name: duplicate.kos.name,
+          area: duplicate.kos.kosLocation?.label ?? t('an unnamed location'),
+        }),
+        confirmLabel: t('Save anyway'),
         tone: 'primary',
       });
       if (!proceed) {
@@ -252,7 +259,7 @@ function SurveyForm({ saved }) {
     if (editingId) {
       // An autosaved draft is already a record, so publishing it promotes the same row.
       store.updateSurvey(editingId, intent === 'publish' ? { ...data, status: STATUS.PUBLISHED } : data);
-      toast(intent === 'publish' ? 'Published' : 'Survey updated');
+      toast(intent === 'publish' ? t('Published') : t('Survey updated'));
     } else {
       const now = new Date().toISOString();
       store.addSurvey({
@@ -263,7 +270,7 @@ function SurveyForm({ saved }) {
         updatedAt: now,
         ...data,
       });
-      toast(intent === 'publish' ? 'Published' : 'Saved as draft');
+      toast(intent === 'publish' ? t('Published') : t('Saved as draft'));
     }
     // Dropped photos are destroyed only once the record without them is written.
     pruneSurveyMedia(editingId || surveyId, keptMedia).catch(() => null);
@@ -274,9 +281,9 @@ function SurveyForm({ saved }) {
   const cancel = async () => {
     if (dirty.current) {
       const discard = await confirmDialog({
-        title: 'Discard your changes?',
-        body: 'What you have entered on this form will not be saved.',
-        confirmLabel: 'Discard',
+        title: t('Discard your changes?'),
+        body: t('What you have entered on this form will not be saved.'),
+        confirmLabel: t('Discard'),
       });
       if (!discard) return;
     }
@@ -304,12 +311,12 @@ function SurveyForm({ saved }) {
   return (
     <HowToContext.Provider value={(key, trigger) => setHowTo({ key, trigger })}>
       <PageHead
-        title={editing ? 'Edit survey' : 'New survey'}
+        title={editing ? t('Edit survey') : t('New survey')}
         titleAside={<SurveyGuideButton buttonRef={help} onOpen={() => setGuideOpen(true)} />}
         lede={
           editing
-            ? 'Change what you recorded. Cancel leaves the saved version untouched.'
-            : 'Record what you saw during the visit. Only the kos name is needed to save a draft.'
+            ? t('Change what you recorded. Cancel leaves the saved version untouched.')
+            : t('Record what you saw during the visit. Only the kos name is needed to save a draft.')
         }
       />
 
@@ -318,25 +325,29 @@ function SurveyForm({ saved }) {
           {summary > 0 && (
             <Banner
               tone="alert"
-              message={`${summary === 1 ? 'One field needs attention' : `${summary} fields need attention`} before this survey can be published.`}
+              message={
+                summary === 1
+                  ? t('One field needs attention before this survey can be published.')
+                  : t('{count} fields need attention before this survey can be published.', { count: summary })
+              }
             />
           )}
         </div>
 
-        <Section index={1} title="Kos information" intro={SECTION_INTROS.kos} errors={errors}>
+        <Section index={1} title={t('Kos information')} intro="kos" errors={errors}>
           <div className={twoUp}>
             <TextField
               name="name"
-              label="Kos name"
+              label={t('Kos name')}
               value={values.name}
               onChange={set('name')}
-              placeholder="e.g. Kos Melati Residence"
+              placeholder={t('e.g. Kos Melati Residence')}
               guide={guide('name')}
               error={errors.name}
             />
             <CurrencyField
               name="rent"
-              label="Monthly rent"
+              label={t('Monthly rent')}
               value={values.rent}
               onChange={set('rent')}
               guide={guide('rent')}
@@ -346,7 +357,7 @@ function SurveyForm({ saved }) {
           </div>
           <RadioGroup
             name="type"
-            legend="Kos type"
+            legend={t('Kos type')}
             value={values.type}
             onChange={set('type')}
             options={KOS_TYPES}
@@ -355,21 +366,21 @@ function SurveyForm({ saved }) {
           />
           <TextField
             name="contactPhone"
-            label="Owner or security phone"
+            label={t('Owner or security phone')}
             value={values.contactPhone}
             onChange={set('contactPhone')}
             type="tel"
             inputMode="tel"
             plain
-            placeholder="e.g. 0812-3456-7890"
+            placeholder={t('e.g. 0812-3456-7890')}
             guide={guide('contactPhone')}
           />
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
             <MapPicker
               name="kosLocation"
-              label="Pin the kos"
-              addressLabel="Kos address"
-              placeholder="e.g. Jl. Sumbersari 12, Malang"
+              label={t('Pin the kos')}
+              addressLabel={t('Kos address')}
+              placeholder={t('e.g. Jl. Sumbersari 12, Malang')}
               point={values.kosLocation}
               onChange={pin('kosLocation')}
               guide={guide('kosLocation')}
@@ -377,9 +388,9 @@ function SurveyForm({ saved }) {
             />
             <MapPicker
               name="campusLocation"
-              label="Pin the campus"
-              addressLabel="Campus address"
-              placeholder="e.g. Universitas Brawijaya"
+              label={t('Pin the campus')}
+              addressLabel={t('Campus address')}
+              placeholder={t('e.g. Universitas Brawijaya')}
               point={values.campusLocation}
               onChange={pin('campusLocation')}
               guide={guide('campusLocation')}
@@ -389,7 +400,7 @@ function SurveyForm({ saved }) {
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <label className={fieldLabel} htmlFor="f-distanceKm">
-                Distance to campus
+                {t('Distance to campus')}
               </label>
               <InfoButton guide={guide('distance')} />
             </div>
@@ -401,24 +412,24 @@ function SurveyForm({ saved }) {
               type="text"
               value={distanceShown}
               readOnly
-              placeholder={distance.status === 'routing' ? 'Measuring the walking route…' : DISTANCE_PLACEHOLDER}
+              placeholder={distance.status === 'routing' ? t('Measuring the walking route…') : t(DISTANCE_PLACEHOLDER)}
               aria-describedby="f-distanceKm-status"
             />
             <span className={cx(fieldHint, 'empty:hidden')} id="f-distanceKm-status" role="status" aria-live="polite">
-              {DISTANCE_NOTES[distance.status] ?? ''}
+              {t(DISTANCE_NOTES[distance.status] ?? '')}
             </span>
             {/* OpenStreetMap's licence asks for its credit wherever its data is used. */}
             <span className="text-xs text-muted" data-credit>
-              Route data © OpenStreetMap contributors
+              {t('Route data © OpenStreetMap contributors')}
             </span>
           </div>
         </Section>
 
-        <Section index={2} title="Room" intro={SECTION_INTROS.room} errors={errors}>
+        <Section index={2} title={t('Room')} intro="room" errors={errors}>
           <div className={twoUp}>
             <ComboField
               name="lengthM"
-              label="Room length (m)"
+              label={t('Room length (m)')}
               value={values.lengthM}
               onChange={set('lengthM')}
               onPick={() => {
@@ -432,7 +443,7 @@ function SurveyForm({ saved }) {
             />
             <ComboField
               name="widthM"
-              label="Room width (m)"
+              label={t('Room width (m)')}
               value={values.widthM}
               onChange={set('widthM')}
               onPick={() => {
@@ -447,17 +458,17 @@ function SurveyForm({ saved }) {
           </div>
           <CheckboxGroup
             name="roomFacility"
-            legend="Room facilities"
+            legend={t('Room facilities')}
             options={ROOM_FACILITIES}
             selected={values.roomFacility}
             onChange={set('roomFacility')}
             guide={guide('roomFacility')}
           />
-          <LikertField legend="Cleanliness" {...score('cleanliness')} />
-          <LikertField legend="Internet quality" {...score('internet')} />
+          <LikertField legend={t('Cleanliness')} {...score('cleanliness')} />
+          <LikertField legend={t('Internet quality')} {...score('internet')} />
           <MediaUploader
             section="room"
-            label="Room photos"
+            label={t('Room photos')}
             ids={values.roomPhotoIds}
             onChange={uploads('roomPhotoIds')}
             surveyId={surveyId}
@@ -465,10 +476,10 @@ function SurveyForm({ saved }) {
           />
         </Section>
 
-        <Section index={3} title="Bathroom" intro={SECTION_INTROS.bathroom} errors={errors}>
+        <Section index={3} title={t('Bathroom')} intro="bathroom" errors={errors}>
           <RadioGroup
             name="bathroomType"
-            legend="Bathroom type"
+            legend={t('Bathroom type')}
             options={BATHROOM_TYPES}
             value={values.bathroomType}
             onChange={set('bathroomType')}
@@ -476,7 +487,7 @@ function SurveyForm({ saved }) {
           />
           <RadioGroup
             name="toiletType"
-            legend="Toilet type"
+            legend={t('Toilet type')}
             options={TOILET_TYPES}
             value={values.toiletType}
             onChange={set('toiletType')}
@@ -484,7 +495,7 @@ function SurveyForm({ saved }) {
           />
           <RadioGroup
             name="waterHeater"
-            legend="Water heater"
+            legend={t('Water heater')}
             options={YES_NO}
             value={values.waterHeater}
             onChange={set('waterHeater')}
@@ -492,7 +503,7 @@ function SurveyForm({ saved }) {
           />
           <MediaUploader
             section="bathroom"
-            label="Bathroom photos"
+            label={t('Bathroom photos')}
             ids={values.bathroomPhotoIds}
             onChange={uploads('bathroomPhotoIds')}
             surveyId={surveyId}
@@ -500,10 +511,10 @@ function SurveyForm({ saved }) {
           />
         </Section>
 
-        <Section index={4} title="Shared facilities" intro={SECTION_INTROS.shared} errors={errors}>
+        <Section index={4} title={t('Shared facilities')} intro="shared" errors={errors}>
           <CheckboxGroup
             name="sharedFacility"
-            legend="Shared facilities"
+            legend={t('Shared facilities')}
             options={SHARED_FACILITIES}
             selected={values.sharedFacility}
             onChange={set('sharedFacility')}
@@ -511,7 +522,7 @@ function SurveyForm({ saved }) {
           />
           <MediaUploader
             section="shared"
-            label="Shared facility photos"
+            label={t('Shared facility photos')}
             ids={values.sharedPhotoIds}
             onChange={uploads('sharedPhotoIds')}
             surveyId={surveyId}
@@ -519,11 +530,11 @@ function SurveyForm({ saved }) {
           />
         </Section>
 
-        <Section index={5} title="Surroundings" intro={SECTION_INTROS.surroundings} errors={errors}>
+        <Section index={5} title={t('Surroundings')} intro="surroundings" errors={errors}>
           {/* Two groups, one list: the places of worship are named apart so each faith can be found. */}
           <CheckboxGroup
             name="surrounding"
-            legend="Around the kos"
+            legend={t('Around the kos')}
             options={NEARBY}
             selected={values.surrounding.filter((item) => NEARBY.includes(item))}
             onChange={(next) => set('surrounding')([...next, ...values.surrounding.filter((item) => WORSHIP_PLACES.includes(item))])}
@@ -531,7 +542,7 @@ function SurveyForm({ saved }) {
           />
           <CheckboxGroup
             name="worship"
-            legend="Places of worship nearby"
+            legend={t('Places of worship nearby')}
             options={WORSHIP_PLACES}
             selected={values.surrounding.filter((item) => WORSHIP_PLACES.includes(item))}
             onChange={(next) => set('surrounding')([...values.surrounding.filter((item) => NEARBY.includes(item)), ...next])}
@@ -539,21 +550,21 @@ function SurveyForm({ saved }) {
           />
         </Section>
 
-        <Section index={6} title="Additional information" intro={SECTION_INTROS.additional} errors={errors}>
-          <LikertField legend="Security" {...score('security')} />
+        <Section index={6} title={t('Additional information')} intro="additional" errors={errors}>
+          <LikertField legend={t('Security')} {...score('security')} />
           <TextareaField
             name="notes"
-            label="Additional notes"
+            label={t('Additional notes')}
             value={values.notes}
             onChange={set('notes')}
-            placeholder="Anything the sections above do not cover."
+            placeholder={t('Anything the sections above do not cover.')}
             guide={guide('notes')}
             error={errors.notes}
           />
           <MediaUploader
             section="video"
             kind="video"
-            label="Videos (optional)"
+            label={t('Videos (optional)')}
             ids={values.videoIds}
             onChange={uploads('videoIds')}
             surveyId={surveyId}
@@ -566,19 +577,19 @@ function SurveyForm({ saved }) {
             {autosaveNote}
           </span>
           <button className={button({ variant: 'quiet' })} type="button" onClick={cancel}>
-            Cancel
+            {t('Cancel')}
           </button>
           {editing ? (
             <button className={button({ variant: 'primary' })} type="submit" data-intent="update">
-              Update
+              {t('Update')}
             </button>
           ) : (
             <>
               <button className={button({ variant: 'secondary' })} type="submit" data-intent="draft">
-                Save as draft
+                {t('Save as draft')}
               </button>
               <button className={button({ variant: 'primary' })} type="submit" data-intent="publish">
-                Publish
+                {t('Publish')}
               </button>
             </>
           )}
@@ -597,10 +608,10 @@ export function SurveyFormPage({ params = {} }) {
   if (params.id && (!saved || !store.isOwnSurvey(params.id))) {
     return (
       <NotFound
-        title="That survey cannot be edited"
-        body="It may have been deleted, or it belongs to someone else."
+        title={msg('That survey cannot be edited')}
+        body={msg('It may have been deleted, or it belongs to someone else.')}
         backHref="#/surveys"
-        backLabel="Back to my surveys"
+        backLabel={msg('Back to my surveys')}
       />
     );
   }

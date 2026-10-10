@@ -13,6 +13,7 @@ import { IncompleteDataBanner } from '../components/ui/Banner.jsx';
 import { EmptyState, GuestCompare, NeedsOneMore, NothingSelected } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
 import { button } from '../components/ui/styles.js';
+import { msg, t } from '../i18n/index.js';
 
 function Result({ selected, shown }) {
   if (selected.length < MIN_COMPARE) {
@@ -21,11 +22,11 @@ function Result({ selected, shown }) {
   if (!shown) {
     return (
       <EmptyState
-        title="Ready when you are"
-        body={`${selected.length} kos selected. Compare them on the same criteria, in the same order, with nothing left out.`}
+        title={msg('Ready when you are')}
+        body={t('{count} kos selected. Compare them on the same criteria, in the same order, with nothing left out.', { count: selected.length })}
       >
         <button className={button({ variant: 'primary' })} type="button" onClick={() => store.showComparison()}>
-          Compare {selected.length} kos
+          {t('Compare {count} kos', { count: selected.length })}
         </button>
       </EmptyState>
     );
@@ -63,8 +64,8 @@ export function ComparePage() {
   return (
     <>
       <PageHead
-        title="Compare kos"
-        lede="The same criteria for every kos, in the same order. Nothing is hidden, and the decision stays yours."
+        title={t('Compare kos')}
+        lede={t('The same criteria for every kos, in the same order. Nothing is hidden, and the decision stays yours.')}
       />
 
       {/* A guest sees the empty slots, and is asked to log in on picking one. */}
@@ -72,7 +73,7 @@ export function ComparePage() {
         barRef={bar}
         selected={selected}
         shown={compareShown}
-        onAdd={(slot) => (user ? setPicker({ open: true, replacing: null, slot }) : requireAccount('Log in to compare kos.'))}
+        onAdd={(slot) => (user ? setPicker({ open: true, replacing: null, slot }) : requireAccount(msg('Log in to compare kos.')))}
         onChange={(id, slot) => setPicker({ open: true, replacing: id, slot })}
         onCompare={() => store.showComparison()}
         onStartOver={startOver}

@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
 import * as store from '../data/store.js';
 import { useStore } from '../hooks/useStore.js';
-import { BEST_MATCH_CRITERIA, STATUS } from '../constants.js';
+import { BEST_MATCH_CRITERIA, STATUS, criterionLabel } from '../constants.js';
 import { formatKosDistance, numberToCurrency } from '../utils/format.js';
 import { isDefault } from '../utils/weights.js';
 import { CriteriaDialog } from '../components/compare/CriteriaDialog.jsx';
 import { EmptyState } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
 import { button, cx, meta, panel, unrecorded } from '../components/ui/styles.js';
+import { msg, t } from '../i18n/index.js';
 
 const stripCell = 'px-3 py-2 text-left align-top tabular-nums lining-nums';
 const stripName = 'font-narrow text-xs font-semibold';
@@ -42,13 +43,13 @@ function HeroStrip({ surveys }) {
   const criteria = [
     {
       id: 'strip-rent',
-      label: 'Monthly rent',
+      label: t('Monthly rent'),
       value: (s) => (s.kos.rent == null ? null : numberToCurrency(s.kos.rent)),
       best: (s) => s.kos.rent === cheapest,
     },
     {
       id: 'strip-distance',
-      label: 'To campus',
+      label: t('To campus'),
       value: (s) => (s.kos.distanceKm == null ? null : formatKosDistance(s.kos)),
       best: (s) => s.kos.distanceKm === nearest,
     },
@@ -61,16 +62,15 @@ function HeroStrip({ surveys }) {
   return (
     <section className="grid grid-cols-[1fr_1.2fr] items-center gap-10 rounded-md border border-rule bg-surface px-6 py-10 max-xl:grid-cols-1 *:min-w-0">
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl tracking-tight">Your last {surveys.length} visits, side by side</h2>
+        <h2 className="text-xl tracking-tight">{t('Your last {count} visits, side by side', { count: surveys.length })}</h2>
         <p>
-          Everything you recorded in one place, so you can weigh the options without opening your gallery, your notes
-          and a chat thread at once.
+          {t('Everything you recorded in one place, so you can weigh the options without opening your gallery, your notes and a chat thread at once.')}
         </p>
       </div>
       <div data-hero-strip>
         <div className="mb-4 flex justify-end">
           <a className={button({ variant: 'primary' })} href="#/compare">
-            Compare kos
+            {t('Compare kos')}
           </a>
         </div>
         <div className="flex flex-col gap-3">
@@ -116,7 +116,7 @@ function HeroStrip({ surveys }) {
                           </span>
                           {value === null ? (
                             <span className={cx('max-md:shrink-0', unrecorded)} data-strip-value>
-                              Not recorded
+                              {t('Not recorded')}
                             </span>
                           ) : (
                             <span className="max-md:shrink-0" data-strip-value>
@@ -150,27 +150,24 @@ export function DashboardPage() {
 
   return (
     <>
-      <PageHead title="Dashboard" lede="Survey, record, organize, compare." />
+      <PageHead title={t('Dashboard')} lede={t('Survey, record, organize, compare.')} />
 
       {recent.length ? (
         <HeroStrip surveys={recent} />
       ) : (
         <EmptyState
-          title="No kos recorded yet"
-          body={
-            'Start with the first kos you visited. Record what you saw, add photos and ' +
-            'notes, then compare your options side by side when you have two or more.'
-          }
-          actions={[{ label: 'Add survey', href: '#/surveys/new' }]}
+          title={msg('No kos recorded yet')}
+          body={msg('Start with the first kos you visited. Record what you saw, add photos and notes, then compare your options side by side when you have two or more.')}
+          actions={[{ label: msg('Add survey'), href: '#/surveys/new' }]}
         />
       )}
 
       <div className="mt-6 grid grid-cols-[2fr_1fr] gap-6 max-xl:grid-cols-1">
         <section className={panel}>
           <div className={sectionHead}>
-            <h2>Recent surveys</h2>
+            <h2>{t('Recent surveys')}</h2>
             <a className={button({ variant: 'quiet', size: 'small' })} href="#/surveys">
-              View all
+              {t('View all')}
             </a>
           </div>
           {recent.length ? (
@@ -189,37 +186,37 @@ export function DashboardPage() {
               ))}
             </ul>
           ) : (
-            <p className={meta}>Nothing recorded yet.</p>
+            <p className={meta}>{t('Nothing recorded yet.')}</p>
           )}
           {drafts > 0 && (
             <p className={cx(meta, 'mt-4')}>
-              {drafts} draft{drafts === 1 ? '' : 's'} still to finish.
+              {drafts === 1 ? t('1 draft still to finish.') : t('{count} drafts still to finish.', { count: drafts })}
             </p>
           )}
         </section>
 
         <section className={panel}>
           <div className={sectionHead}>
-            <h2>Best Match criteria</h2>
+            <h2>{t('Best Match criteria')}</h2>
             <button
               ref={edit}
               className={button({ variant: 'secondary', size: 'small' })}
               type="button"
               aria-haspopup="dialog"
-              aria-label="Edit Best Match criteria"
+              aria-label={t('Edit Best Match criteria')}
               onClick={() => setEditing(true)}
             >
-              Edit
+              {t('Edit')}
             </button>
           </div>
           <p className={meta} data-weights-note>
-            How much each criterion counts in each kos's Best Match score when you compare.{' '}
-            {isDefault(weights) ? 'These are the defaults.' : 'These are your own.'}
+            {t("How much each criterion counts in each kos's Best Match score when you compare.")}{' '}
+            {isDefault(weights) ? t('These are the defaults.') : t('These are your own.')}
           </p>
           <ul className="mt-4 flex flex-col gap-3">
             {BEST_MATCH_CRITERIA.map((c) => (
               <li key={c.key} className={listing}>
-                <span>{c.label}</span>
+                <span>{criterionLabel(c)}</span>
                 <span className="tabular-nums lining-nums">{weights[c.key]}%</span>
               </li>
             ))}

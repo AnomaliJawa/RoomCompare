@@ -5,6 +5,7 @@ import { numberToCurrency, normalizeRentInput } from '../../utils/format.js';
 import { ICON } from '../ui/icons.js';
 import { choice, control, controlGroup, cx, fieldError, fieldHint, fieldLabel } from '../ui/styles.js';
 import { attachCurrencyInput } from './currencyInput.js';
+import { locale, t } from '../../i18n/index.js';
 
 /** Every control has a real <label>, errors are tied by aria-describedby, groups are fieldsets. */
 
@@ -30,7 +31,7 @@ export function InfoButton({ guide, className = '' }) {
     <button
       className={cx(iconButton, className)}
       type="button"
-      aria-label={`How to fill ${guide.label}`}
+      aria-label={t('How to fill {field}', { field: guide.label })}
       aria-haspopup="dialog"
       data-guide={guide.key}
       onClick={(event) => open?.(guide.key, event.currentTarget)}
@@ -40,7 +41,7 @@ export function InfoButton({ guide, className = '' }) {
   );
 }
 
-const count = (n) => n.toLocaleString('en-US');
+const count = (n) => n.toLocaleString(locale());
 
 function Counter({ id, max, length }) {
   const over = length > max;
@@ -177,7 +178,7 @@ export function SelectField({ name, label, value = '', onChange, options, id = `
       <select className={control()} id={id} name={name} value={value} onChange={(event) => onChange?.(event.target.value)}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
-            {option.label}
+            {t(option.label)}
           </option>
         ))}
       </select>
@@ -339,7 +340,7 @@ export function CheckboxGroup({ name, legend, options, selected = [], onChange, 
             onChange={() => toggle(option)}
             {...firstErrorProps(index, name, error)}
           />
-          {option}
+          {t(option)}
         </label>
       ))}
     </Group>
@@ -359,7 +360,7 @@ export function RadioGroup({ name, legend, options, value = null, onChange, guid
             onChange={() => onChange?.(option.value)}
             {...firstErrorProps(index, name, error)}
           />
-          {option.label}
+          {t(option.label)}
         </label>
       ))}
     </Group>
@@ -376,7 +377,7 @@ export function LikertField({ name, legend, value = null, onChange, guide = null
       error={error}
       value={value === null || value === undefined ? null : Number(value)}
       onChange={onChange}
-      options={LIKERT.map((step) => ({ value: step.value, label: `${step.value} ${step.label}` }))}
+      options={LIKERT.map((step) => ({ value: step.value, label: `${step.value} ${t(step.label)}` }))}
     />
   );
 }

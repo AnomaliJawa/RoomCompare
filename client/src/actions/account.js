@@ -5,6 +5,7 @@ import * as sync from '../services/sync.js';
 import * as distanceRefresh from '../services/distanceRefresh.js';
 import { confirmDialog, toast } from '../components/feedback/feedback.js';
 import { navigate } from '../router.js';
+import { t } from '../i18n/index.js';
 
 /** Logging in and out, and the session the app starts with. */
 
@@ -27,14 +28,14 @@ export function requireAccount(reason, { replace = false } = {}) {
 
 /** Pre-account surveys are offered to the first account; left out, they are kept aside, not deleted. */
 function claimSurveys(count) {
-  const one = count === 1;
   return confirmDialog({
-    title: 'Add surveys from this device to your account?',
-    body: `${one ? 'One survey was' : `${count} surveys were`} recorded on this device before you had an account. Added, ${
-      one ? 'it is' : 'they are'
-    } there wherever you log in. Left out, ${one ? 'it stays' : 'they stay'} stored on this device, out of sight.`,
-    confirmLabel: 'Add to my account',
-    cancelLabel: 'Leave out',
+    title: t('Add surveys from this device to your account?'),
+    body:
+      count === 1
+        ? t('One survey was recorded on this device before you had an account. Added, it is there wherever you log in. Left out, it stays stored on this device, out of sight.')
+        : t('{count} surveys were recorded on this device before you had an account. Added, they are there wherever you log in. Left out, they stay stored on this device, out of sight.', { count }),
+    confirmLabel: t('Add to my account'),
+    cancelLabel: t('Leave out'),
     tone: 'primary',
   });
 }
@@ -43,7 +44,7 @@ function sessionEnded() {
   distanceRefresh.stop();
   store.setUser(null);
   navigate('/login');
-  toast('Your session has ended. Log in again to keep saving to your account.');
+  toast(t('Your session has ended. Log in again to keep saving to your account.'));
 }
 
 /** Resolves false if it did not work out, in which case nobody is logged in. */
@@ -77,12 +78,12 @@ export async function restoreSession() {
 /** `call` is api.login or api.register. Throws an ApiError, with field `errors` when the server names them. */
 export async function enter(call, credentials, { done = null } = {}) {
   const { user } = await call(credentials);
-  if (!(await signIn(user))) throw new api.ApiError(401, 'Your session could not be started. Try again.');
+  if (!(await signIn(user))) throw new api.ApiError(401, t('Your session could not be started. Try again.'));
   serverProblem = null;
   loginReason = null;
   // Always the Dashboard, wherever the visitor was (the user's rule).
   navigate('/dashboard');
-  if (done) toast(done);
+  if (done) toast(t(done));
 }
 
 export async function logOut() {
@@ -91,12 +92,13 @@ export async function logOut() {
   const waiting = sync.pendingCount();
   if (waiting) {
     const leave = await confirmDialog({
-      title: 'Log out before everything is saved?',
-      body: `${waiting === 1 ? 'One change has' : `${waiting} changes have`} not reached your account yet. ${
-        waiting === 1 ? 'It stays' : 'They stay'
-      } on this device and will be sent the next time you log in here.`,
-      confirmLabel: 'Log out',
-      cancelLabel: 'Stay logged in',
+      title: t('Log out before everything is saved?'),
+      body:
+        waiting === 1
+          ? t('One change has not reached your account yet. It stays on this device and will be sent the next time you log in here.')
+          : t('{count} changes have not reached your account yet. They stay on this device and will be sent the next time you log in here.', { count: waiting }),
+      confirmLabel: t('Log out'),
+      cancelLabel: t('Stay logged in'),
       tone: 'primary',
     });
     if (!leave) return;
@@ -105,7 +107,7 @@ export async function logOut() {
     await api.logout();
   } catch (error) {
     // Only the server can end the HttpOnly session; clearing the screen alone would not log out.
-    toast(error.offline ? 'You’re offline, so you can’t log out yet. Try again once you’re connected.' : error.message);
+    toast(error.offline ? t('You’re offline, so you can’t log out yet. Try again once you’re connected.') : error.message);
     return;
   }
   sync.stop();
@@ -113,5 +115,5 @@ export async function logOut() {
   store.forgetAccount();
   // Back to what a guest can explore.
   navigate('/community');
-  toast('Logged out');
+  toast(t('Logged out'));
 }

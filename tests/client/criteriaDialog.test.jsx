@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRef, useState } from 'react';
-import { BEST_MATCH_CRITERIA } from '../../client/src/constants.js';
+import { BEST_MATCH_CRITERIA, criterionDescription } from '../../client/src/constants.js';
 import { DEFAULT_WEIGHTS } from '../../client/src/utils/weights.js';
 
 const custom = { price: 35, facilities: 20, cleanliness: 15, location: 15, distance: 3, security: 12 };
@@ -56,7 +56,7 @@ describe('the criteria dialog', () => {
       const input = field(criterion.key);
       expect(input.value).toBe(String(custom[criterion.key]));
       expect(text(dialog().querySelector(`label[for="${input.id}"]`))).toBe(criterion.label);
-      expect(text(document.getElementById(input.getAttribute('aria-describedby')))).toBe(criterion.description);
+      expect(text(document.getElementById(input.getAttribute('aria-describedby')))).toBe(criterionDescription(criterion));
       expect(input.getAttribute('inputmode')).toBe('numeric');
     });
     expect(typed()).toEqual(custom);

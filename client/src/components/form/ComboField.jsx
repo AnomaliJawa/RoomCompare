@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { ICON } from '../ui/icons.js';
 import { control, controlGroup, cx, fieldError, fieldHint, fieldLabel } from '../ui/styles.js';
 import { Field, InfoButton, errorId } from './fields.jsx';
+import { t } from '../../i18n/index.js';
 
 /** Digits and one dot, a comma read as the dot: what the number field it replaced let through. */
 export function cleanDecimal(text) {
@@ -138,7 +139,7 @@ export function ComboField({ name, label, value = '', onChange, onPick, values, 
           className="flex w-10 flex-none items-center justify-center border-l border-rule bg-paper p-0 text-muted hover:text-ink active:bg-accent-tint active:text-accent pointer-coarse:w-target"
           type="button"
           tabIndex={-1}
-          aria-label={`Show ${label} options`}
+          aria-label={t('Show {label} options', { label })}
           aria-controls={listId}
           aria-expanded={open ? 'true' : 'false'}
           // Pressing the chevron or an option must not pull focus out of the field.

@@ -2,6 +2,7 @@ import * as db from './mediaDb.js';
 import { getState } from './store.js';
 import { downscaleImage, acceptVideo, MediaError } from '../utils/image.js';
 import { MAX_PHOTOS_PER_SECTION, SAMPLE_PHOTO_PREFIX } from '../constants.js';
+import { msg, t } from '../i18n/index.js';
 
 /** Photos stay on their device; each records its account, so cleanup never touches another's. */
 const currentOwner = () => getState().user?.id ?? null;
@@ -35,13 +36,13 @@ export async function addPhoto(file, { surveyId, section }) {
       return {
         ok: false,
         fileName: file.name,
-        message: 'Photos cannot be saved in this browser mode.',
+        message: msg('Photos cannot be saved in this browser mode.'),
       };
     }
     return { ok: true, record };
   } catch (error) {
     const message =
-      error instanceof MediaError ? error.message : 'That file could not be added.';
+      error instanceof MediaError ? error.message : msg('That file could not be added.');
     return { ok: false, fileName: file?.name ?? '', message };
   }
 }
@@ -65,11 +66,11 @@ export async function addVideo(file, { surveyId }) {
     };
     const stored = await db.putMedia(record);
     if (!stored) {
-      return { ok: false, fileName: file.name, message: 'Videos cannot be saved in this browser mode.' };
+      return { ok: false, fileName: file.name, message: msg('Videos cannot be saved in this browser mode.') };
     }
     return { ok: true, record };
   } catch (error) {
-    const message = error instanceof MediaError ? error.message : 'That file could not be added.';
+    const message = error instanceof MediaError ? error.message : msg('That file could not be added.');
     return { ok: false, fileName: file?.name ?? '', message };
   }
 }
@@ -80,7 +81,7 @@ export async function addPhotos(files, { surveyId, section, existingCount = 0 })
   const rejected = [...files].slice(room).map((file) => ({
     ok: false,
     fileName: file.name,
-    message: `Only ${MAX_PHOTOS_PER_SECTION} photos can be added to this section.`,
+    message: t('Only {max} photos can be added to this section.', { max: MAX_PHOTOS_PER_SECTION }),
   }));
 
   const results = [];

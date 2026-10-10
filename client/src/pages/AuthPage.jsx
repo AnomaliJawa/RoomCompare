@@ -5,27 +5,28 @@ import { ACCOUNT_LIMITS, validateLogin, validateRegistration } from '../utils/va
 import { TextField } from '../components/form/fields.jsx';
 import { Banner } from '../components/ui/Banner.jsx';
 import { button } from '../components/ui/styles.js';
+import { msg, t } from '../i18n/index.js';
 
 const KINDS = {
   login: {
-    title: 'Log in',
-    lede: 'Your surveys are saved to your account, so they are there on any device you log in from.',
+    title: msg('Log in'),
+    lede: msg('Your surveys are saved to your account, so they are there on any device you log in from.'),
     validate: validateLogin,
     call: api.login,
-    label: 'Log in',
-    busy: 'Logging in…',
+    label: msg('Log in'),
+    busy: msg('Logging in…'),
     done: null,
-    alternate: { text: 'No account yet? ', link: 'Create one', href: '#/register' },
+    alternate: { text: msg('No account yet?'), link: msg('Create one'), href: '#/register' },
   },
   register: {
-    title: 'Create your account',
-    lede: 'One account keeps every kos you survey, on any device you log in from. Photos stay on the device you add them on.',
+    title: msg('Create your account'),
+    lede: msg('One account keeps every kos you survey, on any device you log in from. Photos stay on the device you add them on.'),
     validate: validateRegistration,
     call: api.register,
-    label: 'Create account',
-    busy: 'Creating account…',
-    done: 'Account created',
-    alternate: { text: 'Already have an account? ', link: 'Log in', href: '#/login' },
+    label: msg('Create account'),
+    busy: msg('Creating account…'),
+    done: msg('Account created'),
+    alternate: { text: msg('Already have an account?'), link: msg('Log in'), href: '#/login' },
   },
 };
 
@@ -105,51 +106,51 @@ function AuthPage({ kind }) {
     onChange: (value) => setTyped((now) => ({ ...now, [name]: value })),
   });
   const emailField = (
-    <TextField {...field('email')} label="Email" type="email" autoComplete="email" inputMode="email" plain />
+    <TextField {...field('email')} label={t('Email')} type="email" autoComplete="email" inputMode="email" plain />
   );
 
   return (
     <section className="flex justify-center pt-6 max-lg:pt-0">
       <div className="flex w-full max-w-[440px] flex-col gap-6 rounded-md border border-rule bg-surface px-6 py-10 max-lg:px-4 max-lg:py-6">
         <div>
-          <h1>{page.title}</h1>
-          <p className="mt-2 text-muted">{page.lede}</p>
+          <h1>{t(page.title)}</h1>
+          <p className="mt-2 text-muted">{t(page.lede)}</p>
         </div>
         {reason && (
           <div data-login-reason>
-            <Banner message={reason} />
+            <Banner message={t(reason)} />
           </div>
         )}
         <div className="empty:hidden" role="alert" data-auth-notice>
-          {notice && <Banner message={notice} tone="alert" />}
+          {notice && <Banner message={t(notice)} tone="alert" />}
         </div>
         <form ref={form} className="flex flex-col gap-4" noValidate onSubmit={submit} onBlur={recheck}>
           {kind === 'register' ? (
             <>
-              <TextField {...field('name')} label="Your name" autoComplete="name" />
+              <TextField {...field('name')} label={t('Your name')} autoComplete="name" />
               {emailField}
               <TextField
                 {...field('password')}
-                label="Password"
+                label={t('Password')}
                 type="password"
                 autoComplete="new-password"
-                hint={`At least ${ACCOUNT_LIMITS.PASSWORD_MIN} characters.`}
+                hint={t('At least {min} characters.', { min: ACCOUNT_LIMITS.PASSWORD_MIN })}
               />
             </>
           ) : (
             <>
               {emailField}
-              <TextField {...field('password')} label="Password" type="password" autoComplete="current-password" />
+              <TextField {...field('password')} label={t('Password')} type="password" autoComplete="current-password" />
             </>
           )}
           <button className={button({ variant: 'primary', className: 'mt-2 w-full' })} type="submit" disabled={busy}>
-            {busy ? page.busy : page.label}
+            {t(busy ? page.busy : page.label)}
           </button>
         </form>
         <p className="text-muted">
-          {page.alternate.text}
+          {t(page.alternate.text)}{' '}
           <a className="touch-hit" href={page.alternate.href} onClick={() => (switching.current = true)}>
-            {page.alternate.link}
+            {t(page.alternate.link)}
           </a>
         </p>
       </div>

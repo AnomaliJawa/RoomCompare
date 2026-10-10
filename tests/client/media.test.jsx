@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MediaUploader } from '../../client/src/components/form/MediaUploader.jsx';
-import { Gallery } from '../../client/src/components/survey/PhotoGallery.jsx';
+import { MediaGallery } from '../../client/src/components/survey/PhotoGallery.jsx';
 import { loadMedia } from '../../client/src/data/media.js';
 import { MAX_PHOTOS_PER_SECTION } from '../../client/src/constants.js';
 
@@ -22,6 +22,10 @@ function serveSamples(files = ['room-1-1', 'room-1-2', 'bathroom-2-1']) {
   vi.stubGlobal('fetch', fetch);
   return fetch;
 }
+
+const roomGallery = (ids) => (
+  <MediaGallery groups={[{ title: 'Room', one: '1 room photo', many: '{count} room photos', none: 'room photos', ids }]} />
+);
 
 async function roomUploader(ids) {
   const onChange = vi.fn();
@@ -84,7 +88,7 @@ describe('photos added on another device', () => {
   });
 
   it('are named on the survey page rather than reported lost', async () => {
-    render(<Gallery label="room photos" mediaIds={['p1', 'p2']} />);
+    render(roomGallery(['p1', 'p2']));
     await settle();
     expect(screen.getByRole('status').textContent).toBe(
       '2 photos are not on this device. Photos and videos stay on the device they were added on.',
@@ -100,9 +104,9 @@ describe('the uploader', () => {
     expect(drop.disabled).toBe(true);
   });
 
-  it('holds tiles in place while the files load', () => {
-    const { container } = render(<Gallery label="room photos" mediaIds={['p1', 'p2']} />);
-    expect(container.querySelectorAll('[aria-hidden="true"] > span')).toHaveLength(2);
+  it('holds the large photo’s place while the files load', () => {
+    const { container } = render(roomGallery(['p1', 'p2']));
+    expect(container.querySelectorAll('[aria-hidden="true"] > span')).toHaveLength(1);
     expect(screen.getByRole('status').textContent).toBe('Loading 2 files…');
   });
 });
