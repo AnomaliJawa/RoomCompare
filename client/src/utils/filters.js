@@ -1,4 +1,4 @@
-import { ROOM_FACILITIES, BATHROOM_FACILITIES, SHARED_FACILITIES } from '../constants.js';
+import { ROOM_FACILITIES, SHARED_FACILITIES } from '../constants.js';
 
 /** Matches ignoring case and accents, so a phone keyboard's spelling still finds the kos. */
 function searchKey(value) {
@@ -14,10 +14,19 @@ export function filterSurveys(surveys, query) {
   return surveys.filter((survey) => searchKey(survey.kos.name).includes(term));
 }
 
+/** The bathroom's answers, offered as requirements like the facilities beside them. */
+const BATHROOM_REQUIREMENTS = {
+  'Indoor bathroom': (bathroom) => bathroom?.type === 'indoor',
+  'Outdoor bathroom': (bathroom) => bathroom?.type === 'outdoor',
+  'Squat toilet': (bathroom) => bathroom?.toilet === 'squat',
+  'Sitting toilet': (bathroom) => bathroom?.toilet === 'sit',
+  'Water heater': (bathroom) => bathroom?.waterHeater === true,
+};
+
 /** Facility filters are scoped to their section: a room refrigerator is not a shared one. */
 export const FACILITY_SECTIONS = [
   { key: 'room', legend: 'Room facilities', options: ROOM_FACILITIES },
-  { key: 'bathroom', legend: 'Bathroom facilities', options: BATHROOM_FACILITIES },
+  { key: 'bathroom', legend: 'Bathroom', options: Object.keys(BATHROOM_REQUIREMENTS) },
   { key: 'shared', legend: 'Shared facilities', options: SHARED_FACILITIES },
 ];
 
@@ -36,15 +45,15 @@ export function activeFilterCount(filters) {
 
 /** `search` matches the kos name or its area; the filters narrow what it finds. */
 export function filterCommunity(surveys, filters, starredIds, search = '') {
-  const query = search.trim().toLowerCase();
-  const location = filters.location.trim().toLowerCase();
+  const query = searchKey(search).trim();
+  const location = searchKey(filters.location).trim();
   const min = filters.minRent === '' ? null : Number(filters.minRent);
   const max = filters.maxRent === '' ? null : Number(filters.maxRent);
   const required = filters.facilities ?? [];
 
   return surveys.filter((survey) => {
-    const area = (survey.kos.kosLocation?.label ?? '').toLowerCase();
-    if (query && !survey.kos.name.toLowerCase().includes(query) && !area.includes(query)) return false;
+    const area = searchKey(survey.kos.kosLocation?.label);
+    if (query && !searchKey(survey.kos.name).includes(query) && !area.includes(query)) return false;
     if (location && !area.includes(location)) return false;
     if (filters.type && survey.kos.type !== filters.type) return false;
     if (filters.starredOnly && !starredIds.includes(survey.id)) return false;
@@ -55,6 +64,7 @@ export function filterCommunity(surveys, filters, starredIds, search = '') {
     return required.every((key) => {
       const [section, ...rest] = key.split(':');
       const name = rest.join(':');
+      if (section === 'bathroom') return BATHROOM_REQUIREMENTS[name]?.(survey.bathroom) ?? false;
       return (survey[section]?.facilities ?? []).includes(name);
     });
   });

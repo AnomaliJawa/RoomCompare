@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { computeBestMatch } from '../../client/src/utils/bestMatch.js';
-import { BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT, SURROUNDINGS } from '../../client/src/constants.js';
+import { AMENITY_COUNT, BEST_MATCH_CRITERIA, SURROUNDINGS, TOTAL_FACILITY_COUNT, WORSHIP_PLACES } from '../../client/src/constants.js';
 import { DEFAULT_WEIGHTS } from '../../client/src/utils/weights.js';
 
 function kos(id, over = {}) {
@@ -9,7 +9,7 @@ function kos(id, over = {}) {
     id,
     kos: { name: id, rent: 1_000_000, distanceKm: 2, ...(over.kos ?? {}) },
     room: { facilities: [], cleanliness: 3, ...(over.room ?? {}) },
-    bathroom: { facilities: [], ...(over.bathroom ?? {}) },
+    bathroom: { type: null, toilet: null, waterHeater: null, ...(over.bathroom ?? {}) },
     shared: { facilities: [], ...(over.shared ?? {}) },
     surroundings: over.surroundings ?? [],
     additional: { security: 3, ...(over.additional ?? {}) },
@@ -41,9 +41,9 @@ describe('the weighted total', () => {
     const best = kos('best', {
       kos: { rent: 1_000_000, distanceKm: 1 },
       room: { facilities: fill(8), cleanliness: 4 },
-      bathroom: { facilities: fill(4) },
+      bathroom: { type: 'indoor', toilet: 'sit', waterHeater: true },
       shared: { facilities: fill(6) },
-      surroundings: fill(SURROUNDINGS.length),
+      surroundings: [...SURROUNDINGS],
       additional: { security: 4 },
     });
     const worst = kos('worst', {
@@ -54,8 +54,8 @@ describe('the weighted total', () => {
 
     const { scored } = computeBestMatch([best, worst]);
 
-    // price 100, facilities 18/24 = 75, cleanliness 100, location 100, distance 100, security 100.
-    const expected = Math.round((100 * 25 + 75 * 20 + 100 * 15 + 100 * 15 + 100 * 13 + 100 * 12) / 100);
+    // price 100, facilities 8 + 6 + heater + indoor = 16/21, cleanliness 100, location 100, distance 100, security 100.
+    const expected = Math.round((100 * 25 + (16 / 21) * 100 * 20 + 100 * 15 + 100 * 15 + 100 * 13 + 100 * 12) / 100);
     expect(expected).toBe(95);
     expect(scored[0].total).toBe(95);
     expect(scored[1].total).toBe(0);
@@ -66,13 +66,13 @@ describe('weights of the user’s own', () => {
   const onlyPriceAndFacilities = { price: 50, facilities: 50, cleanliness: 0, location: 0, distance: 0, security: 0 };
 
   it('score with the user’s percentages instead of the defaults', () => {
-    const best = kos('best', { kos: { rent: 1_000_000 }, room: { facilities: fill(8) }, bathroom: { facilities: fill(4) }, shared: { facilities: fill(6) } });
+    const best = kos('best', { kos: { rent: 1_000_000 }, room: { facilities: fill(8) }, bathroom: { type: 'indoor', waterHeater: true }, shared: { facilities: fill(6) } });
     const worst = kos('worst', { kos: { rent: 2_000_000 } });
 
     const { scored } = computeBestMatch([best, worst], onlyPriceAndFacilities);
 
-    // price 100 × 50 + facilities 75 × 50, over 100.
-    expect(scored[0].total).toBe(Math.round((100 * 50 + 75 * 50) / 100));
+    // price 100 × 50 + facilities 16/21 × 50, over 100.
+    expect(scored[0].total).toBe(Math.round((100 * 50 + (16 / 21) * 100 * 50) / 100));
     expect(scored[0].total).toBe(88);
     expect(scored[1].total).toBe(0);
   });
@@ -101,10 +101,24 @@ describe('weights of the user’s own', () => {
 });
 
 describe('sub-scores', () => {
-  it('counts facilities across all three sections', () => {
-    const a = kos('a', { room: { facilities: fill(4) }, bathroom: { facilities: fill(2) }, shared: { facilities: fill(6) } });
-    const { scored } = computeBestMatch([a, kos('b')]);
+  it('counts room and shared facilities, a working water heater and an indoor bathroom, out of 21', () => {
+    expect(TOTAL_FACILITY_COUNT).toBe(21);
+    const full = kos('full', { room: { facilities: fill(4) }, bathroom: { type: 'indoor', toilet: 'squat', waterHeater: true }, shared: { facilities: fill(6) } });
+    const plain = kos('plain', { room: { facilities: fill(4) }, bathroom: { type: 'outdoor', toilet: 'sit', waterHeater: false }, shared: { facilities: fill(6) } });
+    const { scored } = computeBestMatch([full, plain]);
     expect(scored[0].parts.facilities).toBeCloseTo((12 / TOTAL_FACILITY_COUNT) * 100, 6);
+    // The toilet type is a preference, not a facility: squat and sitting score alike.
+    expect(scored[1].parts.facilities).toBeCloseTo((10 / TOTAL_FACILITY_COUNT) * 100, 6);
+  });
+
+  it('counts any place of worship once among the surroundings, out of 7', () => {
+    expect(AMENITY_COUNT).toBe(7);
+    const faiths = kos('faiths', { kos: { distanceKm: 2 }, surroundings: [SURROUNDINGS[0], ...WORSHIP_PLACES] });
+    const one = kos('one', { kos: { distanceKm: 2 }, surroundings: [SURROUNDINGS[0], WORSHIP_PLACES[2]] });
+    const { scored } = computeBestMatch([faiths, one]);
+    // Both are at the same distance (nearness 100) with two amenities: (100 + 2/7) / 2.
+    expect(scored[0].parts.location).toBeCloseTo((100 + (2 / 7) * 100) / 2, 6);
+    expect(scored[1].parts.location).toBeCloseTo(scored[0].parts.location, 6);
   });
 
   it('maps the 1-4 scale so that 1 scores zero, not a quarter', () => {

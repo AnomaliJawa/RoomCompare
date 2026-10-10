@@ -31,7 +31,7 @@ const survey = (id, name = `Kos ${id}`) => ({
   updatedAt: '2026-09-01T08:00:00.000Z',
   kos: { name, rent: 1_500_000 },
   room: { facilities: [], photoIds: [] },
-  bathroom: { facilities: [], photoIds: [] },
+  bathroom: { type: null, toilet: null, waterHeater: null, photoIds: [] },
   shared: { facilities: [], photoIds: [] },
   surroundings: [],
   additional: { notes: '' },
@@ -62,6 +62,27 @@ describe('syncing an account', () => {
     expect(store.getState().surveys.map((s) => s.id)).toEqual(['svy-a', 'svy-b']);
     expect(cached().ownerId).toBe(USER.id);
     expect(api.putSurvey).not.toHaveBeenCalled();
+  });
+
+  it('brings a record from before the bathroom split to the current shape, and sends it back once', async () => {
+    const legacy = {
+      ...survey('svy-old'),
+      bathroom: { facilities: ['Indoor bathroom', 'Squat toilet'], photoIds: [] },
+      surroundings: ['Laundry', 'Place of worship'],
+    };
+    const { api, store, sync } = await load({ server: [legacy] });
+    await sync.start(USER);
+
+    const now = store.findSurvey('svy-old');
+    expect(now.bathroom).toEqual({ type: 'indoor', toilet: 'squat', waterHeater: false, photoIds: [] });
+    expect(now.surroundings).toHaveLength(2);
+    expect(now.surroundings).not.toContain('Place of worship');
+    expect(api.putSurvey).toHaveBeenCalledTimes(1);
+    expect(api.putSurvey).toHaveBeenCalledWith(expect.objectContaining({ id: 'svy-old', bathroom: now.bathroom }));
+
+    store.setSearch('melati');
+    await sync.flush();
+    expect(api.putSurvey).toHaveBeenCalledTimes(1);
   });
 
   it('sends every change to the account: added, edited, deleted', async () => {

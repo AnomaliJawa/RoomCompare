@@ -1,4 +1,4 @@
-import { BATHROOM_FACILITIES, ROOM_FACILITIES, SHARED_FACILITIES, SURROUNDINGS } from '../constants.js';
+import { BATHROOM_TYPES, ROOM_FACILITIES, SHARED_FACILITIES, SURROUNDINGS, TOILET_TYPES } from '../constants.js';
 import { distanceFor } from '../services/walkingRoute.js';
 import { isValidPoint } from './geo.js';
 
@@ -35,7 +35,9 @@ export function formValues(survey = null) {
     cleanliness: room.cleanliness ?? null,
     internet: room.internet ?? null,
     roomPhotoIds: room.photoIds ?? [],
-    bathroomFacility: survey?.bathroom?.facilities ?? [],
+    bathroomType: survey?.bathroom?.type ?? null,
+    toiletType: survey?.bathroom?.toilet ?? null,
+    waterHeater: survey?.bathroom?.waterHeater ?? null,
     bathroomPhotoIds: survey?.bathroom?.photoIds ?? [],
     sharedFacility: survey?.shared?.facilities ?? [],
     sharedPhotoIds: survey?.shared?.photoIds ?? [],
@@ -68,6 +70,9 @@ function place(point) {
 /** Ticked boxes in the form's order, whatever order they were ticked in. */
 const inOrder = (options, chosen) => options.filter((option) => chosen.includes(option));
 
+/** One of the offered choices, or nothing: a stray value must not reach the record. */
+const oneOf = (options, value) => (options.some((option) => option.value === value) ? value : null);
+
 export function readSurvey(values) {
   const kosPoint = place(values.kosLocation);
   const campusPoint = place(values.campusLocation);
@@ -94,7 +99,12 @@ export function readSurvey(values) {
       internet: num(values.internet),
       photoIds: values.roomPhotoIds.filter(Boolean),
     },
-    bathroom: { facilities: inOrder(BATHROOM_FACILITIES, values.bathroomFacility), photoIds: values.bathroomPhotoIds.filter(Boolean) },
+    bathroom: {
+      type: oneOf(BATHROOM_TYPES, values.bathroomType),
+      toilet: oneOf(TOILET_TYPES, values.toiletType),
+      waterHeater: typeof values.waterHeater === 'boolean' ? values.waterHeater : null,
+      photoIds: values.bathroomPhotoIds.filter(Boolean),
+    },
     shared: { facilities: inOrder(SHARED_FACILITIES, values.sharedFacility), photoIds: values.sharedPhotoIds.filter(Boolean) },
     surroundings: inOrder(SURROUNDINGS, values.surrounding),
     additional: { security: num(values.security), notes: text(values.notes), videoIds: values.videoIds.filter(Boolean) },

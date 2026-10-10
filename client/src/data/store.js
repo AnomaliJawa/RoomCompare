@@ -2,6 +2,7 @@ import { ownSurveys } from '../seed/ownSurveys.js';
 import { communitySurveys } from '../seed/communitySurveys.js';
 import { MAX_COMPARE, MIN_COMPARE, DISTANCE_BASIS, STATUS } from '../constants.js';
 import { checkWeights, effectiveWeights, isDefault } from '../utils/weights.js';
+import { normalizeSurvey } from '../utils/migrate.js';
 import * as storage from './localStore.js';
 import * as db from './mediaDb.js';
 
@@ -18,7 +19,7 @@ const state = {
   /** In memory only: the session itself is an HttpOnly cookie. */
   user: null,
   ownerId: seeded ? null : boot.data.ownerId ?? null,
-  surveys: seeded ? structuredClone(ownSurveys) : boot.data.surveys,
+  surveys: seeded ? structuredClone(ownSurveys) : boot.data.surveys.map(normalizeSurvey),
   communitySurveys: structuredClone(communitySurveys),
   starredIds: seeded ? ['com-kartika'] : boot.data.starredIds,
   /** The viewer's own likes of community kos, loaded with the account. */
@@ -130,7 +131,8 @@ export function unclaimedSurveys() {
 }
 
 export function adoptSurveys(surveys, ownerId) {
-  state.surveys = surveys;
+  // Records from before a field was split come back in today's shape; sync then sends them on once.
+  state.surveys = surveys.map(normalizeSurvey);
   state.ownerId = ownerId;
   state.compareSelection = state.compareSelection.filter((id) => findSurvey(id));
   closeComparisonIfTooFew();

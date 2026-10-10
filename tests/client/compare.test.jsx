@@ -8,7 +8,6 @@ import { communitySurveys } from '../../client/src/seed/communitySurveys.js';
 import { formatDistance } from '../../client/src/utils/format.js';
 import {
   ROOM_FACILITIES,
-  BATHROOM_FACILITIES,
   SHARED_FACILITIES,
   SURROUNDINGS,
   MAX_COMPARE,
@@ -48,10 +47,12 @@ describe('the comparison, one section per category', () => {
   it('keeps every criterion and every facility row', () => {
     const { container } = render(<ComparisonTable surveys={three} />);
     const labels = rowLabels(container);
-    for (const item of [...ROOM_FACILITIES, ...BATHROOM_FACILITIES, ...SHARED_FACILITIES, ...SURROUNDINGS]) {
+    const bathroom = ['Bathroom type', 'Toilet type', 'Water heater'];
+    for (const item of [...ROOM_FACILITIES, ...bathroom, ...SHARED_FACILITIES, ...SURROUNDINGS]) {
       expect(labels).toContain(item);
     }
-    expect(labels).toHaveLength(42);
+    // 4 kos rows, 4 room rows and 11 room facilities, 3 bathroom answers, 8 shared, 11 surroundings, 3 additional.
+    expect(labels).toHaveLength(44);
   });
 
   it('marks every facility present ✓ or absent —, saying which to a screen reader', () => {

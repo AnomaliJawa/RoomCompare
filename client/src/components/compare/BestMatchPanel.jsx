@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import * as store from '../../data/store.js';
 import { useStore } from '../../hooks/useStore.js';
-import { BEST_MATCH_CRITERIA, SURROUNDINGS, TOTAL_FACILITY_COUNT } from '../../constants.js';
+import { AMENITY_COUNT, BEST_MATCH_CRITERIA, TOTAL_FACILITY_COUNT } from '../../constants.js';
 import { computeBestMatch, joinList } from '../../utils/bestMatch.js';
 import { isDefault } from '../../utils/weights.js';
 import { button, cx, meta, narrowLabel, unrecorded } from '../ui/styles.js';
@@ -166,12 +166,13 @@ export function BestMatchPanel({ surveys }) {
           <dt>Price and distance</dt>
           <dd>Ranked against the other kos here. Best value scores 100.</dd>
           <dt>Facilities</dt>
-          <dd>Recorded facilities out of {TOTAL_FACILITY_COUNT} across room, bathroom and shared.</dd>
+          <dd>Recorded facilities out of {TOTAL_FACILITY_COUNT}: room and shared, a water heater, and an indoor bathroom.</dd>
           <dt>Cleanliness and security</dt>
           <dd>The 1–4 rating, where 1 scores 0 and 4 scores 100.</dd>
           <dt>Location</dt>
           <dd>
-            Half nearness to campus, ranked as distance is, and half recorded surroundings out of {SURROUNDINGS.length}.
+            Half nearness to campus, ranked as distance is, and half recorded surroundings out of {AMENITY_COUNT}, any place
+            of worship counting once.
             It needs the distance to campus recorded.
           </dd>
           <dt>Weights</dt>

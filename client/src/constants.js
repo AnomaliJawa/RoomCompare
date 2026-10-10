@@ -36,12 +36,19 @@ export const ROOM_FACILITIES = [
   'Includes electricity',
 ];
 
-export const BATHROOM_FACILITIES = [
-  'Outdoor bathroom',
-  'Indoor bathroom',
-  'Squat toilet',
-  'Western-style toilet',
-  'Water heater',
+export const BATHROOM_TYPES = [
+  { value: 'indoor', label: 'Indoor (inside the room)' },
+  { value: 'outdoor', label: 'Outdoor (outside the room)' },
+];
+
+export const TOILET_TYPES = [
+  { value: 'squat', label: 'Squat toilet' },
+  { value: 'sit', label: 'Sitting (Western-style) toilet' },
+];
+
+export const YES_NO = [
+  { value: true, label: 'Yes' },
+  { value: false, label: 'No' },
 ];
 
 export const SHARED_FACILITIES = [
@@ -55,18 +62,33 @@ export const SHARED_FACILITIES = [
   'Dispenser',
 ];
 
+export const WORSHIP_PLACES = [
+  'Mosque (masjid)',
+  'Church (gereja)',
+  'Hindu temple (pura)',
+  'Buddhist temple (vihara)',
+  'Chinese temple (klenteng)',
+];
+
 export const SURROUNDINGS = [
   'Minimarket / supermarket',
   'Eatery (warung makan)',
   'Pharmacy / clinic',
   'ATM / bank',
   'Laundry',
-  'Place of worship',
+  ...WORSHIP_PLACES,
   'Gym / sports facilities',
 ];
 
-export const TOTAL_FACILITY_COUNT =
-  ROOM_FACILITIES.length + BATHROOM_FACILITIES.length + SHARED_FACILITIES.length;
+/** Any place of worship counts once (the user's choice), so a kos is not scored on how many faiths are near. */
+export const AMENITY_COUNT = SURROUNDINGS.length - WORSHIP_PLACES.length + 1;
+
+/** Room and shared facilities, a working water heater, and an indoor bathroom; the toilet type is a preference. */
+export const TOTAL_FACILITY_COUNT = ROOM_FACILITIES.length + SHARED_FACILITIES.length + 2;
+
+export function choiceLabel(options, value) {
+  return options.find((option) => option.value === value)?.label ?? null;
+}
 
 export const LIKERT = [
   { value: 1, label: 'Poor' },
@@ -97,7 +119,7 @@ export const BEST_MATCH_CRITERIA = [
     key: 'facilities',
     label: 'Facilities',
     defaultWeight: 20,
-    description: `Recorded facilities out of ${TOTAL_FACILITY_COUNT}, across room, bathroom and shared.`,
+    description: `Recorded facilities out of ${TOTAL_FACILITY_COUNT}: room and shared, a water heater, and an indoor bathroom.`,
   },
   {
     key: 'cleanliness',
@@ -109,7 +131,7 @@ export const BEST_MATCH_CRITERIA = [
     key: 'location',
     label: 'Location (distance and amenities)',
     defaultWeight: 15,
-    description: `Half nearness to campus, ranked against the other kos compared, and half recorded surroundings out of ${SURROUNDINGS.length}.`,
+    description: `Half nearness to campus, ranked against the other kos compared, and half recorded surroundings out of ${AMENITY_COUNT}, any place of worship counting once.`,
   },
   {
     key: 'distance',

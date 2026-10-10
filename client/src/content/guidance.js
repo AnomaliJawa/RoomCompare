@@ -3,7 +3,7 @@
 export const SECTION_INTROS = {
   kos: 'Start with the basics: name, rent, type, and location. These are the base for comparing every kos.',
   room: 'Record the room you surveyed: size, facilities, and condition in photos. Write down what you see on the day.',
-  bathroom: "Record the bathroom's facilities and condition to judge how comfortable it is.",
+  bathroom: "Record the bathroom's type, toilet, hot water and condition to judge how comfortable it is.",
   shared: 'Record the facilities tenants share for daily needs, including Wi-Fi.',
   surroundings: 'Record useful places within a 10-minute walk of the kos.',
   additional: 'Add anything else that affects your choice: security, notes, and videos.',
@@ -181,17 +181,36 @@ export const FIELD_GUIDE = {
   },
 
   // 3. Bathroom
-  bathroomFacility: {
-    label: 'Bathroom facilities',
-    helper: 'Tick everything available. Unticked means not available.',
+  bathroomType: {
+    label: 'Bathroom type',
+    helper: 'Indoor is inside your room; outdoor is outside it, usually shared.',
     panel: {
-      what: 'What the bathroom has.',
-      find: 'Check the bathroom yourself.',
-      example:
-        'Indoor bathroom: inside your room, for you only. Outdoor bathroom: outside the room, usually shared. ' +
-        'If both exist, tick both. Squat or Western-style: the toilet type.',
-      rules: 'Optional. Unticked means not available.',
-      tip: 'Water heater: tick only if it works; turn on the hot water to check.',
+      what: 'Where the bathroom is: inside the room, or outside it.',
+      find: 'Check where the bathroom is yourself.',
+      example: 'Indoor: inside your room, for you only. Outdoor: outside the room, usually shared with other tenants.',
+      rules: 'Optional. Choose one.',
+      tip: 'If the room has both, choose Indoor and mention the outdoor one in Additional notes.',
+    },
+  },
+  toiletType: {
+    label: 'Toilet type',
+    helper: 'Squat, or sitting (Western-style).',
+    panel: {
+      what: 'The kind of toilet in the bathroom you would use.',
+      find: 'Look in the bathroom.',
+      example: 'Squat: set into the floor. Sitting: a Western-style toilet with a seat.',
+      rules: 'Optional. Choose one.',
+      tip: 'Flush it to check that it works and drains well.',
+    },
+  },
+  waterHeater: {
+    label: 'Water heater',
+    helper: 'Yes only if it works.',
+    panel: {
+      what: 'Whether the bathroom has hot water.',
+      find: 'Turn on the hot water to check.',
+      rules: 'Optional. Yes or No.',
+      tip: 'Choose Yes only if it works: a heater that is broken is no heater.',
     },
   },
   bathroomPhotos: {
@@ -242,8 +261,17 @@ export const FIELD_GUIDE = {
       find: 'Walk around the kos, or use Google Maps walking directions from the kos pin.',
       example:
         'Eatery: a warung makan or small restaurant. ' +
-        'Laundry: a laundry shop nearby (a service run by the kos goes under Shared facilities). ' +
-        'Place of worship: a mosque, church, temple, or similar.',
+        'Laundry: a laundry shop nearby (a service run by the kos goes under Shared facilities).',
+      rules: 'Optional. Unticked means not nearby.',
+    },
+  },
+  worship: {
+    label: 'Places of worship nearby',
+    helper: 'Tick each one within a 10-minute walk (about 800 m).',
+    panel: {
+      what: 'Places of worship within a 10-minute walk (about 800 m).',
+      find: 'Walk around the kos, or search Google Maps near the kos pin.',
+      example: 'Masjid, gereja, pura, vihara or klenteng: tick every one that is close.',
       rules: 'Optional. Unticked means not nearby.',
     },
   },
