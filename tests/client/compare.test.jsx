@@ -12,6 +12,7 @@ import {
   SHARED_FACILITIES,
   SURROUNDINGS,
   MAX_COMPARE,
+  MIN_COMPARE,
 } from '../../client/src/constants.js';
 
 const three = ownSurveys.slice(0, 3);
@@ -266,7 +267,7 @@ describe('the kos picker', () => {
   it('is titled for the dialog and counts the selection', () => {
     picker({ selection: [candidates.own[0].id] });
     expect(text(document.getElementById('picker-dialog-title'))).toBe('Add kos');
-    expect(screen.getByRole('status').textContent.trim()).toBe(`1 of ${MAX_COMPARE} selected.`);
+    expect(screen.getByRole('status').textContent.trim()).toBe(`1 of ${MAX_COMPARE} selected, 1 more to compare.`);
   });
 
   it('lists your own surveys and every community survey, each under its source', () => {
@@ -318,10 +319,14 @@ describe('the kos picker', () => {
     for (const button of blocked) expect(button.disabled).toBe(true);
   });
 
-  it('can be closed from its head and its foot', () => {
-    picker();
+  it('closes from its head, and compares from its foot only once two are picked', () => {
+    const first = picker();
     expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Done' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Compare' }).disabled).toBe(true);
+    first.unmount();
+    picker({ selection: everyKos.slice(0, MIN_COMPARE).map((s) => s.id) });
+    expect(screen.getByRole('button', { name: 'Compare' }).disabled).toBe(false);
   });
 
   describe('opened from a filled slot', () => {
@@ -419,9 +424,24 @@ describe('the compare page', () => {
     expect(text(dialog.querySelector('#picker-dialog-title'))).toBe('Add kos');
     fireEvent.click(within(dialog).getAllByRole('button', { name: 'Add' })[0]);
     expect(store.getState().compareSelection).toHaveLength(1);
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     expect(document.querySelector('dialog[open]')).toBeNull();
     expect(document.activeElement.dataset.slot).toBe('0');
+  });
+
+  it('compares straight from the picker once two kos are added', async () => {
+    const { store } = await page(0, false);
+    fireEvent.click(screen.getByRole('button', { name: 'Add kos 1' }));
+    const dialog = document.querySelector('dialog[open]');
+    const compare = () => within(dialog).getByRole('button', { name: 'Compare' });
+    fireEvent.click(within(dialog).getAllByRole('button', { name: 'Add' })[0]);
+    expect(compare().disabled).toBe(true);
+    fireEvent.click(within(dialog).getAllByRole('button', { name: 'Add' })[0]);
+    expect(compare().disabled).toBe(false);
+    fireEvent.click(compare());
+    expect(document.querySelector('dialog[open]')).toBeNull();
+    expect(store.getState().compareShown).toBe(true);
+    expect(document.querySelector('[data-compare-result] table')).not.toBeNull();
   });
 
   it('changes a kos in its own slot, so the others keep their columns', async () => {

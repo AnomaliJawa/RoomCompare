@@ -8,14 +8,8 @@ import { navigate } from '../router.js';
 
 /** Logging in and out, and the session the app starts with. */
 
-/** Where a visitor sent to log in was going, so a deep link such as #/compare survives the detour. */
-let returnTo = null;
 /** Anything but "nobody is logged in" when the app asked at start, said on the login page. */
 let serverProblem = null;
-
-export const rememberReturn = (path) => {
-  returnTo = path;
-};
 
 export const startupProblem = () => serverProblem;
 
@@ -73,9 +67,8 @@ export async function enter(call, credentials, { done = null } = {}) {
   const { user } = await call(credentials);
   if (!(await signIn(user))) throw new api.ApiError(401, 'Your session could not be started. Try again.');
   serverProblem = null;
-  const next = returnTo ?? '/dashboard';
-  returnTo = null;
-  navigate(next);
+  // Always the Dashboard, wherever the visitor was (the user's rule).
+  navigate('/dashboard');
   if (done) toast(done);
 }
 

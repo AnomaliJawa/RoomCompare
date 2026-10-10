@@ -57,6 +57,15 @@ describe('filtering community surveys', () => {
     expect(ids({})).toEqual(['a', 'b', 'c']);
   });
 
+  it('searches the kos name or its area, ignoring case, and the filters narrow what it finds', () => {
+    const search = (query, filters = {}) => filterCommunity(surveys, { ...base, ...filters }, [], query).map((s) => s.id);
+    expect(search('kartika')).toEqual(['a']);
+    expect(search('DINOYO')).toEqual(['c']);
+    expect(search('  malang ')).toEqual(['a', 'b', 'c']);
+    expect(search('malang', { type: 'male' })).toEqual(['b']);
+    expect(search('melati')).toEqual([]);
+  });
+
   it('matches part of a location, ignoring case', () => {
     expect(ids({ location: 'dinoyo' })).toEqual(['c']);
     expect(ids({ location: 'MALANG' })).toEqual(['a', 'b', 'c']);

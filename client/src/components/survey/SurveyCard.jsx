@@ -2,7 +2,7 @@ import { CircleCheck, CircleDashed } from 'lucide-react';
 import { STATUS, STATUS_LABELS, kosTypeLabel } from '../../constants.js';
 import { toggleCompare } from '../../actions/surveys.js';
 import { useMediaRecords } from '../../hooks/useMediaRecords.js';
-import { formatKosDistance, numberToCurrency } from '../../utils/format.js';
+import { campusName, formatKosDistance, numberToCurrency } from '../../utils/format.js';
 import { ICON } from '../ui/icons.js';
 import { button, cx, meta, narrowLabel } from '../ui/styles.js';
 import { DeleteButton, EditLink, LikeButton, StarButton } from './SurveyButtons.jsx';
@@ -49,10 +49,12 @@ export function StatusBadge({ status }) {
   );
 }
 
-function Fact({ label, value }) {
+function Fact({ label, value, className = '' }) {
   return (
-    <div>
-      <span className={cx('block text-muted', narrowLabel)}>{label}</span>
+    <div className={className}>
+      <span className={cx('block truncate text-muted', narrowLabel)} title={label}>
+        {label}
+      </span>
       <span className="mt-1 block text-base font-semibold tabular-nums lining-nums">{value}</span>
     </div>
   );
@@ -90,7 +92,11 @@ export function SurveyCard({ survey, variant = 'own', starred = false, inCompare
         </div>
         <div className="mt-2 flex gap-6 border-t border-rule pt-3">
           <Fact label="Rent" value={numberToCurrency(survey.kos.rent)} />
-          <Fact label="To campus" value={formatKosDistance(survey.kos)} />
+          <Fact
+            className="min-w-0 flex-1"
+            label={campusName(survey.kos) ? `To ${campusName(survey.kos)}` : 'To campus'}
+            value={formatKosDistance(survey.kos)}
+          />
         </div>
         <div className="relative z-1 mt-auto flex flex-wrap gap-2 pt-4 pointer-coarse:gap-3">
           <a className={button(small)} href={href}>
@@ -98,7 +104,7 @@ export function SurveyCard({ survey, variant = 'own', starred = false, inCompare
           </a>
           {community ? (
             <>
-              <button className={button(small)} type="button" onClick={() => toggleCompare(survey.id)}>
+              <button className={button(small)} type="button" onClick={() => toggleCompare(survey.id, { go: community })}>
                 {inCompare ? 'In comparison' : 'Add to compare'}
               </button>
               <StarButton survey={survey} starred={starred} small className="ml-auto" />

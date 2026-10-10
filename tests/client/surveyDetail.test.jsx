@@ -271,6 +271,23 @@ describe('Add to compare on the survey page', () => {
     open(store.getState().communitySurveys[0].id);
     expect(screen.getByRole('button', { name: 'Add to compare' })).toBeTruthy();
   });
+
+  it('opens Compare after adding a community kos, but leaves you on your own survey', async () => {
+    const { store, open } = await load();
+    store.addSurvey({ ...survey(), status: 'published' });
+    window.location.hash = '#/surveys/svy-media';
+    const own = open('svy-media');
+    fireEvent.click(screen.getByRole('button', { name: 'Add to compare' }));
+    expect(window.location.hash).toBe('#/surveys/svy-media');
+    own.unmount();
+
+    const { id } = store.getState().communitySurveys[0];
+    window.location.hash = `#/community/${id}`;
+    open(id);
+    fireEvent.click(screen.getByRole('button', { name: 'Add to compare' }));
+    expect(store.getState().compareSelection).toContain(id);
+    expect(window.location.hash).toBe('#/compare');
+  });
 });
 
 describe('Kos information on the survey page', () => {

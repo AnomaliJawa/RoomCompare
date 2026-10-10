@@ -58,6 +58,11 @@ export function isStraightLineDistance(kos) {
   return Number.isFinite(kos?.distanceKm) && kos.distanceBasis !== DISTANCE_BASIS.WALKING;
 }
 
+/** The campus as the user typed it, or as the address lookup named it. */
+export function campusName(kos) {
+  return kos?.campusLocation?.address || kos?.campusLocation?.label || null;
+}
+
 /** Only straight lines are marked; the no-break space keeps the mark whole when it wraps. */
 export function formatKosDistance(kos) {
   const text = formatDistance(kos?.distanceKm);
