@@ -11,14 +11,15 @@ import {
   likertLabel,
 } from '../constants.js';
 import { campusName, formatKosDistance, numberToCurrency } from '../utils/format.js';
-import { formatCoordinate, isValidPoint } from '../utils/geo.js';
-import { Gallery } from '../components/survey/PhotoGallery.jsx';
+import { isValidPoint } from '../utils/geo.js';
+import { MapView } from '../components/survey/MapView.jsx';
+import { MediaGallery } from '../components/survey/PhotoGallery.jsx';
 import { DeleteButton, EditLink, LikeButton, StarButton } from '../components/survey/SurveyButtons.jsx';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs.jsx';
 import { NotFound } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
 import { SectionHeading, sectionHead } from '../components/ui/SectionHeading.jsx';
-import { button, cx, meta, narrowLabel, panel, unrecorded } from '../components/ui/styles.js';
+import { button, cx, narrowLabel, panel, unrecorded } from '../components/ui/styles.js';
 
 /** Missing values read "Not recorded": unknown and absent are different facts. */
 function Value({ input }) {
@@ -56,24 +57,6 @@ function contact(phone) {
   );
 }
 
-/** Google Maps' documented search URL: on a phone it opens the Maps app at the pin. */
-function mapsLink(point) {
-  if (!isValidPoint(point)) return null;
-  const query = encodeURIComponent(`${Number(point.lat)},${Number(point.lng)}`);
-  const shown = formatCoordinate(point);
-  return (
-    <a
-      className={link}
-      href={`https://www.google.com/maps/search/?api=1&query=${query}`}
-      target="_blank"
-      rel="noopener"
-      aria-label={`${shown}, open in Google Maps`}
-    >
-      {shown}
-    </a>
-  );
-}
-
 /** Every facility is listed, present or absent: "No AC" is information. */
 function Checklist({ all, selected }) {
   const chosen = new Set(selected ?? []);
@@ -106,38 +89,21 @@ function Section({ title, icon, first = false, children }) {
   );
 }
 
-const count = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`;
-
-function MediaPanel({ survey }) {
+/** At the top, as a gallery: the photos say more about a kos at a glance than any list below them. */
+function MediaSection({ survey }) {
   const groups = [
-    { title: 'Room', label: 'room photos', ids: survey.room?.photoIds },
-    { title: 'Bathroom', label: 'bathroom photos', ids: survey.bathroom?.photoIds },
-    { title: 'Shared facilities', label: 'shared facility photos', ids: survey.shared?.photoIds },
-    { title: 'Videos', label: 'videos', ids: survey.additional?.videoIds, kind: 'video' },
+    { title: 'Room', noun: 'room photo', ids: survey.room?.photoIds },
+    { title: 'Bathroom', noun: 'bathroom photo', ids: survey.bathroom?.photoIds },
+    { title: 'Shared facilities', noun: 'shared facility photo', ids: survey.shared?.photoIds },
+    { title: 'Videos', noun: 'video', ids: survey.additional?.videoIds, kind: 'video' },
   ].map((group) => ({ ...group, ids: group.ids ?? [] }));
 
-  const photoCount = groups.filter((group) => !group.kind).reduce((sum, group) => sum + group.ids.length, 0);
-  const videoCount = groups.find((group) => group.kind === 'video').ids.length;
-  const summary = [photoCount && count(photoCount, 'photo'), videoCount && count(videoCount, 'video')].filter(Boolean).join(', ');
-
   return (
-    <section className={cx(panel, 'mt-10')} aria-labelledby="media-title">
-      <div className={sectionHead}>
-        <SectionHeading title="Photos and videos" icon="media" id="media-title" />
-        {summary && <span className={meta}>{summary}</span>}
-      </div>
-      {summary ? (
-        <div className="flex flex-col gap-6">
-          {groups.map((group) => (
-            <div key={group.title} className="flex flex-col gap-2">
-              <h3 className={cx(narrowLabel, 'leading-body text-muted')}>{group.title}</h3>
-              <Gallery label={group.label} mediaIds={group.ids} kind={group.kind} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className={meta}>No photos or videos recorded.</p>
-      )}
+    <section className="mb-6" aria-labelledby="media-title">
+      <h2 className="sr-only" id="media-title">
+        Photos and videos
+      </h2>
+      <MediaGallery groups={groups} />
     </section>
   );
 }
@@ -200,6 +166,8 @@ export function SurveyDetailPage({ params: { id } }) {
         }
       />
 
+      <MediaSection survey={survey} />
+
       <div className={cx(panel, 'flex flex-wrap gap-6')} data-facts>
         <Fact label="Monthly rent">{numberToCurrency(kos.rent)}</Fact>
         <Fact label="Distance to campus">{formatKosDistance(kos)}</Fact>
@@ -211,12 +179,13 @@ export function SurveyDetailPage({ params: { id } }) {
         <DefinitionList>
           <Definition label="Type" input={kosTypeLabel(kos.type)} />
           <Definition label="Address" input={kos.kosLocation?.address} />
-          <Definition label="Pinned at" input={mapsLink(kos.kosLocation)} />
+          {!isValidPoint(kos.kosLocation) && <Definition label="Map" input={null} />}
           <Definition label="Campus" input={campusName(kos)} />
           <Definition label="Distance to campus" input={kos.distanceKm == null ? null : formatKosDistance(kos)} />
           <Definition label="Monthly rent" input={numberToCurrency(kos.rent)} />
           <Definition label="Owner or security phone" input={contact(kos.contactPhone)} />
         </DefinitionList>
+        {isValidPoint(kos.kosLocation) && <MapView kos={kos.kosLocation} campus={kos.campusLocation} name={kos.name} />}
       </Section>
 
       <Section title="Room" icon="room">
@@ -246,7 +215,6 @@ export function SurveyDetailPage({ params: { id } }) {
         </p>
       </Section>
 
-      <MediaPanel survey={survey} />
     </>
   );
 }

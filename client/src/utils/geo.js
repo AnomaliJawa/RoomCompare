@@ -47,6 +47,11 @@ export function distanceBetween(a, b) {
 }
 
 /** Six decimals is about 0.1 m. */
+/** Google Maps' documented search URL: on a phone it opens the Maps app at the pin. */
+export function googleMapsUrl(point) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${Number(point.lat)},${Number(point.lng)}`)}`;
+}
+
 export function formatCoordinate(point) {
   if (!isValidPoint(point)) return 'Not pinned';
   return `${Number(point.lat).toFixed(6)}, ${Number(point.lng).toFixed(6)}`;

@@ -1,43 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_CENTER, formatCoordinate, isValidPoint } from '../../utils/geo.js';
 import { GEOCODE_STATUS, geocodeAddress, shortLabel } from '../../services/geocode.js';
+import { addTiles, loadLeaflet } from '../../services/leaflet.js';
 import { InfoButton, errorId } from './fields.jsx';
 import { button, control, cx, fieldError, fieldHint, fieldLabel } from '../ui/styles.js';
 
 /** Leaflet loads on demand, so a blocked CDN degrades to typed coordinates; geolocation is optional. */
-
-const LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
-const LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-const LOAD_TIMEOUT_MS = 6000;
-
-let leafletPromise = null;
-
-function loadLeaflet() {
-  if (leafletPromise) return leafletPromise;
-  leafletPromise = new Promise((resolve) => {
-    if (window.L) {
-      resolve(window.L);
-      return;
-    }
-    const timer = setTimeout(() => resolve(null), LOAD_TIMEOUT_MS);
-    const done = (value) => {
-      clearTimeout(timer);
-      resolve(value);
-    };
-    const style = document.createElement('link');
-    style.rel = 'stylesheet';
-    style.href = LEAFLET_CSS;
-    document.head.append(style);
-
-    const script = document.createElement('script');
-    script.src = LEAFLET_JS;
-    script.async = true;
-    script.onload = () => done(window.L ?? null);
-    script.onerror = () => done(null);
-    document.head.append(script);
-  });
-  return leafletPromise;
-}
 
 const SEARCH_MESSAGES = {
   [GEOCODE_STATUS.NOT_FOUND]: 'No match for that address. Try a nearby landmark, or tap the map.',
@@ -94,11 +62,7 @@ export function MapPicker({ name, label, point, onChange, addressLabel = 'Addres
         [Number(start.lat), Number(start.lng)],
         isValidPoint(latest.current.point) ? 16 : 13,
       );
-      // OpenStreetMap's tile policy requires this attribution.
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(instance);
+      addTiles(L, instance);
 
       let marker = null;
       const place = (coords) => {
