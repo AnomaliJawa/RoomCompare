@@ -73,14 +73,6 @@ const PHOTOS = { one: msg('1 photo'), many: msg('{count} photos') };
 const VIDEOS = { one: msg('1 video'), many: msg('{count} videos') };
 const FILES = { one: msg('Loading 1 file…'), many: msg('Loading {count} files…') };
 
-function SectionTag({ children }) {
-  return (
-    <span className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-surface/90 px-2 text-xs font-medium text-ink" aria-hidden="true">
-      {children}
-    </span>
-  );
-}
-
 /** Beside the large photo on wide screens, the thumbnails fill its height whatever their count. */
 const THUMB_LAYOUT = {
   1: 'lg:grid-cols-1 lg:grid-rows-1',
@@ -93,7 +85,8 @@ const photoTile = 'relative block w-full cursor-zoom-in overflow-hidden rounded-
 
 /**
  * Every photo of a survey as one gallery at the top of its page: the first large, the next four
- * beside it, the rest behind "+N", all in one viewer. Videos play below. `groups`: { title, one, many, none, ids, kind }.
+ * beside it, the rest behind "+N", all in one viewer. The tiles carry no labels (the user's choice);
+ * the viewer's caption names each photo's section. Videos play below. `groups`: { title, one, many, none, ids, kind }.
  */
 export function MediaGallery({ groups }) {
   const photoGroups = groups.filter((group) => group.kind !== 'video');
@@ -146,7 +139,6 @@ export function MediaGallery({ groups }) {
         <div className={cx('grid gap-2', thumbs.length > 0 && 'lg:grid-cols-[2fr_1fr]')} data-gallery="photo">
           <button className={photoTile} type="button" aria-label={t('Open photo {index} of {count}, {section}', { index: 1, count: shown.length, section: shown[0].section })} onClick={open(0)}>
             <img className="block aspect-[16/9] w-full object-cover" src={shown[0].url} alt={shown[0].originalName || t('Survey photo {index}', { index: 1 })} />
-            <SectionTag>{shown[0].section}</SectionTag>
           </button>
           {thumbs.length > 0 && (
             <div className={cx('grid grid-cols-4 gap-2', THUMB_LAYOUT[thumbs.length])}>
@@ -166,12 +158,10 @@ export function MediaGallery({ groups }) {
                     onClick={open(index)}
                   >
                     <img className="block aspect-[4/3] w-full object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full" src={record.url} alt={record.originalName || t('Survey photo {index}', { index: index + 1 })} />
-                    {last ? (
+                    {last && (
                       <span className="absolute inset-0 grid place-items-center bg-ink/50 text-md font-semibold text-surface" aria-hidden="true">
                         +{more}
                       </span>
-                    ) : (
-                      <SectionTag>{record.section}</SectionTag>
                     )}
                   </button>
                 );
