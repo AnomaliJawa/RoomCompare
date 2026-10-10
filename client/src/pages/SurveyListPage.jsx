@@ -4,12 +4,25 @@ import { useDraftValue } from '../hooks/useDebounced.js';
 import { filterSurveys } from '../utils/filters.js';
 import { TextField } from '../components/form/fields.jsx';
 import { SurveyCard } from '../components/survey/SurveyCard.jsx';
-import { NoSearchResults, NoSurveysYet } from '../components/ui/EmptyState.jsx';
+import { GuestSurveys, NoSearchResults, NoSurveysYet } from '../components/ui/EmptyState.jsx';
 import { PageHead } from '../components/ui/PageHead.jsx';
 
 export const cardGrid = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4';
 
 export function SurveyListPage() {
+  const { user } = useStore();
+  if (!user) {
+    return (
+      <>
+        <PageHead title="My surveys" lede="The kos you have visited and recorded, kept in your account." />
+        <GuestSurveys />
+      </>
+    );
+  }
+  return <OwnSurveys />;
+}
+
+function OwnSurveys() {
   const { surveys, search, compareSelection } = useStore();
   const [query, setQuery] = useDraftValue(search, (value) => store.setSearch(value));
   const visible = filterSurveys(surveys, search);

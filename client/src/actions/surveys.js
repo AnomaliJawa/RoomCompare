@@ -2,6 +2,7 @@ import * as store from '../data/store.js';
 import { loadSurveyMedia, restoreMedia } from '../data/media.js';
 import { confirmDialog, dismissToast, toast } from '../components/feedback/feedback.js';
 import { navigate } from '../router.js';
+import { requireAccount } from './account.js';
 import { MAX_COMPARE } from '../constants.js';
 
 /** What a person does to a survey from a card or its page, with the toast that answers it. */
@@ -54,10 +55,20 @@ export function toggleStar(id) {
 }
 
 // No toast: the filled heart and the count already say so.
-export const toggleLike = (id) => store.toggleLike(id);
+export function toggleLike(id) {
+  if (!store.getState().user) {
+    requireAccount('Log in to like a kos.');
+    return;
+  }
+  store.toggleLike(id);
+}
 
 /** `go`: after adding, open Compare, so a kos picked from Community lands where it is compared. */
 export function toggleCompare(id, { go = false } = {}) {
+  if (!store.getState().user) {
+    requireAccount('Log in to compare kos.');
+    return;
+  }
   const survey = store.findSurvey(id);
   if (!store.toggleCompare(id)) {
     toast(

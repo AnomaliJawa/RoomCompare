@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as api from '../services/api.js';
-import { enter, startupProblem } from '../actions/account.js';
+import { clearLoginReason, enter, pendingLoginReason, startupProblem } from '../actions/account.js';
 import { ACCOUNT_LIMITS, validateLogin, validateRegistration } from '../utils/validate.js';
 import { TextField } from '../components/form/fields.jsx';
 import { Banner } from '../components/ui/Banner.jsx';
@@ -37,12 +37,22 @@ function AuthPage({ kind }) {
   const [typed, setTyped] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState(startupProblem);
+  const [reason] = useState(pendingLoginReason);
+  // Kept when switching between Log in and Register; dropped when leaving for anywhere else.
+  const switching = useRef(false);
   const [busy, setBusy] = useState(false);
   const failed = useRef(false);
   const focusFirst = useRef(null);
   const form = useRef(null);
   const latest = useRef(typed);
   latest.current = typed;
+
+  useEffect(
+    () => () => {
+      if (!switching.current) clearLoginReason();
+    },
+    [],
+  );
 
   useEffect(() => {
     const field = focusFirst.current;
@@ -105,6 +115,11 @@ function AuthPage({ kind }) {
           <h1>{page.title}</h1>
           <p className="mt-2 text-muted">{page.lede}</p>
         </div>
+        {reason && (
+          <div data-login-reason>
+            <Banner message={reason} />
+          </div>
+        )}
         <div className="empty:hidden" role="alert" data-auth-notice>
           {notice && <Banner message={notice} tone="alert" />}
         </div>
@@ -133,7 +148,7 @@ function AuthPage({ kind }) {
         </form>
         <p className="text-muted">
           {page.alternate.text}
-          <a className="touch-hit" href={page.alternate.href}>
+          <a className="touch-hit" href={page.alternate.href} onClick={() => (switching.current = true)}>
             {page.alternate.link}
           </a>
         </p>

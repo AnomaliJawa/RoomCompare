@@ -311,8 +311,11 @@ describe('Add to compare on the survey page', () => {
     expect(screen.queryByRole('button', { name: 'Add to compare' })).toBeNull();
   });
 
+  const ana = { id: 'user-ana', email: 'ana@example.test', name: 'Ana' };
+
   it('is offered once the survey is published, and on a community survey', async () => {
     const { store, open } = await load();
+    store.setUser(ana);
     store.addSurvey({ ...survey(), status: 'published' });
     const first = open('svy-media');
     fireEvent.click(screen.getByRole('button', { name: 'Add to compare' }));
@@ -324,6 +327,7 @@ describe('Add to compare on the survey page', () => {
 
   it('opens Compare after adding a community kos, but leaves you on your own survey', async () => {
     const { store, open } = await load();
+    store.setUser(ana);
     store.addSurvey({ ...survey(), status: 'published' });
     window.location.hash = '#/surveys/svy-media';
     const own = open('svy-media');
@@ -337,6 +341,18 @@ describe('Add to compare on the survey page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add to compare' }));
     expect(store.getState().compareSelection).toContain(id);
     expect(window.location.hash).toBe('#/compare');
+  });
+
+  it('sends a guest to log in, saying why, and adds nothing', async () => {
+    const { store, open } = await load();
+    const { id } = store.getState().communitySurveys[0];
+    window.location.hash = `#/community/${id}`;
+    open(id);
+    fireEvent.click(screen.getByRole('button', { name: 'Add to compare' }));
+    expect(store.getState().compareSelection).toEqual([]);
+    expect(window.location.hash).toBe('#/login');
+    const { pendingLoginReason } = await import('../../client/src/actions/account.js');
+    expect(pendingLoginReason()).toBe('Log in to compare kos.');
   });
 });
 

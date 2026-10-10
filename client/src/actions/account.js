@@ -10,8 +10,20 @@ import { navigate } from '../router.js';
 
 /** Anything but "nobody is logged in" when the app asked at start, said on the login page. */
 let serverProblem = null;
+/** Why a guest was sent to log in, said on the login page. */
+let loginReason = null;
 
 export const startupProblem = () => serverProblem;
+export const pendingLoginReason = () => loginReason;
+export const clearLoginReason = () => {
+  loginReason = null;
+};
+
+/** Guests explore freely; recording, comparing and liking need an account. */
+export function requireAccount(reason, { replace = false } = {}) {
+  loginReason = reason;
+  navigate('/login', { replace });
+}
 
 /** Pre-account surveys are offered to the first account; left out, they are kept aside, not deleted. */
 function claimSurveys(count) {
@@ -67,6 +79,7 @@ export async function enter(call, credentials, { done = null } = {}) {
   const { user } = await call(credentials);
   if (!(await signIn(user))) throw new api.ApiError(401, 'Your session could not be started. Try again.');
   serverProblem = null;
+  loginReason = null;
   // Always the Dashboard, wherever the visitor was (the user's rule).
   navigate('/dashboard');
   if (done) toast(done);
@@ -98,6 +111,7 @@ export async function logOut() {
   sync.stop();
   distanceRefresh.stop();
   store.forgetAccount();
-  navigate('/login');
+  // Back to what a guest can explore.
+  navigate('/community');
   toast('Logged out');
 }

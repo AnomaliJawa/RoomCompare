@@ -16,24 +16,27 @@ const link = cx(
 );
 
 /**
- * The header. Logged out, every destination but log in needs an account, so it is the wordmark alone.
- * On phones it keeps one row: the logo, Add survey and the menu icon.
+ * The header: the wordmark alone until the session is known. Guests get the same links, and Log in
+ * where Log out would be; Add survey sends them to log in. On phones it keeps one row: the logo,
+ * Add survey and the menu icon.
  */
-export function NavBar({ user, active, menuOpen, onToggleMenu }) {
+export function NavBar({ ready, user, auth, active, menuOpen, onToggleMenu }) {
   const who = user ? `Logged in as ${user.email}` : undefined;
+  // On Log in and Register the page itself is the action.
+  const actions = !auth;
   return (
     <header className="sticky top-0 z-50 border-b border-rule bg-paper">
       <div className="mx-auto flex h-16 max-w-column-wide items-center gap-6 px-6 max-lg:px-4 max-md:gap-3 max-xs:gap-2">
         <a
           className="inline-flex items-center gap-2 text-md font-bold tracking-tight whitespace-nowrap text-ink no-underline pointer-coarse:min-h-target pointer-coarse:min-w-target"
-          href="#/dashboard"
+          href={user ? '#/dashboard' : '#/community'}
         >
           <img className="block shrink-0" src="/icons/logo.svg" alt="" width="32" height="32" />
           {/* Phones show the logo alone; the hidden name keeps the link's name. */}
           <span className="max-lg:sr-only">RoomCompare</span>
         </a>
 
-        {user && (
+        {ready && (
           <>
             <nav
               className={cx(
@@ -51,10 +54,18 @@ export function NavBar({ user, active, menuOpen, onToggleMenu }) {
                   {item.label}
                 </a>
               ))}
-              {/* On narrow screens Log out moves to the foot of the menu. */}
-              <button className={cx(link, 'hidden max-xl:flex')} type="button" title={who} onClick={logOut}>
-                Log out
-              </button>
+              {/* On narrow screens Log out, or Log in, moves to the foot of the menu. */}
+              {user ? (
+                <button className={cx(link, 'hidden max-xl:flex')} type="button" title={who} onClick={logOut}>
+                  Log out
+                </button>
+              ) : (
+                actions && (
+                  <a className={cx(link, 'hidden max-xl:flex')} href="#/login">
+                    Log in
+                  </a>
+                )
+              )}
             </nav>
 
             {/* Equal columns, so both actions take the wider label's width; the menu icon takes its own. */}
@@ -75,12 +86,23 @@ export function NavBar({ user, active, menuOpen, onToggleMenu }) {
               >
                 <Menu size={20} strokeWidth={2} absoluteStrokeWidth className="block" />
               </button>
-              <button className={button({ variant: 'quiet', display: 'inline-flex max-xl:hidden' })} type="button" title={who} onClick={logOut}>
-                Log out
-              </button>
-              <a className={button({ variant: 'primary', className: 'max-md:px-3' })} href="#/surveys/new">
-                Add survey
-              </a>
+              {user ? (
+                <button className={button({ variant: 'quiet', display: 'inline-flex max-xl:hidden' })} type="button" title={who} onClick={logOut}>
+                  Log out
+                </button>
+              ) : (
+                actions && (
+                  <a className={button({ variant: 'quiet', display: 'inline-flex max-xl:hidden' })} href="#/login">
+                    Log in
+                  </a>
+                )
+              )}
+              {/* A guest's goes through the route guard, which asks them to log in first. */}
+              {actions && (
+                <a className={button({ variant: 'primary', className: 'max-md:px-3' })} href="#/surveys/new">
+                  Add survey
+                </a>
+              )}
             </div>
           </>
         )}

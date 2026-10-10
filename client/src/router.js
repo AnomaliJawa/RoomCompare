@@ -71,7 +71,7 @@ export function useRoute(routes) {
   return { path, visit: at, ...matchRoute(routes, path) };
 }
 
-/** An empty address starts at the dashboard, as a bookmark of the bare site would. */
-export function startAtDashboard() {
-  if (!window.location.hash) window.history.replaceState(null, '', '#/dashboard');
+/** An empty address starts where the visitor belongs: the Dashboard, or Community for a guest. */
+export function startAt(path) {
+  if (!window.location.hash) window.history.replaceState(null, '', `#${path}`);
 }
