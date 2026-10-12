@@ -35,7 +35,7 @@ marketplace, a booking site or a kos directory.
 | Part | Uses |
 |---|---|
 | Frontend | React 19, Vite, Tailwind CSS v4, lucide-react |
-| Backend | Express 5 on Node.js 22.13 or later |
+| Backend | Express 5 on Node.js 22 (22.13 or later) |
 | Storage in the browser | localStorage (the working copy of your surveys), IndexedDB (photos and videos) |
 | Storage on the server | SQLite (`node:sqlite`) locally; Upstash Redis on Vercel |
 | Maps | Leaflet with OpenStreetMap, Nominatim address search, OSRM walking routes |
@@ -46,7 +46,7 @@ coordinates and straight-line distances. No API keys are needed.
 
 ## Getting started
 
-Requires Node.js 22.13 or later.
+Requires Node.js 22, 22.13 or later.
 
 ```bash
 npm install

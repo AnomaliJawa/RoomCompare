@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Record, organize and compare surveyed boarding houses.",
   "engines": {
-    "node": ">=22.13"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "node --disable-warning=ExperimentalWarning server/index.js --dev",
