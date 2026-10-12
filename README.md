@@ -12,19 +12,37 @@ marketplace, a booking site or a kos directory.
 
 ## What it does
 
-- **Record a survey on site.** Rent, kos type, the owner's phone, pins for
-  the kos and the campus (with address search), the walking distance between
-  them, room size, 24 facilities across the room, bathroom and shared areas,
-  7 nearby amenities, ratings for cleanliness, internet and security, notes,
-  and photos and videos. A draft needs only a name and saves itself as you
-  go; publishing checks that the survey is complete.
-- **Compare up to three kos** side by side, on every criterion, in the same
-  order. Nothing is cut short, and anything not recorded reads
-  *Not recorded* rather than a blank.
+- **Record a survey on site:**
+  - rent, kos type and the owner's phone;
+  - pins for the kos and the campus, with address search, and the walking
+    distance between them;
+  - the room's size and 11 facilities;
+  - the bathroom: indoor or outdoor, squat or sitting toilet, water heater;
+  - 8 shared facilities;
+  - 11 nearby places (6 everyday amenities and 5 places of worship);
+  - ratings for cleanliness, internet and security;
+  - notes, up to 10 photos per section and 2 videos.
+
+  A survey guide and per-field help say what to record. A draft needs only
+  a name and saves itself as you go; publishing checks that the survey is
+  complete.
+- **One page per survey:** its photos as a gallery at the top, a map with
+  the kos and the campus, and every answer.
+- **Compare up to three kos** side by side: your own published surveys and
+  the community's. Every criterion is shown, in the same order. Nothing is
+  cut short, and anything not recorded reads *Not recorded* rather than a
+  blank.
 - **Best Match** (optional) scores each kos from weights you set: price,
   facilities, cleanliness, location, distance to campus and security. A kos
   missing a weighted value gets no score instead of a guessed one.
-- **Community:** sample surveys to browse, filter, star and like.
+- **Dashboard:** your last three visits side by side, your recent surveys
+  and your Best Match weights.
+- **Community:** 10 sample surveys, shown as other students would share
+  them, to search, filter, star and like.
+- **English and Indonesian**, switched with one button in the header and
+  remembered on the device.
+- **Browse without an account:** Community is open to guests. Recording,
+  comparing and liking ask you to log in first, and say why.
 - **Accounts** keep your survey records on any device you log in from. The
   app keeps working offline once open, and sends changes when the
   connection returns. Photos and videos stay on the device they were added
@@ -39,6 +57,7 @@ marketplace, a booking site or a kos directory.
 | Storage in the browser | localStorage (the working copy of your surveys), IndexedDB (photos and videos) |
 | Storage on the server | SQLite (`node:sqlite`) locally; Upstash Redis on Vercel |
 | Maps | Leaflet with OpenStreetMap, Nominatim address search, OSRM walking routes |
+| Languages | English and Indonesian, through the app's own small `i18n` module |
 | Tests | Vitest, jsdom, Testing Library |
 
 The map services are optional: without them the app falls back to typed
@@ -61,7 +80,9 @@ npm run seed:demo
 ```
 
 It creates a demo account holding 8 surveys and writes its login to
-`data/demo-account.txt`. Running it again resets the account.
+`data/demo-account.txt`. Running it again resets the account. The
+Community page needs no account: it shows 10 sample surveys to every
+visitor.
 
 On Windows PowerShell, if `npm` is blocked by the script execution policy,
 use `npm.cmd` instead (for example `npm.cmd run dev`).
@@ -93,14 +114,36 @@ client/            the React app (Vite's root)
     services/      API client, sync, address search, walking routes
     data/          the store, localStorage, IndexedDB media
     utils/         pure logic: Best Match, comparison, filters, formatting
-    content/       the survey form's guidance text
-    seed/          sample surveys
+    content/       the survey form's guidance, in English and Indonesian
+    i18n/          translation: t(), and the Indonesian text
+    seed/          sample surveys and their photo ids
 server/            the Express app: routes, middleware, storage, services
 api/index.js       the API as one Vercel function
 shared/            account validation used by both sides
 tests/             client/ and server/
-tools/             demo seeding and asset generation
+tools/             demo seeding, sample photos, icons
 ```
+
+## Sample photos
+
+Each of the 18 sample surveys has its own seven photos: three of the room,
+two of the bathroom and two of the shared areas. No two surveys share one.
+
+- They are free stock photos from [Pexels](https://www.pexels.com) and
+  [Unsplash](https://unsplash.com), chosen to match what each survey
+  records. They are not photos of the kos they belong to.
+- Neither licence requires credit. Each photo's source page and
+  photographer are listed in `tools/seed-photos.json` all the same.
+- To rebuild them (Python with Pillow), pass a new, empty folder outside
+  the project for the downloads:
+
+```bash
+python -I tools/seed-photos.py ../roomcompare-downloads
+```
+
+It writes 1200×900 JPEGs, without location metadata, to
+`client/public/seed-photos/`. `tools/make-assets.py` draws the app icons
+and the favicon.
 
 ## Configuration
 
