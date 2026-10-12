@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { ownSurveys } from '../../client/src/seed/ownSurveys.js';
 import { communitySurveys } from '../../client/src/seed/communitySurveys.js';
 import { hasRecorded } from '../../client/src/seed/samplePhotos.js';
@@ -7,7 +8,18 @@ import { MAX_PHOTOS_PER_SECTION, SAMPLE_PHOTO_PREFIX } from '../../client/src/co
 import { distanceBetween } from '../../client/src/utils/geo.js';
 
 const SECTIONS = ['room', 'bathroom', 'shared'];
+const PHOTOS = 'client/public/seed-photos';
 const all = [...ownSurveys, ...communitySurveys];
+const fileOf = (id) => `${id.slice(SAMPLE_PHOTO_PREFIX.length)}.jpg`;
+
+/** Width and height from a JPEG's frame header. */
+function jpegSize(bytes) {
+  for (let at = 2; at < bytes.length; at += 2 + bytes.readUInt16BE(at + 2)) {
+    const marker = bytes[at + 1];
+    if (marker >= 0xc0 && marker <= 0xc3) return [bytes.readUInt16BE(at + 7), bytes.readUInt16BE(at + 5)];
+  }
+  return null;
+}
 
 describe('the sample surveys and their photos', () => {
   it('point only at images that ship with the app', () => {
@@ -15,7 +27,7 @@ describe('the sample surveys and their photos', () => {
     expect(ids.length).toBeGreaterThan(0);
     for (const id of ids) {
       expect(id.startsWith(SAMPLE_PHOTO_PREFIX)).toBe(true);
-      expect(existsSync(`client/public/seed-photos/${id.slice(SAMPLE_PHOTO_PREFIX.length)}.jpg`), id).toBe(true);
+      expect(existsSync(`${PHOTOS}/${fileOf(id)}`), id).toBe(true);
     }
   });
 
@@ -30,13 +42,27 @@ describe('the sample surveys and their photos', () => {
     }
   });
 
-  it('vary from one survey to the next, so neighbouring cards differ', () => {
-    for (const list of [ownSurveys, communitySurveys]) {
-      for (let i = 1; i < list.length; i += 1) {
-        expect(list[i].room.photoIds[0]).not.toBe(list[i - 1].room.photoIds[0]);
+  it('give each kos photos of its own: no two surveys share one, and no two files are the same image', () => {
+    const owner = new Map();
+    for (const survey of all) {
+      for (const id of SECTIONS.flatMap((section) => survey[section].photoIds)) {
+        expect(owner.get(id), id).toBeUndefined();
+        owner.set(id, survey.id);
       }
     }
-    expect(communitySurveys[0].room.photoIds[0]).not.toBe(ownSurveys[0].room.photoIds[0]);
+    const digests = readdirSync(PHOTOS).map((name) => createHash('sha256').update(readFileSync(`${PHOTOS}/${name}`)).digest('hex'));
+    expect(new Set(digests).size).toBe(digests.length);
+  });
+
+  it('ship no photo that no survey uses, each at most 1200 × 900', () => {
+    const used = new Set(all.flatMap((survey) => SECTIONS.flatMap((section) => survey[section].photoIds)).map(fileOf));
+    const files = readdirSync(PHOTOS);
+    expect(files.filter((name) => !used.has(name))).toEqual([]);
+    for (const name of files) {
+      const [width, height] = jpegSize(readFileSync(`${PHOTOS}/${name}`));
+      expect(width, name).toBeLessThanOrEqual(1200);
+      expect(height, name).toBeLessThanOrEqual(900);
+    }
   });
 });
 

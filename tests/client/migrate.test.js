@@ -58,3 +58,25 @@ describe('a record that names a place of worship but no faith', () => {
     expect(chosen.size).toBe(WORSHIP_PLACES.length);
   });
 });
+
+describe('a sample survey from when the sample kos shared four sets of photos', () => {
+  const shared = {
+    id: 'svy-melati',
+    room: { photoIds: ['seed:room-2-1', 'seed:room-2-2', 'p-own'] },
+    bathroom: { type: 'indoor', toilet: 'sit', waterHeater: true, photoIds: ['seed:bathroom-3-2'] },
+    shared: { photoIds: [] },
+    surroundings: [],
+  };
+
+  it('points each photo at its own, in the same place, and keeps the photos added since', () => {
+    const next = normalizeSurvey(shared);
+    expect(next.room.photoIds).toEqual(['seed:svy-melati-room-1', 'seed:svy-melati-room-2', 'p-own']);
+    expect(next.bathroom).toEqual({ ...shared.bathroom, photoIds: ['seed:svy-melati-bathroom-2'] });
+    expect(next.shared).toBe(shared.shared);
+  });
+
+  it('is done once', () => {
+    const once = normalizeSurvey(shared);
+    expect(normalizeSurvey(once)).toBe(once);
+  });
+});

@@ -102,9 +102,9 @@ describe('photos and videos on the survey page', () => {
     // After the import: the modules construct URLs as they load.
     vi.stubGlobal('URL', Object.assign(Object.create(URL), { createObjectURL: () => 'blob:sample', revokeObjectURL: () => {} }));
     store.addSurvey(survey({
-      room: ['seed:room-1-1', 'seed:room-1-2', 'seed:room-1-3'],
-      bathroom: ['seed:bathroom-1-1', 'seed:bathroom-1-2'],
-      shared: ['seed:shared-1-1', 'seed:shared-1-2'],
+      room: ['seed:svy-media-room-1', 'seed:svy-media-room-2', 'seed:svy-media-room-3'],
+      bathroom: ['seed:svy-media-bathroom-1', 'seed:svy-media-bathroom-2'],
+      shared: ['seed:svy-media-shared-1', 'seed:svy-media-shared-2'],
     }));
     const { container } = open('svy-media');
     await screen.findByRole('button', { name: 'Open photo 1 of 7, Room' });
@@ -118,9 +118,9 @@ describe('photos and videos on the survey page', () => {
     ]);
     fireEvent.click(screen.getByRole('button', { name: 'Open photo 5 of 7, and 2 more' }));
     const viewer = document.querySelector('dialog[open]');
-    expect(text(viewer.querySelector('figcaption'))).toBe('Bathroom: bathroom-1-2.jpg');
+    expect(text(viewer.querySelector('figcaption'))).toBe('Bathroom: svy-media-bathroom-2.jpg');
     fireEvent.click(within(viewer).getByRole('button', { name: 'Next' }));
-    expect(text(viewer.querySelector('figcaption'))).toBe('Shared facilities: shared-1-1.jpg');
+    expect(text(viewer.querySelector('figcaption'))).toBe('Shared facilities: svy-media-shared-1.jpg');
   });
 });
 

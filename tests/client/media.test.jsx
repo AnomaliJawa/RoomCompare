@@ -12,7 +12,7 @@ const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
 afterEach(() => vi.unstubAllGlobals());
 
 /** The app's own sample files, served; anything else is a 404. */
-function serveSamples(files = ['room-1-1', 'room-1-2', 'bathroom-2-1']) {
+function serveSamples(files = ['com-kartika-room-1', 'com-kartika-room-2', 'svy-melati-bathroom-1']) {
   const fetch = vi.fn(async (url) => {
     const name = decodeURIComponent(String(url).replace(/^seed-photos\//, '').replace(/\.jpg$/, ''));
     return files.includes(name)
@@ -37,35 +37,35 @@ async function roomUploader(ids) {
 describe('sample photos', () => {
   it('load from the files that ship with the app, in the order asked, beside stored ones', async () => {
     const fetch = serveSamples();
-    const records = await loadMedia(['seed:room-1-1', 'p-stored', 'seed:bathroom-2-1']);
+    const records = await loadMedia(['seed:com-kartika-room-1', 'p-stored', 'seed:svy-melati-bathroom-1']);
     expect(records.map((r) => [r.id, r.originalName])).toEqual([
-      ['seed:room-1-1', 'room-1-1.jpg'],
-      ['seed:bathroom-2-1', 'bathroom-2-1.jpg'],
+      ['seed:com-kartika-room-1', 'com-kartika-room-1.jpg'],
+      ['seed:svy-melati-bathroom-1', 'svy-melati-bathroom-1.jpg'],
     ]);
-    expect(fetch).toHaveBeenCalledWith('seed-photos/room-1-1.jpg');
+    expect(fetch).toHaveBeenCalledWith('seed-photos/com-kartika-room-1.jpg');
     // "p-stored" is looked up in this browser's storage, not fetched.
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it('are fetched once per page, since the server tells the browser not to cache', async () => {
     const fetch = serveSamples();
-    await loadMedia(['seed:room-1-2']);
-    await loadMedia(['seed:room-1-2']);
+    await loadMedia(['seed:com-kartika-room-2']);
+    await loadMedia(['seed:com-kartika-room-2']);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it('are left out when a file cannot be loaded, and tried again later', async () => {
     const fetch = serveSamples([]);
-    expect(await loadMedia(['seed:shared-9-9'])).toEqual([]);
-    await loadMedia(['seed:shared-9-9']);
+    expect(await loadMedia(['seed:com-nowhere-shared-9'])).toEqual([]);
+    await loadMedia(['seed:com-nowhere-shared-9']);
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it('show as photos in the form, not as files kept on another device', async () => {
     serveSamples();
     vi.stubGlobal('URL', Object.assign(Object.create(URL), { createObjectURL: () => 'blob:sample', revokeObjectURL: () => {} }));
-    await roomUploader(['seed:room-1-1']);
-    expect(screen.getByRole('img').getAttribute('alt')).toBe('room-1-1.jpg');
+    await roomUploader(['seed:com-kartika-room-1']);
+    expect(screen.getByRole('img').getAttribute('alt')).toBe('com-kartika-room-1.jpg');
     expect(screen.queryByText('Not on this device')).toBeNull();
   });
 });

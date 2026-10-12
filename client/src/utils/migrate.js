@@ -1,6 +1,7 @@
-import { SURROUNDINGS, WORSHIP_PLACES } from '../constants.js';
+import { SAMPLE_PHOTO_PREFIX, SURROUNDINGS, WORSHIP_PLACES } from '../constants.js';
+import { samplePhotoId } from '../seed/samplePhotos.js';
 
-/** Records written before the bathroom and the place of worship were split, brought to today's shape. */
+/** Records written before the bathroom and the place of worship were split, or before each sample kos had its own photos, brought to today's shape. */
 
 const LEGACY_WORSHIP = 'Place of worship';
 
@@ -37,6 +38,24 @@ function bathroomFrom({ facilities, ...rest }) {
   };
 }
 
+/** A photo from the four sets the sample kos once shared, as `seed:room-2-1`. */
+const SHARED_SAMPLE = new RegExp(String.raw`^${SAMPLE_PHOTO_PREFIX}(room|bathroom|shared)-\d+-(\d+)$`);
+
+/** The demo account's surveys keep their old ids on the server; each now points at its own photo in the same place. */
+function ownSamplePhotos(survey) {
+  let next = survey;
+  for (const section of ['room', 'bathroom', 'shared']) {
+    const ids = survey[section]?.photoIds;
+    if (!Array.isArray(ids) || !ids.some((id) => SHARED_SAMPLE.test(id))) continue;
+    const photoIds = ids.map((id) => {
+      const match = SHARED_SAMPLE.exec(id);
+      return match ? samplePhotoId(survey.id, match[1], match[2]) : id;
+    });
+    next = { ...next, [section]: { ...next[section], photoIds } };
+  }
+  return next;
+}
+
 export function normalizeSurvey(survey) {
   if (!survey || typeof survey !== 'object') return survey;
   let next = survey;
@@ -46,5 +65,5 @@ export function normalizeSurvey(survey) {
     chosen.add(worshipFor(survey.id));
     next = { ...next, surroundings: SURROUNDINGS.filter((item) => chosen.has(item)) };
   }
-  return next;
+  return ownSamplePhotos(next);
 }

@@ -1,0 +1,1017 @@
+{
+  "about": "The sample surveys' photos: one set per kos, chosen to match what each records. All under the Pexels or Unsplash licence, which need no credit; the credits are kept here anyway. tools/seed-photos.py downloads them and writes client/public/seed-photos/.",
+  "photos": [
+    {
+      "file": "com-kartika-room-1.jpg",
+      "shows": "Room with AC, bed and table",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991565/",
+      "url": "https://images.pexels.com/photos/5991565/pexels-photo-5991565.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-kartika-room-2.jpg",
+      "shows": "Desk by the window, wardrobe",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991561/",
+      "url": "https://images.pexels.com/photos/5991561/pexels-photo-5991561.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-kartika-room-3.jpg",
+      "shows": "Bed, table and wardrobe",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991558/",
+      "url": "https://images.pexels.com/photos/5991558/pexels-photo-5991558.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-kartika-bathroom-1.jpg",
+      "shows": "Indoor bathroom: water heater, sink, sitting toilet",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991530/",
+      "url": "https://images.pexels.com/photos/5991530/pexels-photo-5991530.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-kartika-bathroom-2.jpg",
+      "shows": "Sitting toilet and shower",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991531/",
+      "url": "https://images.pexels.com/photos/5991531/pexels-photo-5991531.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-kartika-shared-1.jpg",
+      "shows": "Shared kitchen counter",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991501/",
+      "url": "https://images.pexels.com/photos/5991501/pexels-photo-5991501.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-kartika-shared-2.jpg",
+      "shows": "Washing machine",
+      "source": "Pexels",
+      "by": "Towfiqu barbhuiya",
+      "page": "https://www.pexels.com/photo/11899611/",
+      "url": "https://images.pexels.com/photos/11899611/pexels-photo-11899611.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-pondok-biru-room-1.jpg",
+      "shows": "Bed by the window, desk fan",
+      "source": "Pexels",
+      "by": "Dương Nhân",
+      "page": "https://www.pexels.com/photo/4389917/",
+      "url": "https://images.pexels.com/photos/4389917/pexels-photo-4389917.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-pondok-biru-room-2.jpg",
+      "shows": "Fan by the window",
+      "source": "Unsplash",
+      "by": "Akshar Dave",
+      "page": "https://unsplash.com/photos/Tk_Arhwj4Xk",
+      "url": "https://images.unsplash.com/photo-1588001895517-cb4c7fe6b392?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-pondok-biru-room-3.jpg",
+      "shows": "Table by the window",
+      "source": "Unsplash",
+      "by": "Annie Spratt",
+      "page": "https://unsplash.com/photos/2pia6OAe5rA",
+      "url": "https://images.unsplash.com/photo-1653463174231-3911539cfdd9?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-pondok-biru-bathroom-1.jpg",
+      "shows": "Outdoor washing area and bathroom door",
+      "source": "Unsplash",
+      "by": "Tuhibagus Syarif",
+      "page": "https://unsplash.com/photos/X7cjqF3Yg9s",
+      "url": "https://images.unsplash.com/photo-1669964173893-8495e760f154?w=1600&q=85&fm=jpg",
+      "focus": 0.6
+    },
+    {
+      "file": "com-pondok-biru-bathroom-2.jpg",
+      "shows": "Buckets and hose in the bathroom",
+      "source": "Pexels",
+      "by": "Mak_ jp",
+      "page": "https://www.pexels.com/photo/11470450/",
+      "url": "https://images.pexels.com/photos/11470450/pexels-photo-11470450.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-pondok-biru-shared-1.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Markus Winkler",
+      "page": "https://www.pexels.com/photo/11309962/",
+      "url": "https://images.pexels.com/photos/11309962/pexels-photo-11309962.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-pondok-biru-shared-2.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Matheus Bertelli",
+      "page": "https://www.pexels.com/photo/12513477/",
+      "url": "https://images.pexels.com/photos/12513477/pexels-photo-12513477.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-room-1.jpg",
+      "shows": "Room with AC, bed and wardrobe",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/6920438/",
+      "url": "https://images.pexels.com/photos/6920438/pexels-photo-6920438.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-room-2.jpg",
+      "shows": "Bed and window",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/6920442/",
+      "url": "https://images.pexels.com/photos/6920442/pexels-photo-6920442.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-room-3.jpg",
+      "shows": "Wardrobe and bed",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/6920444/",
+      "url": "https://images.pexels.com/photos/6920444/pexels-photo-6920444.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-bathroom-1.jpg",
+      "shows": "Indoor bathroom: sitting toilet and sink",
+      "source": "Pexels",
+      "by": "Jaycee300s",
+      "page": "https://www.pexels.com/photo/18071801/",
+      "url": "https://images.pexels.com/photos/18071801/pexels-photo-18071801.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-bathroom-2.jpg",
+      "shows": "Sitting toilet and sink",
+      "source": "Pexels",
+      "by": "Mateusz Pielech",
+      "page": "https://www.pexels.com/photo/29252363/",
+      "url": "https://images.pexels.com/photos/29252363/pexels-photo-29252363.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-shared-1.jpg",
+      "shows": "Car parking",
+      "source": "Pexels",
+      "by": "Nenyasha Manzvera",
+      "page": "https://www.pexels.com/photo/11301816/",
+      "url": "https://images.pexels.com/photos/11301816/pexels-photo-11301816.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-griya-asri-shared-2.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Alex Tyson",
+      "page": "https://www.pexels.com/photo/19966789/",
+      "url": "https://images.pexels.com/photos/19966789/pexels-photo-19966789.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-wisma-cempaka-room-1.jpg",
+      "shows": "Bed by the window",
+      "source": "Pexels",
+      "by": "Vishal Saini",
+      "page": "https://www.pexels.com/photo/20396077/",
+      "url": "https://images.pexels.com/photos/20396077/pexels-photo-20396077.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-wisma-cempaka-room-2.jpg",
+      "shows": "Ceiling fan",
+      "source": "Unsplash",
+      "by": "Jason Anderson",
+      "page": "https://unsplash.com/photos/CN2h4eUbFGw",
+      "url": "https://images.unsplash.com/photo-1555470100-1728256970aa?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-wisma-cempaka-room-3.jpg",
+      "shows": "Table and chair by the window",
+      "source": "Unsplash",
+      "by": "Annie Spratt",
+      "page": "https://unsplash.com/photos/gdi9fJboJQU",
+      "url": "https://images.unsplash.com/photo-1651739084015-85af0539f960?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-wisma-cempaka-bathroom-1.jpg",
+      "shows": "Squat toilet",
+      "source": "Pexels",
+      "by": "wutthichai charoenburi",
+      "page": "https://www.pexels.com/photo/19882102/",
+      "url": "https://images.pexels.com/photos/19882102/pexels-photo-19882102.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-wisma-cempaka-bathroom-2.jpg",
+      "shows": "Shower and sink",
+      "source": "Unsplash",
+      "by": "Bilal Mansuri",
+      "page": "https://unsplash.com/photos/OqGJHtHHr-4",
+      "url": "https://images.unsplash.com/photo-1643949700446-7905f6e08b33?w=1600&q=85&fm=jpg",
+      "focus": 0.45
+    },
+    {
+      "file": "com-wisma-cempaka-shared-1.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Jan van der Wolf",
+      "page": "https://www.pexels.com/photo/16899294/",
+      "url": "https://images.pexels.com/photos/16899294/pexels-photo-16899294.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-wisma-cempaka-shared-2.jpg",
+      "shows": "Washing machine",
+      "source": "Pexels",
+      "by": "Engin Akyurt",
+      "page": "https://www.pexels.com/photo/27376258/",
+      "url": "https://images.pexels.com/photos/27376258/pexels-photo-27376258.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-room-1.jpg",
+      "shows": "Room with AC, bed and wardrobe",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991543/",
+      "url": "https://images.pexels.com/photos/5991543/pexels-photo-5991543.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-room-2.jpg",
+      "shows": "Bed, table and wardrobe",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991541/",
+      "url": "https://images.pexels.com/photos/5991541/pexels-photo-5991541.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-room-3.jpg",
+      "shows": "Bed and window",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991544/",
+      "url": "https://images.pexels.com/photos/5991544/pexels-photo-5991544.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-bathroom-1.jpg",
+      "shows": "Indoor bathroom: shower, sitting toilet, water heater",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991529/",
+      "url": "https://images.pexels.com/photos/5991529/pexels-photo-5991529.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-bathroom-2.jpg",
+      "shows": "Shower, sitting toilet and sink",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991540/",
+      "url": "https://images.pexels.com/photos/5991540/pexels-photo-5991540.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-shared-1.jpg",
+      "shows": "Car parking",
+      "source": "Pexels",
+      "by": "Alef Morais",
+      "page": "https://www.pexels.com/photo/34569495/",
+      "url": "https://images.pexels.com/photos/34569495/pexels-photo-34569495.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-mawar-shared-2.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Alexander F Ungerer",
+      "page": "https://www.pexels.com/photo/20374786/",
+      "url": "https://images.pexels.com/photos/20374786/pexels-photo-20374786.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-tirta-room-1.jpg",
+      "shows": "Bed under a ceiling fan",
+      "source": "Pexels",
+      "by": "Curtis Adams",
+      "page": "https://www.pexels.com/photo/7601267/",
+      "url": "https://images.pexels.com/photos/7601267/pexels-photo-7601267.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-tirta-room-2.jpg",
+      "shows": "Floor fan",
+      "source": "Unsplash",
+      "by": "Jakub Żerdzicki",
+      "page": "https://unsplash.com/photos/8g67iFsX0YA",
+      "url": "https://images.unsplash.com/photo-1703677322692-c53d284db001?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-tirta-room-3.jpg",
+      "shows": "Table and lamp by the window",
+      "source": "Unsplash",
+      "by": "Annie Spratt",
+      "page": "https://unsplash.com/photos/ttu9P9-4svM",
+      "url": "https://images.unsplash.com/photo-1766431045580-b35d47c08f4a?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-tirta-bathroom-1.jpg",
+      "shows": "Shared bathroom door",
+      "source": "Pexels",
+      "by": "준섭 윤",
+      "page": "https://www.pexels.com/photo/10421674/",
+      "url": "https://images.pexels.com/photos/10421674/pexels-photo-10421674.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-tirta-bathroom-2.jpg",
+      "shows": "Water bucket",
+      "source": "Unsplash",
+      "by": "Muhammed Zafer Yahsi",
+      "page": "https://unsplash.com/photos/2oZmhj-MZQo",
+      "url": "https://images.unsplash.com/photo-1601588531716-f6a3c75f504f?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-tirta-shared-1.jpg",
+      "shows": "Clothesline for laundry",
+      "source": "Pexels",
+      "by": "Malik WaQaS",
+      "page": "https://www.pexels.com/photo/9602506/",
+      "url": "https://images.pexels.com/photos/9602506/pexels-photo-9602506.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-tirta-shared-2.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "fjeijf bfiqbfcq",
+      "page": "https://www.pexels.com/photo/31357222/",
+      "url": "https://images.pexels.com/photos/31357222/pexels-photo-31357222.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-room-1.jpg",
+      "shows": "Room with AC, bed and wardrobe",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991499/",
+      "url": "https://images.pexels.com/photos/5991499/pexels-photo-5991499.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-room-2.jpg",
+      "shows": "Bed, wardrobe and AC",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991500/",
+      "url": "https://images.pexels.com/photos/5991500/pexels-photo-5991500.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-room-3.jpg",
+      "shows": "Wardrobe, table and window",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991504/",
+      "url": "https://images.pexels.com/photos/5991504/pexels-photo-5991504.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-bathroom-1.jpg",
+      "shows": "Sitting toilet with a hand shower",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991508/",
+      "url": "https://images.pexels.com/photos/5991508/pexels-photo-5991508.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-bathroom-2.jpg",
+      "shows": "Sitting toilet and shower",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991511/",
+      "url": "https://images.pexels.com/photos/5991511/pexels-photo-5991511.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-shared-1.jpg",
+      "shows": "Laundry drying area",
+      "source": "Pexels",
+      "by": "AV",
+      "page": "https://www.pexels.com/photo/10065162/",
+      "url": "https://images.pexels.com/photos/10065162/pexels-photo-10065162.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-anggrek-shared-2.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Markus Winkler",
+      "page": "https://www.pexels.com/photo/11292415/",
+      "url": "https://images.pexels.com/photos/11292415/pexels-photo-11292415.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-bagas-room-1.jpg",
+      "shows": "Mattress in a bare room",
+      "source": "Pexels",
+      "by": "Skylar Kang",
+      "page": "https://www.pexels.com/photo/6045221/",
+      "url": "https://images.pexels.com/photos/6045221/pexels-photo-6045221.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-bagas-room-2.jpg",
+      "shows": "Wardrobe",
+      "source": "Unsplash",
+      "by": "Alex Tyson",
+      "page": "https://unsplash.com/photos/l8rvtvzhgH8",
+      "url": "https://images.unsplash.com/photo-1722605895374-1faef3395cd3?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-bagas-room-3.jpg",
+      "shows": "Wall fan",
+      "source": "Unsplash",
+      "by": "Andrew George",
+      "page": "https://unsplash.com/photos/npImOWRVWyg",
+      "url": "https://images.unsplash.com/photo-1607835498554-2c5519af1730?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-bagas-bathroom-1.jpg",
+      "shows": "Washing sink by the wall",
+      "source": "Pexels",
+      "by": "PeopleByOwen",
+      "page": "https://www.pexels.com/photo/15824728/",
+      "url": "https://images.pexels.com/photos/15824728/pexels-photo-15824728.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-bagas-bathroom-2.jpg",
+      "shows": "Buckets and stools",
+      "source": "Pexels",
+      "by": "Jimmy Liao",
+      "page": "https://www.pexels.com/photo/18498208/",
+      "url": "https://images.pexels.com/photos/18498208/pexels-photo-18498208.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-bagas-shared-1.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Jakub Zerdzicki",
+      "page": "https://www.pexels.com/photo/18372742/",
+      "url": "https://images.pexels.com/photos/18372742/pexels-photo-18372742.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-bagas-shared-2.jpg",
+      "shows": "Motorcycle parking, another angle",
+      "source": "Pexels",
+      "by": "Nguyen Duc Toan",
+      "page": "https://www.pexels.com/photo/35211016/",
+      "url": "https://images.pexels.com/photos/35211016/pexels-photo-35211016.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-harmoni-room-1.jpg",
+      "shows": "Bed under a ceiling fan",
+      "source": "Pexels",
+      "by": "Sharath G.",
+      "page": "https://www.pexels.com/photo/31737836/",
+      "url": "https://images.pexels.com/photos/31737836/pexels-photo-31737836.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-harmoni-room-2.jpg",
+      "shows": "Desk fan",
+      "source": "Unsplash",
+      "by": "Siebe Warmoeskerken",
+      "page": "https://unsplash.com/photos/lG-uuO-FTkw",
+      "url": "https://images.unsplash.com/photo-1547099036-45fa8caf2152?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-harmoni-room-3.jpg",
+      "shows": "Desk and chair by the window",
+      "source": "Unsplash",
+      "by": "Annie Spratt",
+      "page": "https://unsplash.com/photos/cpDBPCwTs2s",
+      "url": "https://images.unsplash.com/photo-1653463174225-fb1c604b8812?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-harmoni-bathroom-1.jpg",
+      "shows": "Indoor bathroom: water heater and sink",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/8142983/",
+      "url": "https://images.pexels.com/photos/8142983/pexels-photo-8142983.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-harmoni-bathroom-2.jpg",
+      "shows": "Shower head",
+      "source": "Pexels",
+      "by": "Kaboompics",
+      "page": "https://www.pexels.com/photo/4194866/",
+      "url": "https://images.pexels.com/photos/4194866/pexels-photo-4194866.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-harmoni-shared-1.jpg",
+      "shows": "Refrigerator in the shared kitchen",
+      "source": "Pexels",
+      "by": "Алексей Вечерин",
+      "page": "https://www.pexels.com/photo/9551373/",
+      "url": "https://images.pexels.com/photos/9551373/pexels-photo-9551373.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-harmoni-shared-2.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/7173663/",
+      "url": "https://images.pexels.com/photos/7173663/pexels-photo-7173663.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-cendana-room-1.jpg",
+      "shows": "Room with AC and bed",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/7166557/",
+      "url": "https://images.pexels.com/photos/7166557/pexels-photo-7166557.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-cendana-room-2.jpg",
+      "shows": "AC unit",
+      "source": "Unsplash",
+      "by": "Zulfugar Karimov",
+      "page": "https://unsplash.com/photos/mM0vW68NY0g",
+      "url": "https://images.unsplash.com/photo-1762341123870-d706f257a12e?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-cendana-room-3.jpg",
+      "shows": "Window with curtain",
+      "source": "Unsplash",
+      "by": "eduard",
+      "page": "https://unsplash.com/photos/Q4PvX80itZ0",
+      "url": "https://images.unsplash.com/photo-1473252812967-d565c3607e28?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "com-cendana-bathroom-1.jpg",
+      "shows": "Indoor bathroom: sitting toilet and sink",
+      "source": "Pexels",
+      "by": "Real Estate 4k",
+      "page": "https://www.pexels.com/photo/30688582/",
+      "url": "https://images.pexels.com/photos/30688582/pexels-photo-30688582.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-cendana-bathroom-2.jpg",
+      "shows": "Sitting toilet and sink",
+      "source": "Pexels",
+      "by": "Mateusz Pielech",
+      "page": "https://www.pexels.com/photo/33054908/",
+      "url": "https://images.pexels.com/photos/33054908/pexels-photo-33054908.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-cendana-shared-1.jpg",
+      "shows": "Wi-Fi router",
+      "source": "Pexels",
+      "by": "Pascal",
+      "page": "https://www.pexels.com/photo/32698507/",
+      "url": "https://images.pexels.com/photos/32698507/pexels-photo-32698507.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "com-cendana-shared-2.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Lisa Anna",
+      "page": "https://www.pexels.com/photo/19899084/",
+      "url": "https://images.pexels.com/photos/19899084/pexels-photo-19899084.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-room-1.jpg",
+      "shows": "Bed by the window",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944373/",
+      "url": "https://images.pexels.com/photos/31944373/pexels-photo-31944373.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-room-2.jpg",
+      "shows": "Bed",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31976027/",
+      "url": "https://images.pexels.com/photos/31976027/pexels-photo-31976027.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-room-3.jpg",
+      "shows": "Ceiling fan",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944355/",
+      "url": "https://images.pexels.com/photos/31944355/pexels-photo-31944355.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-bathroom-1.jpg",
+      "shows": "Sitting toilet and water bucket",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944379/",
+      "url": "https://images.pexels.com/photos/31944379/pexels-photo-31944379.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-bathroom-2.jpg",
+      "shows": "Water heater",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944394/",
+      "url": "https://images.pexels.com/photos/31944394/pexels-photo-31944394.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-shared-1.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944364/",
+      "url": "https://images.pexels.com/photos/31944364/pexels-photo-31944364.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-melati-shared-2.jpg",
+      "shows": "Clothesline for laundry",
+      "source": "Pexels",
+      "by": "Jo-anne",
+      "page": "https://www.pexels.com/photo/14152438/",
+      "url": "https://images.pexels.com/photos/14152438/pexels-photo-14152438.png?auto=compress&cs=tinysrgb&w=1600&fm=jpg"
+    },
+    {
+      "file": "svy-casa-hijau-room-1.jpg",
+      "shows": "Bed and window",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31925616/",
+      "url": "https://images.pexels.com/photos/31925616/pexels-photo-31925616.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-casa-hijau-room-2.jpg",
+      "shows": "Desk fan",
+      "source": "Unsplash",
+      "by": "Valery Fedotov",
+      "page": "https://unsplash.com/photos/vFWciisio5g",
+      "url": "https://images.unsplash.com/photo-1618941716939-553df3c6c278?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-casa-hijau-room-3.jpg",
+      "shows": "Bed",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31925626/",
+      "url": "https://images.pexels.com/photos/31925626/pexels-photo-31925626.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-casa-hijau-bathroom-1.jpg",
+      "shows": "Sitting toilet",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31976042/",
+      "url": "https://images.pexels.com/photos/31976042/pexels-photo-31976042.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-casa-hijau-bathroom-2.jpg",
+      "shows": "Sitting toilet and sink",
+      "source": "Pexels",
+      "by": "Alexander F Ungerer",
+      "page": "https://www.pexels.com/photo/31473350/",
+      "url": "https://images.pexels.com/photos/31473350/pexels-photo-31473350.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-casa-hijau-shared-1.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31925627/",
+      "url": "https://images.pexels.com/photos/31925627/pexels-photo-31925627.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-casa-hijau-shared-2.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Image Hunter",
+      "page": "https://www.pexels.com/photo/13023825/",
+      "url": "https://images.pexels.com/photos/13023825/pexels-photo-13023825.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-arwana-room-1.jpg",
+      "shows": "Room with AC and bed",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944406/",
+      "url": "https://images.pexels.com/photos/31944406/pexels-photo-31944406.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-arwana-room-2.jpg",
+      "shows": "Bed and curtains",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944409/",
+      "url": "https://images.pexels.com/photos/31944409/pexels-photo-31944409.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-arwana-room-3.jpg",
+      "shows": "AC remote",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944374/",
+      "url": "https://images.pexels.com/photos/31944374/pexels-photo-31944374.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-arwana-bathroom-1.jpg",
+      "shows": "Sitting toilet and hand shower",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944393/",
+      "url": "https://images.pexels.com/photos/31944393/pexels-photo-31944393.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-arwana-bathroom-2.jpg",
+      "shows": "Water heater",
+      "source": "Unsplash",
+      "by": "Sies Kranen",
+      "page": "https://unsplash.com/photos/slTZivra5Zw",
+      "url": "https://images.unsplash.com/photo-1594233078955-e1f73a02ebb2?w=1600&q=85&fm=jpg",
+      "focus": 0.45
+    },
+    {
+      "file": "svy-arwana-shared-1.jpg",
+      "shows": "Shared kitchen stove",
+      "source": "Pexels",
+      "by": "Fahad Puthawala",
+      "page": "https://www.pexels.com/photo/31944361/",
+      "url": "https://images.pexels.com/photos/31944361/pexels-photo-31944361.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-arwana-shared-2.jpg",
+      "shows": "Car parking",
+      "source": "Pexels",
+      "by": "Get Lost Mike",
+      "page": "https://www.pexels.com/photo/5587958/",
+      "url": "https://images.pexels.com/photos/5587958/pexels-photo-5587958.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-bumi-asri-room-1.jpg",
+      "shows": "Bed and door",
+      "source": "Pexels",
+      "by": "Raymond Aquila",
+      "page": "https://www.pexels.com/photo/27313199/",
+      "url": "https://images.pexels.com/photos/27313199/pexels-photo-27313199.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-bumi-asri-room-2.jpg",
+      "shows": "Desk fan",
+      "source": "Unsplash",
+      "by": "Delaney Van",
+      "page": "https://unsplash.com/photos/MvCW2PE9Tbg",
+      "url": "https://images.unsplash.com/photo-1601084195907-44baaa49dabd?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-bumi-asri-room-3.jpg",
+      "shows": "Window",
+      "source": "Unsplash",
+      "by": "Rob Wingate",
+      "page": "https://unsplash.com/photos/Fd9tUmRBJzk",
+      "url": "https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-bumi-asri-bathroom-1.jpg",
+      "shows": "Sign to the shared bathroom",
+      "source": "Pexels",
+      "by": "Patrick",
+      "page": "https://www.pexels.com/photo/17406355/",
+      "url": "https://images.pexels.com/photos/17406355/pexels-photo-17406355.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-bumi-asri-bathroom-2.jpg",
+      "shows": "Sink and water buckets",
+      "source": "Unsplash",
+      "by": "Quan Jing",
+      "page": "https://unsplash.com/photos/Shjgcz3SXlI",
+      "url": "https://images.unsplash.com/photo-1772461287904-7bfdc7b04da1?w=1600&q=85&fm=jpg",
+      "focus": 0.55
+    },
+    {
+      "file": "svy-bumi-asri-shared-1.jpg",
+      "shows": "Laundry drying line",
+      "source": "Pexels",
+      "by": "Tanya Kash",
+      "page": "https://www.pexels.com/photo/11678594/",
+      "url": "https://images.pexels.com/photos/11678594/pexels-photo-11678594.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-bumi-asri-shared-2.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Jose Cruz",
+      "page": "https://www.pexels.com/photo/20733124/",
+      "url": "https://images.pexels.com/photos/20733124/pexels-photo-20733124.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-room-1.jpg",
+      "shows": "Room with AC, bed and desk",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991495/",
+      "url": "https://images.pexels.com/photos/5991495/pexels-photo-5991495.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-room-2.jpg",
+      "shows": "Bed and AC",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991496/",
+      "url": "https://images.pexels.com/photos/5991496/pexels-photo-5991496.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-room-3.jpg",
+      "shows": "Desk and wardrobe",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991497/",
+      "url": "https://images.pexels.com/photos/5991497/pexels-photo-5991497.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-bathroom-1.jpg",
+      "shows": "Sitting toilet",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991567/",
+      "url": "https://images.pexels.com/photos/5991567/pexels-photo-5991567.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-bathroom-2.jpg",
+      "shows": "Shower by the door",
+      "source": "Pexels",
+      "by": "Hakim Santoso",
+      "page": "https://www.pexels.com/photo/5991513/",
+      "url": "https://images.pexels.com/photos/5991513/pexels-photo-5991513.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-shared-1.jpg",
+      "shows": "Clothes drying on the balcony",
+      "source": "Pexels",
+      "by": "gokceakyildiz",
+      "page": "https://www.pexels.com/photo/4623073/",
+      "url": "https://images.pexels.com/photos/4623073/pexels-photo-4623073.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-pelangi-shared-2.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Onur",
+      "page": "https://www.pexels.com/photo/35045989/",
+      "url": "https://images.pexels.com/photos/35045989/pexels-photo-35045989.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-teratai-room-1.jpg",
+      "shows": "Bed with posters",
+      "source": "Pexels",
+      "by": "Pham Ngoc Anh",
+      "page": "https://www.pexels.com/photo/28167327/",
+      "url": "https://images.pexels.com/photos/28167327/pexels-photo-28167327.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-teratai-room-2.jpg",
+      "shows": "Pedestal fan",
+      "source": "Unsplash",
+      "by": "nameofmin",
+      "page": "https://unsplash.com/photos/bFFe5E7yRdc",
+      "url": "https://images.unsplash.com/photo-1560404031-54e5257f870d?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-teratai-room-3.jpg",
+      "shows": "Desk and chair",
+      "source": "Pexels",
+      "by": "ready made",
+      "page": "https://www.pexels.com/photo/3847597/",
+      "url": "https://images.pexels.com/photos/3847597/pexels-photo-3847597.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-teratai-bathroom-1.jpg",
+      "shows": "Outdoor sink",
+      "source": "Pexels",
+      "by": "Chrys Stam",
+      "page": "https://www.pexels.com/photo/18522291/",
+      "url": "https://images.pexels.com/photos/18522291/pexels-photo-18522291.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-teratai-bathroom-2.jpg",
+      "shows": "Shower",
+      "source": "Pexels",
+      "by": "Kaboompics",
+      "page": "https://www.pexels.com/photo/4194867/",
+      "url": "https://images.pexels.com/photos/4194867/pexels-photo-4194867.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-teratai-shared-1.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Наталья Маркина",
+      "page": "https://www.pexels.com/photo/9696593/",
+      "url": "https://images.pexels.com/photos/9696593/pexels-photo-9696593.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-teratai-shared-2.jpg",
+      "shows": "Wi-Fi router",
+      "source": "Pexels",
+      "by": "Jakub Zerdzicki",
+      "page": "https://www.pexels.com/photo/29711663/",
+      "url": "https://images.pexels.com/photos/29711663/pexels-photo-29711663.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-kenanga-room-1.jpg",
+      "shows": "Room with TV and bed",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/7546560/",
+      "url": "https://images.pexels.com/photos/7546560/pexels-photo-7546560.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-kenanga-room-2.jpg",
+      "shows": "AC unit",
+      "source": "Pexels",
+      "by": "NEOSiAM 18+",
+      "page": "https://www.pexels.com/photo/38788452/",
+      "url": "https://images.pexels.com/photos/38788452/pexels-photo-38788452.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-kenanga-room-3.jpg",
+      "shows": "Wardrobe",
+      "source": "Unsplash",
+      "by": "A65 Design",
+      "page": "https://unsplash.com/photos/eUK-z1I7DSE",
+      "url": "https://images.unsplash.com/photo-1628843359126-8cd868ba4ce0?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-kenanga-bathroom-1.jpg",
+      "shows": "Water heater above the washing machines",
+      "source": "Pexels",
+      "by": "Pușcaș Adryan",
+      "page": "https://www.pexels.com/photo/28479466/",
+      "url": "https://images.pexels.com/photos/28479466/pexels-photo-28479466.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-kenanga-bathroom-2.jpg",
+      "shows": "Indoor bathroom: sitting toilet",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/8142977/",
+      "url": "https://images.pexels.com/photos/8142977/pexels-photo-8142977.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-kenanga-shared-1.jpg",
+      "shows": "Kitchen with refrigerator",
+      "source": "Pexels",
+      "by": "Max Vakhtbovych",
+      "page": "https://www.pexels.com/photo/6758518/",
+      "url": "https://images.pexels.com/photos/6758518/pexels-photo-6758518.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-kenanga-shared-2.jpg",
+      "shows": "Refrigerator",
+      "source": "Pexels",
+      "by": "Polina Tankilevitch",
+      "page": "https://www.pexels.com/photo/4443442/",
+      "url": "https://images.pexels.com/photos/4443442/pexels-photo-4443442.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-cempaka-dua-room-1.jpg",
+      "shows": "Mattress by the window",
+      "source": "Pexels",
+      "by": "Наталья Маркина",
+      "page": "https://www.pexels.com/photo/9977683/",
+      "url": "https://images.pexels.com/photos/9977683/pexels-photo-9977683.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-cempaka-dua-room-2.jpg",
+      "shows": "Fan by the window",
+      "source": "Unsplash",
+      "by": "duy duy",
+      "page": "https://unsplash.com/photos/NC4K-NhNnXg",
+      "url": "https://images.unsplash.com/photo-1658304830982-8a515f340877?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-cempaka-dua-room-3.jpg",
+      "shows": "Wooden wardrobe",
+      "source": "Unsplash",
+      "by": "Lisa Anna",
+      "page": "https://unsplash.com/photos/6Y3avYzs6os",
+      "url": "https://images.unsplash.com/photo-1722349674028-a148f4364e43?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-cempaka-dua-bathroom-1.jpg",
+      "shows": "Outdoor tap",
+      "source": "Unsplash",
+      "by": "shraddha kulkarni",
+      "page": "https://unsplash.com/photos/x3EXXxOoV18",
+      "url": "https://images.unsplash.com/photo-1680008702835-d79e376a5f79?w=1600&q=85&fm=jpg"
+    },
+    {
+      "file": "svy-cempaka-dua-bathroom-2.jpg",
+      "shows": "Shower",
+      "source": "Pexels",
+      "by": "Christa Grover",
+      "page": "https://www.pexels.com/photo/1909656/",
+      "url": "https://images.pexels.com/photos/1909656/pexels-photo-1909656.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-cempaka-dua-shared-1.jpg",
+      "shows": "Shared kitchen",
+      "source": "Pexels",
+      "by": "Lisa Anna",
+      "page": "https://www.pexels.com/photo/19857267/",
+      "url": "https://images.pexels.com/photos/19857267/pexels-photo-19857267.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    },
+    {
+      "file": "svy-cempaka-dua-shared-2.jpg",
+      "shows": "Motorcycle parking",
+      "source": "Pexels",
+      "by": "Jeremy Benaya",
+      "page": "https://www.pexels.com/photo/14958804/",
+      "url": "https://images.pexels.com/photos/14958804/pexels-photo-14958804.jpeg?auto=compress&cs=tinysrgb&w=1600"
+    }
+  ]
+}
